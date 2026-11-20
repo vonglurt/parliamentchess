@@ -15,6 +15,22 @@ Targets come from bin/label.php's teacher search, which looks depth plies deeper
     policy = softmax(teacher action values / temp) over the legal moves
 so the student learns, in one look, what the teacher saw by searching. Games are split 90/10
 by game id, never by position. The export is plain JSON that src/AI/Net2.php reads.
+
+Generations:
+    --mode residual    the net learns teacher score minus the hand evaluation; with no --init its value
+                       head starts at zero, so generation 0 IS the deterministic hand-written player and
+                       learning only adds corrections to it (--no-zero-init to start at random)
+    --init FILE        warm start from the champion; a larger --h1/--h2 than the champion's widens it
+                       without changing what it computes (new units start with zero outgoing weights)
+Cookies for non-standard moves (labels carry move flags: 1 promotion, 2 Writ, 4 castling, 8 capture,
+16 a Writ whose count would already crown its Candidate):
+    --cookie-writ CP   centipawns added to a sound Writ's teacher score (flag 16), in the policy target
+                       and in the value target (the position is worth its best move counting the cookie)
+    --cookie-promo CP  the same for a promotion
+    --weight-special W loss weight for positions where a Writ or promotion is within 50 cp of best
+Reinforcing the result:
+    --reinforce RHO    residual mode: the target leans RHO of the way from the teacher's score to the
+                       game's result (+-400 cp); value mode uses --lam for the same thing
 """
 import argparse
 import glob
@@ -91,13 +107,50 @@ class SensorNet(nn.Module):
         return v, logits
 
 
-def value_target(r, lam, mode):
+WRIT_PRIOR = -50.0  # the logit that puts Writs last in Search's move order, as the hand order does
+
+
+def flags_of(m):
+    """A label's move flags; old labels carry none, but a Writ is still known by its index."""
+    f = m[2] if len(m) > 2 else 0
+    return f | (2 if m[0] >= 4096 else 0)
+
+
+def special_weight(r, args):
+    if args.weight_special == 1.0:
+        return 1.0
+    best = max(s for _, s, *_ in r["p"])
+    near = any((flags_of(m) & 1 or flags_of(m) & 18 == 18) and m[1] >= best - 50 for m in r["p"])
+    return args.weight_special if near else 1.0
+
+
+def cookie(m, args):
+    """Centipawns of encouragement for a non-standard move: a Writ, a promotion."""
+    if args is None:
+        return 0.0
+    f = flags_of(m)
+    # A Writ earns its cookie only if the crown-move theory approves it (flag 16: its count would
+    # already crown the Candidate). Labels made before the flag existed reward every Writ.
+    sound = f & 16 or len(m) < 3
+    return (args.cookie_writ if f & 2 and sound else 0.0) + (args.cookie_promo if f & 1 else 0.0)
+
+
+def value_target(r, lam, mode, args=None):
+    s = r["s"]
+    if args is not None and (args.cookie_writ or args.cookie_promo) and r.get("p"):
+        # With cookies the position is worth its best move counting the cookie, so a position with a
+        # good Writ or promotion within reach is worth a little more, and the search steers toward it.
+        s = max(m[1] + cookie(m, args) for m in r["p"])
+    if args is not None and args.reinforce and mode == "residual":
+        # Reinforce winning: lean the teacher's score toward the game's real result, a win counting
+        # as +400 cp for the side that went on to win it and a loss as -400.
+        s = (1 - args.reinforce) * s + args.reinforce * 400.0 * r["r"]
     if mode == "residual":  # the correction, in units of 400 cp, clipped
-        return max(-2.0, min(2.0, (r["s"] - r.get("h", 0)) / 400.0))
-    return lam * r["r"] + (1 - lam) * math.tanh(r["s"] / 400.0)
+        return max(-2.0, min(2.0, (s - r.get("h", 0)) / 400.0))
+    return lam * r["r"] + (1 - lam) * math.tanh(s / 400.0)
 
 
-def batches(recs, size, device, lam, temp, shuffle, mode="value"):
+def batches(recs, size, device, lam, temp, shuffle, mode="value", args=None):
     order = list(range(len(recs)))
     if shuffle:
         random.shuffle(order)
@@ -108,25 +161,32 @@ def batches(recs, size, device, lam, temp, shuffle, mode="value"):
             offs.append(len(flat))
             flat.extend(r["f"])
         b = len(chunk)
-        vt = torch.tensor([value_target(r, lam, mode) for r in chunk])
+        vt = torch.tensor([value_target(r, lam, mode, args) for r in chunk])
         mask = torch.full((b, MOVES), float("-inf"))
         target = torch.zeros(b, MOVES)
         best = torch.zeros(b, dtype=torch.long)
+        w = torch.ones(b)
         for k, r in enumerate(chunk):
-            ids = torch.tensor([m for m, _ in r["p"]], dtype=torch.long)
-            sc = torch.tensor([s for _, s in r["p"]], dtype=torch.float)
+            ids = torch.tensor([m[0] for m in r["p"]], dtype=torch.long)
+            raw = torch.tensor([m[1] for m in r["p"]], dtype=torch.float)
+            sc = raw.clone()
+            if args is not None and (args.cookie_writ or args.cookie_promo):
+                # Cookies: a non-standard move looks a little better to the student than to the teacher.
+                sc += torch.tensor([cookie(m, args) for m in r["p"]])
             mask[k, ids] = 0.0
             target[k, ids] = torch.softmax(sc / temp, 0)
-            best[k] = ids[int(torch.argmax(sc))]
+            best[k] = ids[int(torch.argmax(raw))]
+            if args is not None:
+                w[k] = special_weight(r, args)
         yield (torch.tensor(flat, dtype=torch.long, device=device), torch.tensor(offs, dtype=torch.long, device=device),
-               vt.to(device), mask.to(device), target.to(device), best.to(device), chunk)
+               vt.to(device), mask.to(device), target.to(device), best.to(device), chunk, w.to(device))
 
 
 def evaluate(model, recs, args, device):
     model.eval()
     se = n = agree = sign_ok = sign_n = 0.0
     with torch.no_grad():
-        for flat, offs, vt, mask, target, best, chunk in batches(recs, 4096, device, args.lam, args.temp, False, args.mode):
+        for flat, offs, vt, mask, target, best, chunk, _w in batches(recs, 4096, device, args.lam, args.temp, False, args.mode):
             v, logits = model(flat, offs)
             se += float(((v - vt) ** 2).sum())
             n += len(chunk)
@@ -177,6 +237,11 @@ def main():
     ap.add_argument("--beta", type=float, default=1.0)
     ap.add_argument("--device", default="auto")
     ap.add_argument("--init", default=None)
+    ap.add_argument("--no-zero-init", action="store_true", help="residual nets start random instead of at zero")
+    ap.add_argument("--cookie-writ", type=float, default=0.0)
+    ap.add_argument("--cookie-promo", type=float, default=0.0)
+    ap.add_argument("--weight-special", type=float, default=1.0)
+    ap.add_argument("--reinforce", type=float, default=0.0, help="residual mode: weight of the game result in the target")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
     random.seed(args.seed)
@@ -197,20 +262,48 @@ def main():
           f"({held} games); device {gpu}; loaded in {time.time() - t0:.1f}s", flush=True)
     model = SensorNet(args.h1, args.h2, args.mode == "residual").to(device)
     if args.init and os.path.exists(args.init):
-        print("warm start from", args.init)
         prev = json.load(open(args.init))
-        if prev.get("h1") == args.h1 and prev.get("h2") == args.h2:
-            with torch.no_grad():
-                model.ft.weight.copy_(torch.tensor(prev["emb"]))
-                model.ft_bias.copy_(torch.tensor(prev["b1"]))
-                model.l2.weight.copy_(torch.tensor(prev["w2"]).t())
-                model.l2.bias.copy_(torch.tensor(prev["b2"]))
-                model.value.weight.copy_(torch.tensor([prev["wv"]]))
-                model.value.bias.fill_(prev["bv"])
-                model.efrom.weight.copy_(torch.tensor(prev["from"]))
-                model.eto.weight.copy_(torch.tensor(prev["to"]))
-                model.ewrit.weight.copy_(torch.tensor(prev["writ"]))
-                model.mbias.copy_(torch.tensor(prev["mbias"]))
+        a1, a2 = prev["h1"], prev["h2"]
+        if a1 > args.h1 or a2 > args.h2:
+            sys.exit(f"cannot shrink the champion ({a1}, {a2}) to ({args.h1}, {args.h2})")
+        print(f"warm start from {args.init}" + (f", grown from ({a1}, {a2}) to ({args.h1}, {args.h2})" if (a1, a2) != (args.h1, args.h2) else ""))
+        with torch.no_grad():
+            # Growth that keeps the function: the champion's weights fill the top-left corner; the new
+            # units keep their small random inputs but every weight leaving them starts at zero, so the
+            # grown net computes exactly what the champion did until training gives them a use.
+            model.ft.weight[:, :a1] = torch.tensor(prev["emb"])
+            model.ft_bias[:a1] = torch.tensor(prev["b1"])
+            model.ft_bias[a1:] = 0.0
+            w2 = torch.zeros(args.h2, args.h1)
+            w2[:a2, :a1] = torch.tensor(prev["w2"]).t()
+            if args.h2 > a2:
+                w2[a2:, :a1] = torch.randn(args.h2 - a2, a1) * 0.01
+            model.l2.weight.copy_(w2)
+            model.l2.bias.zero_()
+            model.l2.bias[:a2] = torch.tensor(prev["b2"])
+            model.value.weight.zero_()
+            model.value.weight[0, :a2] = torch.tensor(prev["wv"])
+            model.value.bias.fill_(prev["bv"])
+            for emb, key in ((model.efrom, "from"), (model.eto, "to"), (model.ewrit, "writ")):
+                emb.weight.zero_()
+                emb.weight[:, :a2] = torch.tensor(prev[key])
+            model.mbias.copy_(torch.tensor(prev["mbias"]))
+    elif args.mode == "residual" and not args.no_zero_init:
+        # Generation 0 is the deterministic program, in both of the net's jobs:
+        #   value   a correction of exactly zero, so the evaluation is the hand-written one;
+        #   policy  every move embedding zero and a bias of WRIT_PRIOR on Writs, so Search ranks
+        #           quiet moves at 4000 + 100 * 0 and Writs at 4000 + 100 * -50 = -1000: the
+        #           hand-written move order (src/AI/Search.php, order()) exactly.
+        # The hidden layers keep their random start; with every weight leaving them at zero they
+        # change nothing until training gives them a use.
+        with torch.no_grad():
+            model.value.weight.zero_()
+            model.value.bias.zero_()
+            for emb in (model.efrom, model.eto, model.ewrit):
+                emb.weight.zero_()
+            model.mbias.zero_()
+            model.mbias[4096:] = WRIT_PRIOR
+        print("zero start: before training, this net plays exactly like the hand-written program")
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, args.epochs))
     base = sum(value_target(r, args.lam, args.mode) ** 2 for r in val) / max(1, len(val))
@@ -219,11 +312,12 @@ def main():
     for ep in range(1, args.epochs + 1):
         te = time.time()
         tot = vl = pl = 0.0
-        for flat, offs, vt, mask, target, best, chunk in batches(train, args.batch, device, args.lam, args.temp, True, args.mode):
+        for flat, offs, vt, mask, target, best, chunk, w in batches(train, args.batch, device, args.lam, args.temp, True, args.mode, args):
             v, logits = model(flat, offs)
-            loss_v = F.mse_loss(v, vt)
+            wn = w / w.mean()
+            loss_v = (wn * (v - vt) ** 2).mean()
             logp = F.log_softmax(logits + mask, 1)
-            loss_p = -(target * torch.where(torch.isfinite(logp), logp, torch.zeros_like(logp))).sum(1).mean()
+            loss_p = (wn * -(target * torch.where(torch.isfinite(logp), logp, torch.zeros_like(logp))).sum(1)).mean()
             loss = loss_v + args.beta * loss_p
             opt.zero_grad()
             loss.backward()

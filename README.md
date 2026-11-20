@@ -15,6 +15,7 @@ untouched, the extension is the joke, and the joke has to be balanced.
   (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–IX, from the rules to the fleet.
   The data behind them is in [docs/data](docs/data) and the figures in [docs/media](docs/media)
 - **Film:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim
+- **Player's guide:** `docs/media/players_guide.mp4`, your first game on the real client in 106 seconds (`sh film/render.sh guide`)
 - **License:** MIT
 
 ## Run it
@@ -63,6 +64,8 @@ sh bin/php bin/analyze.php orrery/census      # balance statistics with 95% inte
 sh bin/php bin/label.php --games 8 --depth 3  # teacher labels for the net
 make export EXPORT=export.html                # the lab report, from the shared doc's export
 sh film/render.sh                             # render the Manim film
+node film/guide_shots.mjs && sh film/render.sh guide   # the player's guide (screenshots need a server on :8091)
+sh bin/php bin/crown-theory.php               # when to move the crown, from the census Writs
 ```
 
 ## Training the second-generation net (GPU)

@@ -16,7 +16,8 @@ declare(strict_types=1);
  *   s   teacher score, centipawns, side to move's view (mates clamped to +-2000)
  *   h   the hand-written static evaluation of the same position (what a residual net corrects)
  *   r   final game result for the side to move (1, 0, -1)
- *   p   action values: [policy index, score] for every legal root move
+ *   p   action values: [policy index, score, flags] for every legal root move
+ *       (flags: 1 promotion, 2 Writ, 4 castling, 8 capture, 16 a Writ whose poll already crowns)
  * The teacher sees depth plies plus quiescence; the student learns to see it in one look.
  * DIR/summary.json records counts and timing, the generation's labelling cost.
  */
@@ -105,7 +106,16 @@ for ($i = 0; $i < $games; $i++) {
             $teacherMs += (microtime(true) - $t) * 1000;
             $pv = [];
             foreach ($teacher->rootScores as $m => $sc) {
-                $pv[] = [Sensors::moveIndex($g->pos, $m), max(-2000, min(2000, $sc))];
+                // Flags mark the non-standard moves a trainer may reward: 1 promotion, 2 Writ, 4 castling,
+                // 8 capture, 16 a Writ whose count would already crown its Candidate (the crown-move
+                // theory's first rule: in 1,712 census Writs, 79% of these moved the crown, 5.5% of the rest).
+                $fl = $m >> 16;
+                $flags = (($m >> 12) & 7 ? 1 : 0) | ($fl & \Parliament\Engine\Position::F_WRIT ? 2 : 0)
+                    | ($fl & \Parliament\Engine\Position::F_CASTLE ? 4 : 0) | ($fl & \Parliament\Engine\Position::F_CAPTURE ? 8 : 0);
+                if ($flags & 2 && in_array($g->pos->poll($g->pos->side, ($m >> 6) & 63)['outcome'], ['coronation', 'contested', 'swap'], true)) {
+                    $flags |= 16;
+                }
+                $pv[] = [Sensors::moveIndex($g->pos, $m), max(-2000, min(2000, $sc)), $flags];
             }
             if ($pv) {
                 $pending[] = ['g' => sprintf('%s-%d', $o['job'] ?? 'local', $gs), 'f' => Sensors::features($g->pos), 's' => max(-2000, min(2000, $info['score'])),

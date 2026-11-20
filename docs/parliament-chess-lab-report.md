@@ -540,6 +540,87 @@ Pause it from the console, or run `fleet-queue.py grove project parliament-chess
 - [ ] PHP on whitewolf, boburner, calber and macmini would add four more lanes. That needs package installs, which await your decision.
 - [ ] The roster shows Parliament only on PHP lanes, because a project names one capability; its training on CUDA lanes shows in the card.
 
+## Lab Report X — Teaching the net to govern
+
+A net now becomes the next generation only if it beats the champion and also holds at least one election. Generation 0 plays move for move like the hand-written program, and later generations grow without changing what they already compute. The census gives a theory of the crown move: a Writ whose count is already won moves the crown 79% of the time; one that is not, 5.5%.
+
+### A. What changed, and the check each passed
+
+Every change was tested before it reached the fleet; generation 2, already labelled, keeps the code it started with.
+
+| Change | What it does | Check |
+| --- | --- | --- |
+| The election gate | A challenger is elected only if it scores z > 2 against the champion **and** files Writs that reach at least `bar.elections` counts (default 1) in its gauntlet. | Generation 1 re-decided: the same 100 games and z = −26.16, with 110 elections counted. A strong net with too few elections was refused. |
+| Generation 0 is the program | A residual net starts with its value head at zero, every move embedding at zero, and a bias of −50 on Writs, so Search ranks moves exactly as the hand-written order does. | Correction 0.0 on all 1,049 test positions. Six games against Monarchist Medium, in two styles, were identical move for move to plain Medium (306 and 338 plies). |
+| Growth | A warm start may be wider than the champion (g003: 128/32 to 160/40). New units start with zero outgoing weights, so the grown net computes the same function [14]. | Grown 64/16 to 96/24: largest change 8.7×10⁻¹⁹ in value and 5.6×10⁻¹⁷ in any logit. |
+| Cookies | A bonus in both the policy and value targets for promotions and for Writs the crown-move theory approves (Section C). Positions where one is within 50 cp of best weigh more. Every cookie shrinks by 0.6 a generation. | Labels now flag moves: of 1,588 Writs in a test set, 441 (28%) were sound. |
+| Reinforcing the result | The training target leans ρ = 0.1 of the way from the teacher's score to the game's result, ±400 cp. | Trains; its effect on strength is not yet measured. |
+| Replay window | A generation also trains on the previous generation's labels (`train.window = 2`). | The g003 rehearsal sent 62 label shards plus the champion. |
+| Pinned code | Each generation runs the code it started with, unpacked to `~/parliament-chess/HASH/`, so a late setup job can never swap code under a running generation. | g002 runs version 6518c42e72 while the repository moves on. The 45 rule tests and 34 two-browser checks still pass. |
+
+### B. Who votes
+
+Every one of the filer's pieces except the King and the Candidate takes part, wherever it stands: each backs whichever is nearer in king-steps, and a tie backs the King. The figure is a real count from the census (`tools/election_example.php` picks it; `tools/fig_election.py` draws the engine's own poll). At move 13 White files for the d2 pawn. The Commons tie 2 to 2, which goes to the King. The College goes 7 to 5 for the Candidate, because the a1 Rook, c1 Bishop and c3 Knight stand nearer d2 than e1. The a3 and d4 pawns are attacked and abstain. The Queen, as Speaker, is 3 steps from each, so she backs the King, but she votes only on a College tie. Result: a Contested Coronation.
+
+![Who votes, and for whom: a real census count. Each of White's pieces backs the nearer of the Candidate on d2 and the King on e1; the attacked a3 and d4 pawns abstain; Commons 2 to 2, College 7 to 5: a Contested Coronation.](media/fig-election.png)
+
+### C. When to move the crown
+
+Castling theory came from watching what happened to Kings that castled and Kings that did not; `bin/crown-theory.php` does the same for every Writ in 1,100 self-play games with elections on. The 796 games with at least one Writ held 1,712 of them, and the crown moved after 1,199 (70%). The campaign move mostly takes crowns away: 1,188 counts won at filing stayed won, 324 were lost in the campaign, and only 11 were won in it.
+
+![How often the crown moved after a Writ, by the position at filing, with 95% intervals: 1,712 Writs in 1,100 self-play games.](media/fig-crown-theory.png)
+
+1. **Count first.** File only a Writ whose count already wins: those moved the crown 78.6% of the time, the rest 5.5%.
+2. **Crown before the storm.** With no square around the King attacked, 85.0% moved the crown; with three or more attacked, 51.3%. Like castling, the crown move is made while things are quiet.
+3. **Crown early.** Moves 10 to 29 moved the crown 76% of the time, move 45 or later 59.5%.
+4. **Distance barely matters.** A Candidate 1 to 2 steps from the King did 71.9%, one 5 to 7 steps away 67.6%, and the intervals overlap.
+
+Filers whose crown moved scored better in every band of their own evaluation (level games: 0.497 against 0.394). That is an association, not a cause: a failed count often means the opponent already had the initiative. The theory now steers training, because only Writs that pass rule 1 earn a cookie.
+
+### D. Rewards: reinforcing what wins
+
+Only results elect a generation; everything else in training is a hint that the gauntlet can overrule.
+
+- **The judge is the gauntlet.** A generation must win (z > 2 over its gauntlet) and must govern (at least one election). The second condition keeps the lineage from drifting back to plain chess, where Writs are never filed.
+- **Dense hints, sparse truth.** Every labelled position carries about 30 teacher scores, one per legal move; that is distillation, cheap and dense [15]. The game result is the true reward but comes once a game, so it enters the target at ρ = 0.1.
+- **Cookies are shaping, so they stay small.** A bonus that is not potential-based can change which play is best [16]. Ours is limited three ways: it rewards only sound Writs and promotions, it starts at 30 cp for a Writ and 36 cp for a promotion in g003 (about a third of a pawn), and it shrinks by 0.6 a generation. If cookies ever make play worse, the gauntlet refuses that generation.
+- **Faster generations come from fewer new labels, not a faster GPU.** Labelling took 87% of generation 1 and training 0.2% (Report VIII). The replay window reuses the previous generation's labels, and the cookies and the gate cost nothing to compute.
+
+### E. The net, and how long
+
+Keep the small, NNUE-shaped residual net [6] and grow it, rather than switch to a deep AlphaZero-style network. A depth-3 search evaluates about 26,500 positions per move in PHP (Report VIII), so each evaluation must cost microseconds. A deep convolutional net needs GPU batching and a different search, and AlphaZero's chess run used 44 million self-play games [7]. Giraffe likewise taught a conventional alpha-beta engine its evaluation by self-play [17].
+
+What makes this net teachable:
+
+- it starts as the hand-written program, then learns only corrections;
+- it grows by generation without forgetting;
+- its policy head orders moves;
+- its Sensors v2 inputs (1,203) already see two plies ahead.
+
+| New labels per generation | Labelling, two saskatchewan lanes | Training, 16 epochs, GTX 1080 Ti | Gauntlet, 100 games |
+| --- | --- | --- | --- |
+| 70,000 (g003) | about 20 min | about 3 min | about 15 min |
+| 1,000,000 | about 5 h | about 30 min | about 15 min |
+| 10,000,000 | about 2 days | about 5 h | about 15 min |
+
+The rates were measured today: 94,000 to 127,000 labels per lane-hour on saskatchewan at depth 3, and 8,300 position-epochs per second for training. Training at that rate is limited by Python building batches, not by the GPU, so it can be sped up once data passes a million positions.
+
+How many generations it takes is a forecast, not a measurement. Generation 1's residual net scored 0.450 against Medium from 9,214 labels. To be elected over 100 games, a net must score about 0.59 (z > 2 at a standard error near 0.045), roughly 65 Elo better. If strength grows with the logarithm of the data, as it usually does, the first elected generation needs 10⁵ to 10⁶ labels: g003 is the first real test, and a million labels is about six hours of two lanes.
+
+### F. The player's guide
+
+A 106-second video, `docs/media/players_guide.mp4` (1080p, 4.7 MB), walks through a first game on the real client. Every screen in it is a screenshot of that game. `film/guide_shots.mjs` drives headless Chrome over its DevTools protocol through 14 steps: the lobby, inviting a player, an Italian opening, a Writ for the c1 Bishop, Black's campaign move, the count, the record, a bot and a bot game. It records where each panel stands, so the highlights in `film/guide.py` land on them.
+
+The game taught its own lesson. The Writ was chosen to crown after every one of Black's 50 replies, yet Black's Be6 still made the count close. It attacked the b3 Bishop, which abstained, and the College tied 5 to 5. The Queen, nearer c1, broke the tie as Speaker, and the crown moved from g1 to c1, much as a long castle moves a King.
+
+### G. Open
+
+- [ ] Generation 2 labelled 5,292 positions and trained on calber-cuda in 14.3 s (held-out sign accuracy 0.851). Its four gauntlet jobs wait behind treadcore's work on the two PHP lanes; the verdict, with its election count, lands in grove's `parliament/generations.json`.
+- [ ] Generation 3 then starts on the new code: about 70,000 labels, grown to 160/40, with cookies, the result blend and the replay window. It is the first test of whether any of them makes play stronger.
+- [ ] Measure the cookies directly: g003 against the same run without cookies, if g003 is elected.
+- [ ] Pre-pack the training data on the GPU once a generation passes a million positions.
+- [ ] More PHP lanes would shorten labelling the most; installing PHP on whitewolf, boburner, calber and macmini still awaits your decision.
+
 ## References
 
 Game and history sources are linked in Report II; every link there was opened on 20 November 2026.
@@ -557,6 +638,10 @@ Game and history sources are linked in Report II; every link there was opened on
 11. S. Kass and K. Bryla, "Rock Paper Scissors Spock Lizard." [Online](http://www.samkass.com/theories/RPSSL.html)
 12. Orreryq, the Orrery Queue: job and planner contract in `tools/fleet-queue.py` of the orrery repository (local checkout).
 13. Manim Community, version 0.22.1, used for the film in Report VII.
+14. T. Chen, I. Goodfellow, and J. Shlens, "Net2Net: Accelerating learning via knowledge transfer," in *Proc. ICLR*, 2016. [Online](https://arxiv.org/abs/1511.05641)
+15. G. Hinton, O. Vinyals, and J. Dean, "Distilling the knowledge in a neural network," 2015. [Online](https://arxiv.org/abs/1503.02531)
+16. A. Y. Ng, D. Harada, and S. Russell, "Policy invariance under reward transformations: Theory and application to reward shaping," in *Proc. ICML*, 1999, pp. 278–287.
+17. M. Lai, "Giraffe: Using deep reinforcement learning to play chess," M.Sc. thesis, Imperial College London, 2015. [Online](https://arxiv.org/abs/1509.01549)
 
 ### License
 

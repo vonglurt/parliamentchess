@@ -27,3 +27,4 @@ film/__pycache__/
 .DS_Store
 *.swp
 film/out/
+film/guide-shots/

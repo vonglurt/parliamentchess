@@ -76,15 +76,33 @@ function state(array $have, string $id): string
     return $have[$id]['state'] ?? '';
 }
 
-function prelude(): string
+/**
+ * Where a job runs: its generation's code version, unpacked by pc-prep into ~/parliament-chess/HASH/
+ * (one folder a version, so a late setup job can never roll a lane back), sharing one venv.
+ * Without a fleet (the one-machine keeper) it runs in this checkout.
+ */
+function prelude(string $hash = ''): string
 {
-    return 'D="$HOME/parliament-chess"; [ -d "$D/src" ] || D=' . escapeshellarg((string)realpath(REPO)) . '; cd "$D" || exit 1; '
-        . 'PY="$D/.venv/bin/python"; [ -x "$PY" ] || PY=python3; ';
+    $v = $hash !== '' ? '"$HOME/parliament-chess/' . $hash . '"' : '"$HOME/parliament-chess"';
+    return 'D=' . $v . '; [ -d "$D/src" ] || D="$HOME/parliament-chess"; [ -d "$D/src" ] || D=' . escapeshellarg((string)realpath(REPO)) . '; cd "$D" || exit 1; '
+        . 'PY="$HOME/parliament-chess/.venv/bin/python"; [ -x "$PY" ] || PY="$D/.venv/bin/python"; [ -x "$PY" ] || PY=python3; ';
 }
 
 function job(array $j): array
 {
     return $j + ['timeout_s' => 4 * 3600];
+}
+
+/** A generation's code: the version it was pinned to when it started (state/pins.json), built once. */
+function pinned(string $state, string $gen): array
+{
+    $pins = json_decode((string)@file_get_contents("$state/pins.json"), true) ?: [];
+    if (empty($pins[$gen]) || !is_file("$state/dist/parliament-chess-{$pins[$gen]}.tgz")) {
+        $pins[$gen] = dist($state)['hash'];
+        file_put_contents("$state/pins.json", json_encode($pins, JSON_PRETTY_PRINT));
+    }
+    $pip = glob("$state/dist/pip-*.whl")[0] ?? null;
+    return ['hash' => $pins[$gen], 'tgz' => "$state/dist/parliament-chess-{$pins[$gen]}.tgz", 'pip' => $pip];
 }
 
 /** The code the lanes run: a tarball named by a hash of its contents, built once per version. */
@@ -152,11 +170,11 @@ function prepJob(string $name, array $caps, array $d, array $needs): ?array
     if (!$isCuda && !$isPhp) {
         return null;
     }
-    $id = "pc-prep-$name-{$d['hash']}";
+    $id = "pc-prep2-$name-{$d['hash']}"; // prep2: one folder a version
     $tgz = 'pc-dist/' . basename($d['tgz']);
     $send = [['src' => $d['tgz'], 'dst' => $tgz]];
     $out = '"$HOME/pc-out/' . $id . '"';
-    $cmd = 'set -e; mkdir -p ~/parliament-chess ' . $out . '; cd ~/parliament-chess; rm -rf src bin train; '
+    $cmd = 'set -e; mkdir -p ~/parliament-chess/' . $d['hash'] . ' ' . $out . '; cd ~/parliament-chess/' . $d['hash'] . '; '
         . 'tar -xzf ~/' . $tgz . '; ';
     if ($isPhp) {
         $cmd .= 'php -r \'exit(version_compare(PHP_VERSION, "8.2", "<") ? 1 : 0);\'; '
@@ -168,10 +186,11 @@ function prepJob(string $name, array $caps, array $d, array $needs): ?array
         }
         $whl = 'pc-dist/' . basename($d['pip']);
         $send[] = ['src' => $d['pip'], 'dst' => $whl];
-        $cmd .= 'if ! .venv/bin/python -c "import torch, sys; sys.exit(0 if torch.__version__.startswith(\'2.14.1\') else 1)" 2>/dev/null; then '
-            . 'rm -rf .venv; python3 -m venv --without-pip .venv; .venv/bin/python ~/' . $whl . '/pip install -q --no-index ~/' . $whl . '; '
-            . '.venv/bin/pip install -q -r train/requirements-pascal.txt; fi; '
-            . '.venv/bin/python -c "import torch; x = torch.ones(1024, device=\'cuda\'); print(torch.__version__, torch.cuda.get_device_name(0), float(x.sum()))" > ' . $out . '/torch.txt 2>&1; ';
+        $venv = '~/parliament-chess/.venv';
+        $cmd .= 'if ! ' . $venv . '/bin/python -c "import torch, sys; sys.exit(0 if torch.__version__.startswith(\'2.14.1\') else 1)" 2>/dev/null; then '
+            . 'rm -rf ' . $venv . '; python3 -m venv --without-pip ' . $venv . '; ' . $venv . '/bin/python ~/' . $whl . '/pip install -q --no-index ~/' . $whl . '; '
+            . $venv . '/bin/pip install -q -r train/requirements-pascal.txt; fi; '
+            . $venv . '/bin/python -c "import torch; x = torch.ones(1024, device=\'cuda\'); print(torch.__version__, torch.cuda.get_device_name(0), float(x.sum()))" > ' . $out . '/torch.txt 2>&1; ';
     }
     $cmd .= 'echo ok > ' . $out . '/ready';
     return job(['id' => $id, 'kind' => 'pc-prep', 'title' => "Parliament Chess setup on $name ({$d['hash']})",
@@ -225,6 +244,9 @@ function decide(string $dir, string $state): array
             continue;
         }
         $scores = [];
+        // What the challenger did with the election layer across its gauntlet: Writs filed, elections
+        // held (counts), crowns moved, Kings crowned, promotions. The gate reads these.
+        $politics = ['writs' => 0, 'elections' => 0, 'crownMoves' => 0, 'coronations' => 0, 'promotions' => 0];
         foreach ($g['gaunts'] as $id) {
             $sum = json_decode((string)@file_get_contents(rp($dir, $id, 'summary.json')), true);
             foreach ($sum['files'] ?? [] as $f) {
@@ -234,6 +256,21 @@ function decide(string $dir, string $state): array
                 }
                 $col = $r['white'] === $g['G']['challenger'] ? 1 : -1;
                 $scores[] = $r['winner'] === null ? 0.5 : ($r['winner'] === $col ? 1.0 : 0.0);
+                foreach ($r['log'] ?? [] as $e) {
+                    if ($e['by'] === $col && !empty($e['writ'])) {
+                        $politics['writs']++;
+                    }
+                    if ($e['by'] === $col && str_contains((string)$e['san'], '=')) {
+                        $politics['promotions']++;
+                    }
+                    $c = $e['count'] ?? null;
+                    if ($c && ($c['color'] ?? 0) === $col) {
+                        $politics['elections']++;
+                        $out = $c['outcome'] ?? '';
+                        $politics['crownMoves'] += in_array($out, ['coronation', 'contested', 'swap'], true) ? 1 : 0;
+                        $politics['coronations'] += in_array($out, ['coronation', 'contested'], true) ? 1 : 0;
+                    }
+                }
             }
         }
         $n = count($scores);
@@ -242,6 +279,10 @@ function decide(string $dir, string $state): array
         $se = $sd / sqrt(max(1, $n));
         $z = $se > 0 ? ($mean - 0.5) / $se : 0.0;
         $bar = (float)($spec['bar']['z'] ?? 2.0);
+        // The election gate: no generation is elected unless it held at least bar.elections elections.
+        $minElections = (int)($spec['bar']['elections'] ?? 1);
+        $strong = $z > $bar;
+        $political = $politics['elections'] >= $minElections;
         // Generation timing: lane-seconds per stage, wall clock from the first start to the last end.
         $stage = ['label' => 0.0, 'train' => 0.0, 'gauntlet' => 0.0];
         $first = PHP_INT_MAX;
@@ -269,13 +310,15 @@ function decide(string $dir, string $state): array
         $hist = $train['history'] ?? [];
         $lastEpoch = $hist ? $hist[count($hist) - 1] : [];
         $row = ['name' => $g['name'], 'gi' => $gi, 'games' => $n, 'score' => round($mean, 4), 'se' => round($se, 4), 'z' => round($z, 2),
-            'bar' => $bar, 'elected' => $z > $bar, 'labels' => $labels, 'device' => $train['device'] ?? null,
+            'bar' => $bar, 'elected' => $strong && $political, 'minElections' => $minElections, 'politics' => $politics,
+            'why' => $strong && $political ? 'stronger, and it holds elections' : (!$strong ? 'not stronger by the bar' : 'stronger, but it held fewer than ' . $minElections . ' election(s)'),
+            'labels' => $labels, 'device' => $train['device'] ?? null,
             'valValueMSE' => $lastEpoch['valValueMSE'] ?? null, 'valPolicyTop1' => $lastEpoch['valPolicyTop1'] ?? null,
             'laneSeconds' => array_map(fn($x) => round($x, 1), $stage), 'wallSeconds' => $last > 0 ? $last - $first : null,
             'hosts' => array_keys($hosts), 'decided' => date('c')];
         $rows[] = $row;
         file_put_contents("$state/lineage.tsv", implode("\t", [$row['name'], $row['games'], $row['score'], $row['se'], $row['z'],
-            $row['elected'] ? 'elected' : 'not elected', $row['labels'], $row['laneSeconds']['label'], $row['laneSeconds']['train'],
+            $row['elected'] ? 'elected' : 'not elected: ' . $row['why'], $row['politics']['elections'], $row['labels'], $row['laneSeconds']['label'], $row['laneSeconds']['train'],
             $row['laneSeconds']['gauntlet'], $row['wallSeconds'], $row['decided']]) . "\n", FILE_APPEND);
         if ($row['elected']) {
             copy(rp($dir, $g['train'], 'net2.json'), "$state/champion.json");
@@ -296,7 +339,6 @@ if ($verb === 'plan') {
     $have = jobs($dir);
     $decided = array_column(json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [], 'name');
     $out = [];
-    $d = dist($state);
     $lanes = lanes($dir);
     // Sharing a queue: keep at most throttle.queued of our lane jobs waiting at once, so the keeper's
     // low water (which counts every queued job a CPU lane could take) barely moves for the other project.
@@ -312,6 +354,7 @@ if ($verb === 'plan') {
         if ($gi > 0 && !in_array($plan['generations'][$gi - 1]['name'], $decided, true)) {
             break; // a generation starts only when the one before it has been decided
         }
+        $d = pinned($state, $name);
         $needs = ['label' => $g['L']['needs'], 'train' => $g['T']['needs'], 'gauntlet' => $g['G']['needs']];
         // Setup first, on every lane that can take this project's work, once per code version.
         foreach ($lanes as $lane => $caps) {
@@ -320,7 +363,7 @@ if ($verb === 'plan') {
                 $out[] = $p;
             }
         }
-        $afterHost = $lanes ? 'pc-prep-{host}-' . $d['hash'] : null;
+        $afterHost = $lanes ? 'pc-prep2-{host}-' . $d['hash'] : null;
         $champ = championBefore($state, $gi);
         $champSend = $champ ? [['src' => rp($dir, 'pc-' . $champ['name'] . '-train', 'net2.json'), 'dst' => "pc-data/$name/champion.json"]] : [];
         $spec2 = fn(string $s) => $s === 'champion' ? ($champ ? 'medium+net2:$HOME/pc-data/' . $name . '/champion.json' : 'medium') : $s;
@@ -333,7 +376,7 @@ if ($verb === 'plan') {
             $L = $g['L'];
             $out[] = $common(['id' => $id, 'kind' => 'pc-label', 'title' => "Parliament $name: label at depth {$L['depth']} ($id)",
                 'needs' => $L['needs'], 'send' => $L['player'] === 'champion' ? $champSend : [], 'stage' => 'label',
-                'cmd' => prelude() . 'sh bin/php bin/label.php --job ' . $id . ' --games ' . (int)$L['games'] . ' --workers ' . (int)$L['workers']
+                'cmd' => prelude($lanes ? $d['hash'] : '') . 'sh bin/php bin/label.php --job ' . $id . ' --games ' . (int)$L['games'] . ' --workers ' . (int)$L['workers']
                     . ' --depth ' . (int)$L['depth'] . ' --every ' . (int)$L['every'] . ' --seed ' . (($gi + 1) * 1000 + $k + 1)
                     . ' --player "' . $spec2($L['player']) . '" --out "$HOME/pc-out/' . $id . '"',
                 'fetch' => "pc-out/$id"]);
@@ -344,17 +387,41 @@ if ($verb === 'plan') {
             foreach ($g['labels'] as $id) {
                 $send[] = ['src' => rp($dir, $id, 'shard.jsonl.gz'), 'dst' => "pc-data/$name/labels/$id.jsonl.gz"];
             }
+            // A replay window: train.window = N also trains on the labels of the N-1 generations before,
+            // so a generation can label fewer new positions (labelling is most of a generation's time).
+            for ($back = 1; $back < (int)($T['window'] ?? 1) && $gi - $back >= 0; $back++) {
+                $old = generation($plan['generations'][$gi - $back], $gi - $back, $have);
+                foreach ($old['labels'] as $id) {
+                    if (is_file(rp($dir, $id, 'shard.jsonl.gz'))) {
+                        $send[] = ['src' => rp($dir, $id, 'shard.jsonl.gz'), 'dst' => "pc-data/$name/labels/$id.jsonl.gz"];
+                    }
+                }
+            }
             $init = '';
             if ($T['warm'] && $champ) {
                 $send = array_merge($send, $champSend);
                 $init = ' --init "$HOME/pc-data/' . $name . '/champion.json"';
             }
+            // Cookies for non-standard moves, shrinking each generation (cookies.decay), so the bonus
+            // opens the door early and the result alone decides later generations.
+            $ck = $T['cookies'] ?? [];
+            $scale = isset($ck['decay']) ? ((float)$ck['decay']) ** $gi : 1.0;
+            $flags = '';
+            if (!empty($T['reinforce'])) {
+                $flags .= ' --reinforce ' . (float)$T['reinforce'];
+            }
+            foreach (['writ' => '--cookie-writ', 'promo' => '--cookie-promo', 'weight' => '--weight-special'] as $k => $flag) {
+                if (isset($ck[$k])) {
+                    $v = $k === 'weight' ? 1 + ((float)$ck[$k] - 1) * $scale : (float)$ck[$k] * $scale;
+                    $flags .= ' ' . $flag . ' ' . round($v, 3);
+                }
+            }
             $o = '"$HOME/pc-out/' . $g['train'] . '"';
             $out[] = $common(['id' => $g['train'], 'kind' => 'pc-train', 'title' => "Parliament $name: train the net", 'needs' => $T['needs'],
                 'after' => $g['labels'], 'send' => $send, 'stage' => 'train', 'priority' => 'high',
-                'cmd' => prelude() . 'mkdir -p ' . $o . '; "$PY" train/train_torch.py --data "$HOME/pc-data/' . $name . '/labels/*.jsonl.gz"'
+                'cmd' => prelude($lanes ? $d['hash'] : '') . 'mkdir -p ' . $o . '; "$PY" train/train_torch.py --data "$HOME/pc-data/' . $name . '/labels/*.jsonl.gz"'
                     . ' --epochs ' . (int)$T['epochs'] . ' --h1 ' . (int)$T['h1'] . ' --h2 ' . (int)$T['h2'] . ' --batch ' . (int)$T['batch'] . $init
-                    . ' --mode ' . escapeshellarg((string)$T['mode']) . ' --lam ' . (float)$T['lam']
+                    . ' --mode ' . escapeshellarg((string)$T['mode']) . ' --lam ' . (float)$T['lam'] . $flags
                     . ' --out ' . $o . '/net2.json > ' . $o . '/train.log 2>&1',
                 'fetch' => "pc-out/{$g['train']}"]);
         }
@@ -370,7 +437,7 @@ if ($verb === 'plan') {
                     'needs' => $G['needs'], 'stage' => 'gauntlet',
                     'send' => array_merge([['src' => rp($dir, $g['train'], 'net2.json'), 'dst' => "pc-data/$name/net2.json"]],
                         $G['champion'] === 'champion' && $champ ? $champSend : []),
-                    'cmd' => prelude() . 'PC_NET2="$HOME/pc-data/' . $name . '/net2.json" sh bin/php bin/selfplay.php --job ' . $id
+                    'cmd' => prelude($lanes ? $d['hash'] : '') . 'PC_NET2="$HOME/pc-data/' . $name . '/net2.json" sh bin/php bin/selfplay.php --job ' . $id
                         . ' --white "' . $G['challenger'] . '" --black "' . $black . '" --games ' . (int)$G['games'] . ' --workers ' . (int)$G['workers']
                         . ' --seed ' . (($gi + 1) * 1000 + $k + 501) . ' --opening-random 2 --max-plies 300 --quiet --no-book'
                         . ' --out "$HOME/pc-out/' . $id . '"',
@@ -388,8 +455,9 @@ if ($verb === 'collect') {
         exit(0);
     }
     foreach (decide($dir, $state) as $r) {
-        printf("%s  score %.3f +- %.3f over %d games, z %.2f (bar %.1f): %s | labels %d | lane-s label %.0f, train %.0f, gauntlet %.0f | wall %ss\n",
-            $r['name'], $r['score'], $r['se'], $r['games'], $r['z'], $r['bar'], $r['elected'] ? 'ELECTED' : 'not elected', $r['labels'],
+        printf("%s  score %.3f +- %.3f over %d games, z %.2f (bar %.1f), %d election(s): %s | labels %d | lane-s label %.0f, train %.0f, gauntlet %.0f | wall %ss\n",
+            $r['name'], $r['score'], $r['se'], $r['games'], $r['z'], $r['bar'], $r['politics']['elections'] ?? 0,
+            $r['elected'] ? 'ELECTED' : 'not elected (' . ($r['why'] ?? '') . ')', $r['labels'],
             $r['laneSeconds']['label'], $r['laneSeconds']['train'], $r['laneSeconds']['gauntlet'], $r['wallSeconds'] ?? '-');
     }
     exit(0);
