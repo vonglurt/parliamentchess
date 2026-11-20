@@ -1,0 +1,2793 @@
+{
+    "generated": "2026-11-20T20:08:56+00:00",
+    "runs": {
+        "F net vs plain": {
+            "games": 100,
+            "whiteWins": 49,
+            "blackWins": 38,
+            "draws": 13,
+            "avgPlies": 123.08,
+            "writsPerGame": 1.38,
+            "countsPerGame": 1.38,
+            "crownMovesPerGame": 0.57,
+            "outcomes": {
+                "defeat": 64,
+                "swap": 19,
+                "contested": 26,
+                "coronation": 12,
+                "failed": 17
+            },
+            "trailingGames": 55,
+            "trailingScore": 0.191,
+            "pawnCoronations": 38,
+            "terminations": {
+                "adjudicated: ply limit": 1,
+                "checkmate": 87,
+                "threefold repetition": 4,
+                "fifty-move rule": 7,
+                "insufficient material": 1
+            },
+            "decisive": 0.87,
+            "whiteScore": 0.555
+        },
+        "G net 15 vs plain": {
+            "games": 100,
+            "whiteWins": 46,
+            "blackWins": 40,
+            "draws": 14,
+            "avgPlies": 126.89,
+            "writsPerGame": 0.89,
+            "countsPerGame": 0.89,
+            "crownMovesPerGame": 0.51,
+            "outcomes": {
+                "failed": 8,
+                "contested": 18,
+                "defeat": 30,
+                "coronation": 12,
+                "swap": 21
+            },
+            "trailingGames": 52,
+            "trailingScore": 0.308,
+            "pawnCoronations": 29,
+            "terminations": {
+                "checkmate": 86,
+                "adjudicated: ply limit": 2,
+                "insufficient material": 4,
+                "fifty-move rule": 3,
+                "threefold repetition": 5
+            },
+            "decisive": 0.86,
+            "whiteScore": 0.53
+        },
+        "H residual net vs plain": {
+            "games": 100,
+            "whiteWins": 39,
+            "blackWins": 51,
+            "draws": 10,
+            "avgPlies": 118.93,
+            "writsPerGame": 0.61,
+            "countsPerGame": 0.61,
+            "crownMovesPerGame": 0.4,
+            "outcomes": {
+                "defeat": 12,
+                "coronation": 10,
+                "swap": 17,
+                "contested": 13,
+                "failed": 9
+            },
+            "trailingGames": 55,
+            "trailingScore": 0.182,
+            "pawnCoronations": 23,
+            "terminations": {
+                "checkmate": 90,
+                "fifty-move rule": 6,
+                "insufficient material": 3,
+                "threefold repetition": 1
+            },
+            "decisive": 0.9,
+            "whiteScore": 0.44
+        }
+    },
+    "recordings": [
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s1/f-net-vs-plain-s1-g01-s1000.json",
+            "result": "1/2-1/2",
+            "plies": 300,
+            "counts": 6,
+            "crownMoves": 3
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s1/f-net-vs-plain-s1-g02-s1001.json",
+            "result": "1-0",
+            "plies": 173,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s1/f-net-vs-plain-s1-g03-s1002.json",
+            "result": "0-1",
+            "plies": 100,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s1/f-net-vs-plain-s1-g04-s1003.json",
+            "result": "1/2-1/2",
+            "plies": 148,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s10/f-net-vs-plain-s10-g01-s10000.json",
+            "result": "0-1",
+            "plies": 106,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s10/f-net-vs-plain-s10-g02-s10001.json",
+            "result": "1-0",
+            "plies": 69,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s10/f-net-vs-plain-s10-g03-s10002.json",
+            "result": "1/2-1/2",
+            "plies": 82,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s10/f-net-vs-plain-s10-g04-s10003.json",
+            "result": "0-1",
+            "plies": 168,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s11/f-net-vs-plain-s11-g01-s11000.json",
+            "result": "1-0",
+            "plies": 111,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s11/f-net-vs-plain-s11-g02-s11001.json",
+            "result": "1-0",
+            "plies": 87,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s11/f-net-vs-plain-s11-g03-s11002.json",
+            "result": "0-1",
+            "plies": 138,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s11/f-net-vs-plain-s11-g04-s11003.json",
+            "result": "0-1",
+            "plies": 170,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s12/f-net-vs-plain-s12-g01-s12000.json",
+            "result": "0-1",
+            "plies": 112,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s12/f-net-vs-plain-s12-g02-s12001.json",
+            "result": "1-0",
+            "plies": 125,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s12/f-net-vs-plain-s12-g03-s12002.json",
+            "result": "0-1",
+            "plies": 88,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s12/f-net-vs-plain-s12-g04-s12003.json",
+            "result": "1-0",
+            "plies": 161,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s13/f-net-vs-plain-s13-g01-s13000.json",
+            "result": "1-0",
+            "plies": 197,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s13/f-net-vs-plain-s13-g02-s13001.json",
+            "result": "1-0",
+            "plies": 43,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s13/f-net-vs-plain-s13-g03-s13002.json",
+            "result": "0-1",
+            "plies": 48,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s13/f-net-vs-plain-s13-g04-s13003.json",
+            "result": "0-1",
+            "plies": 64,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s14/f-net-vs-plain-s14-g01-s14000.json",
+            "result": "0-1",
+            "plies": 130,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s14/f-net-vs-plain-s14-g02-s14001.json",
+            "result": "1-0",
+            "plies": 65,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s14/f-net-vs-plain-s14-g03-s14002.json",
+            "result": "0-1",
+            "plies": 112,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s14/f-net-vs-plain-s14-g04-s14003.json",
+            "result": "0-1",
+            "plies": 162,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s15/f-net-vs-plain-s15-g01-s15000.json",
+            "result": "0-1",
+            "plies": 70,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s15/f-net-vs-plain-s15-g02-s15001.json",
+            "result": "1-0",
+            "plies": 73,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s15/f-net-vs-plain-s15-g03-s15002.json",
+            "result": "1/2-1/2",
+            "plies": 208,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s15/f-net-vs-plain-s15-g04-s15003.json",
+            "result": "1/2-1/2",
+            "plies": 242,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s16/f-net-vs-plain-s16-g01-s16000.json",
+            "result": "1-0",
+            "plies": 143,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s16/f-net-vs-plain-s16-g02-s16001.json",
+            "result": "1-0",
+            "plies": 121,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s16/f-net-vs-plain-s16-g03-s16002.json",
+            "result": "0-1",
+            "plies": 124,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s16/f-net-vs-plain-s16-g04-s16003.json",
+            "result": "1-0",
+            "plies": 135,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s17/f-net-vs-plain-s17-g01-s17000.json",
+            "result": "0-1",
+            "plies": 52,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s17/f-net-vs-plain-s17-g02-s17001.json",
+            "result": "0-1",
+            "plies": 68,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s17/f-net-vs-plain-s17-g03-s17002.json",
+            "result": "0-1",
+            "plies": 124,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s17/f-net-vs-plain-s17-g04-s17003.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 3,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s18/f-net-vs-plain-s18-g01-s18000.json",
+            "result": "1/2-1/2",
+            "plies": 259,
+            "counts": 3,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s18/f-net-vs-plain-s18-g02-s18001.json",
+            "result": "1-0",
+            "plies": 93,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s18/f-net-vs-plain-s18-g03-s18002.json",
+            "result": "0-1",
+            "plies": 118,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s18/f-net-vs-plain-s18-g04-s18003.json",
+            "result": "0-1",
+            "plies": 200,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s19/f-net-vs-plain-s19-g01-s19000.json",
+            "result": "0-1",
+            "plies": 84,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s19/f-net-vs-plain-s19-g02-s19001.json",
+            "result": "0-1",
+            "plies": 94,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s19/f-net-vs-plain-s19-g03-s19002.json",
+            "result": "1-0",
+            "plies": 105,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s19/f-net-vs-plain-s19-g04-s19003.json",
+            "result": "0-1",
+            "plies": 112,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s2/f-net-vs-plain-s2-g01-s2000.json",
+            "result": "0-1",
+            "plies": 92,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s2/f-net-vs-plain-s2-g02-s2001.json",
+            "result": "1-0",
+            "plies": 73,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s2/f-net-vs-plain-s2-g03-s2002.json",
+            "result": "0-1",
+            "plies": 72,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s2/f-net-vs-plain-s2-g04-s2003.json",
+            "result": "1/2-1/2",
+            "plies": 214,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s20/f-net-vs-plain-s20-g01-s20000.json",
+            "result": "0-1",
+            "plies": 90,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s20/f-net-vs-plain-s20-g02-s20001.json",
+            "result": "1/2-1/2",
+            "plies": 283,
+            "counts": 5,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s20/f-net-vs-plain-s20-g03-s20002.json",
+            "result": "1-0",
+            "plies": 73,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s20/f-net-vs-plain-s20-g04-s20003.json",
+            "result": "1-0",
+            "plies": 101,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s21/f-net-vs-plain-s21-g01-s21000.json",
+            "result": "0-1",
+            "plies": 136,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s21/f-net-vs-plain-s21-g02-s21001.json",
+            "result": "1-0",
+            "plies": 153,
+            "counts": 4,
+            "crownMoves": 3
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s21/f-net-vs-plain-s21-g03-s21002.json",
+            "result": "1-0",
+            "plies": 61,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s21/f-net-vs-plain-s21-g04-s21003.json",
+            "result": "1-0",
+            "plies": 119,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s22/f-net-vs-plain-s22-g01-s22000.json",
+            "result": "0-1",
+            "plies": 170,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s22/f-net-vs-plain-s22-g02-s22001.json",
+            "result": "1-0",
+            "plies": 41,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s22/f-net-vs-plain-s22-g03-s22002.json",
+            "result": "0-1",
+            "plies": 104,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s22/f-net-vs-plain-s22-g04-s22003.json",
+            "result": "1-0",
+            "plies": 49,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s23/f-net-vs-plain-s23-g01-s23000.json",
+            "result": "1-0",
+            "plies": 135,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s23/f-net-vs-plain-s23-g02-s23001.json",
+            "result": "1-0",
+            "plies": 35,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s23/f-net-vs-plain-s23-g03-s23002.json",
+            "result": "0-1",
+            "plies": 106,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s23/f-net-vs-plain-s23-g04-s23003.json",
+            "result": "1-0",
+            "plies": 217,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s24/f-net-vs-plain-s24-g01-s24000.json",
+            "result": "1/2-1/2",
+            "plies": 75,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s24/f-net-vs-plain-s24-g02-s24001.json",
+            "result": "1-0",
+            "plies": 97,
+            "counts": 4,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s24/f-net-vs-plain-s24-g03-s24002.json",
+            "result": "1/2-1/2",
+            "plies": 272,
+            "counts": 4,
+            "crownMoves": 3
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s24/f-net-vs-plain-s24-g04-s24003.json",
+            "result": "1-0",
+            "plies": 133,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s25/f-net-vs-plain-s25-g01-s25000.json",
+            "result": "1/2-1/2",
+            "plies": 123,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s25/f-net-vs-plain-s25-g02-s25001.json",
+            "result": "1-0",
+            "plies": 139,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s25/f-net-vs-plain-s25-g03-s25002.json",
+            "result": "1-0",
+            "plies": 115,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s25/f-net-vs-plain-s25-g04-s25003.json",
+            "result": "1-0",
+            "plies": 95,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s3/f-net-vs-plain-s3-g01-s3000.json",
+            "result": "1-0",
+            "plies": 201,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s3/f-net-vs-plain-s3-g02-s3001.json",
+            "result": "0-1",
+            "plies": 104,
+            "counts": 4,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s3/f-net-vs-plain-s3-g03-s3002.json",
+            "result": "0-1",
+            "plies": 230,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s3/f-net-vs-plain-s3-g04-s3003.json",
+            "result": "1-0",
+            "plies": 117,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s4/f-net-vs-plain-s4-g01-s4000.json",
+            "result": "0-1",
+            "plies": 72,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s4/f-net-vs-plain-s4-g02-s4001.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s4/f-net-vs-plain-s4-g03-s4002.json",
+            "result": "0-1",
+            "plies": 102,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s4/f-net-vs-plain-s4-g04-s4003.json",
+            "result": "1-0",
+            "plies": 137,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s5/f-net-vs-plain-s5-g01-s5000.json",
+            "result": "0-1",
+            "plies": 62,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s5/f-net-vs-plain-s5-g02-s5001.json",
+            "result": "1-0",
+            "plies": 149,
+            "counts": 3,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s5/f-net-vs-plain-s5-g03-s5002.json",
+            "result": "1-0",
+            "plies": 165,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s5/f-net-vs-plain-s5-g04-s5003.json",
+            "result": "1-0",
+            "plies": 241,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s6/f-net-vs-plain-s6-g01-s6000.json",
+            "result": "0-1",
+            "plies": 66,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s6/f-net-vs-plain-s6-g02-s6001.json",
+            "result": "1-0",
+            "plies": 59,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s6/f-net-vs-plain-s6-g03-s6002.json",
+            "result": "0-1",
+            "plies": 82,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s6/f-net-vs-plain-s6-g04-s6003.json",
+            "result": "1-0",
+            "plies": 81,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s7/f-net-vs-plain-s7-g01-s7000.json",
+            "result": "1-0",
+            "plies": 115,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s7/f-net-vs-plain-s7-g02-s7001.json",
+            "result": "1/2-1/2",
+            "plies": 86,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s7/f-net-vs-plain-s7-g03-s7002.json",
+            "result": "1-0",
+            "plies": 135,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s7/f-net-vs-plain-s7-g04-s7003.json",
+            "result": "1-0",
+            "plies": 161,
+            "counts": 3,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s8/f-net-vs-plain-s8-g01-s8000.json",
+            "result": "1/2-1/2",
+            "plies": 261,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s8/f-net-vs-plain-s8-g02-s8001.json",
+            "result": "1-0",
+            "plies": 105,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s8/f-net-vs-plain-s8-g03-s8002.json",
+            "result": "0-1",
+            "plies": 60,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s8/f-net-vs-plain-s8-g04-s8003.json",
+            "result": "1-0",
+            "plies": 117,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s9/f-net-vs-plain-s9-g01-s9000.json",
+            "result": "1-0",
+            "plies": 99,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s9/f-net-vs-plain-s9-g02-s9001.json",
+            "result": "1-0",
+            "plies": 157,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s9/f-net-vs-plain-s9-g03-s9002.json",
+            "result": "0-1",
+            "plies": 46,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "F net vs plain",
+            "job": "f-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/f-net-vs-plain-s9/f-net-vs-plain-s9-g04-s9003.json",
+            "result": "1-0",
+            "plies": 87,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s1/g-net-15-vs-plain-s1-g01-s1000.json",
+            "result": "1-0",
+            "plies": 95,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s1/g-net-15-vs-plain-s1-g02-s1001.json",
+            "result": "1-0",
+            "plies": 115,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s1/g-net-15-vs-plain-s1-g03-s1002.json",
+            "result": "0-1",
+            "plies": 88,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s1/g-net-15-vs-plain-s1-g04-s1003.json",
+            "result": "1-0",
+            "plies": 63,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s10/g-net-15-vs-plain-s10-g01-s10000.json",
+            "result": "0-1",
+            "plies": 74,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s10/g-net-15-vs-plain-s10-g02-s10001.json",
+            "result": "1-0",
+            "plies": 85,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s10/g-net-15-vs-plain-s10-g03-s10002.json",
+            "result": "1-0",
+            "plies": 153,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s10/g-net-15-vs-plain-s10-g04-s10003.json",
+            "result": "1-0",
+            "plies": 181,
+            "counts": 4,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s11/g-net-15-vs-plain-s11-g01-s11000.json",
+            "result": "0-1",
+            "plies": 138,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s11/g-net-15-vs-plain-s11-g02-s11001.json",
+            "result": "1-0",
+            "plies": 123,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s11/g-net-15-vs-plain-s11-g03-s11002.json",
+            "result": "1-0",
+            "plies": 55,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s11/g-net-15-vs-plain-s11-g04-s11003.json",
+            "result": "1-0",
+            "plies": 113,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s12/g-net-15-vs-plain-s12-g01-s12000.json",
+            "result": "0-1",
+            "plies": 70,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s12/g-net-15-vs-plain-s12-g02-s12001.json",
+            "result": "1-0",
+            "plies": 105,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s12/g-net-15-vs-plain-s12-g03-s12002.json",
+            "result": "1/2-1/2",
+            "plies": 300,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s12/g-net-15-vs-plain-s12-g04-s12003.json",
+            "result": "0-1",
+            "plies": 104,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s13/g-net-15-vs-plain-s13-g01-s13000.json",
+            "result": "0-1",
+            "plies": 146,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s13/g-net-15-vs-plain-s13-g02-s13001.json",
+            "result": "1-0",
+            "plies": 73,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s13/g-net-15-vs-plain-s13-g03-s13002.json",
+            "result": "0-1",
+            "plies": 54,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s13/g-net-15-vs-plain-s13-g04-s13003.json",
+            "result": "0-1",
+            "plies": 54,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s14/g-net-15-vs-plain-s14-g01-s14000.json",
+            "result": "1-0",
+            "plies": 129,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s14/g-net-15-vs-plain-s14-g02-s14001.json",
+            "result": "0-1",
+            "plies": 124,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s14/g-net-15-vs-plain-s14-g03-s14002.json",
+            "result": "1/2-1/2",
+            "plies": 110,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s14/g-net-15-vs-plain-s14-g04-s14003.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s15/g-net-15-vs-plain-s15-g01-s15000.json",
+            "result": "0-1",
+            "plies": 114,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s15/g-net-15-vs-plain-s15-g02-s15001.json",
+            "result": "0-1",
+            "plies": 166,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s15/g-net-15-vs-plain-s15-g03-s15002.json",
+            "result": "0-1",
+            "plies": 130,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s15/g-net-15-vs-plain-s15-g04-s15003.json",
+            "result": "1-0",
+            "plies": 119,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s16/g-net-15-vs-plain-s16-g01-s16000.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s16/g-net-15-vs-plain-s16-g02-s16001.json",
+            "result": "1-0",
+            "plies": 93,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s16/g-net-15-vs-plain-s16-g03-s16002.json",
+            "result": "0-1",
+            "plies": 66,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s16/g-net-15-vs-plain-s16-g04-s16003.json",
+            "result": "0-1",
+            "plies": 102,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s17/g-net-15-vs-plain-s17-g01-s17000.json",
+            "result": "1/2-1/2",
+            "plies": 208,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s17/g-net-15-vs-plain-s17-g02-s17001.json",
+            "result": "1-0",
+            "plies": 59,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s17/g-net-15-vs-plain-s17-g03-s17002.json",
+            "result": "0-1",
+            "plies": 72,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s17/g-net-15-vs-plain-s17-g04-s17003.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s18/g-net-15-vs-plain-s18-g01-s18000.json",
+            "result": "0-1",
+            "plies": 38,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s18/g-net-15-vs-plain-s18-g02-s18001.json",
+            "result": "0-1",
+            "plies": 196,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s18/g-net-15-vs-plain-s18-g03-s18002.json",
+            "result": "0-1",
+            "plies": 102,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s18/g-net-15-vs-plain-s18-g04-s18003.json",
+            "result": "0-1",
+            "plies": 132,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s19/g-net-15-vs-plain-s19-g01-s19000.json",
+            "result": "0-1",
+            "plies": 108,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s19/g-net-15-vs-plain-s19-g02-s19001.json",
+            "result": "0-1",
+            "plies": 74,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s19/g-net-15-vs-plain-s19-g03-s19002.json",
+            "result": "1-0",
+            "plies": 135,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s19/g-net-15-vs-plain-s19-g04-s19003.json",
+            "result": "1/2-1/2",
+            "plies": 108,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s2/g-net-15-vs-plain-s2-g01-s2000.json",
+            "result": "1-0",
+            "plies": 99,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s2/g-net-15-vs-plain-s2-g02-s2001.json",
+            "result": "0-1",
+            "plies": 150,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s2/g-net-15-vs-plain-s2-g03-s2002.json",
+            "result": "1/2-1/2",
+            "plies": 300,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s2/g-net-15-vs-plain-s2-g04-s2003.json",
+            "result": "1-0",
+            "plies": 101,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s20/g-net-15-vs-plain-s20-g01-s20000.json",
+            "result": "1-0",
+            "plies": 115,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s20/g-net-15-vs-plain-s20-g02-s20001.json",
+            "result": "1/2-1/2",
+            "plies": 201,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s20/g-net-15-vs-plain-s20-g03-s20002.json",
+            "result": "0-1",
+            "plies": 148,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s20/g-net-15-vs-plain-s20-g04-s20003.json",
+            "result": "1/2-1/2",
+            "plies": 148,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s21/g-net-15-vs-plain-s21-g01-s21000.json",
+            "result": "1/2-1/2",
+            "plies": 99,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s21/g-net-15-vs-plain-s21-g02-s21001.json",
+            "result": "1-0",
+            "plies": 85,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s21/g-net-15-vs-plain-s21-g03-s21002.json",
+            "result": "1-0",
+            "plies": 65,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s21/g-net-15-vs-plain-s21-g04-s21003.json",
+            "result": "1-0",
+            "plies": 263,
+            "counts": 3,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s22/g-net-15-vs-plain-s22-g01-s22000.json",
+            "result": "1-0",
+            "plies": 173,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s22/g-net-15-vs-plain-s22-g02-s22001.json",
+            "result": "1-0",
+            "plies": 121,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s22/g-net-15-vs-plain-s22-g03-s22002.json",
+            "result": "1-0",
+            "plies": 71,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s22/g-net-15-vs-plain-s22-g04-s22003.json",
+            "result": "0-1",
+            "plies": 64,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s23/g-net-15-vs-plain-s23-g01-s23000.json",
+            "result": "0-1",
+            "plies": 96,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s23/g-net-15-vs-plain-s23-g02-s23001.json",
+            "result": "1/2-1/2",
+            "plies": 62,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s23/g-net-15-vs-plain-s23-g03-s23002.json",
+            "result": "0-1",
+            "plies": 248,
+            "counts": 5,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s23/g-net-15-vs-plain-s23-g04-s23003.json",
+            "result": "1-0",
+            "plies": 151,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s24/g-net-15-vs-plain-s24-g01-s24000.json",
+            "result": "1-0",
+            "plies": 15,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s24/g-net-15-vs-plain-s24-g02-s24001.json",
+            "result": "0-1",
+            "plies": 82,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s24/g-net-15-vs-plain-s24-g03-s24002.json",
+            "result": "0-1",
+            "plies": 178,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s24/g-net-15-vs-plain-s24-g04-s24003.json",
+            "result": "1-0",
+            "plies": 155,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s25/g-net-15-vs-plain-s25-g01-s25000.json",
+            "result": "1-0",
+            "plies": 289,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s25/g-net-15-vs-plain-s25-g02-s25001.json",
+            "result": "1-0",
+            "plies": 131,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s25/g-net-15-vs-plain-s25-g03-s25002.json",
+            "result": "0-1",
+            "plies": 78,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s25/g-net-15-vs-plain-s25-g04-s25003.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s3/g-net-15-vs-plain-s3-g01-s3000.json",
+            "result": "1-0",
+            "plies": 123,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s3/g-net-15-vs-plain-s3-g02-s3001.json",
+            "result": "1-0",
+            "plies": 53,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s3/g-net-15-vs-plain-s3-g03-s3002.json",
+            "result": "1-0",
+            "plies": 105,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s3/g-net-15-vs-plain-s3-g04-s3003.json",
+            "result": "1-0",
+            "plies": 91,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s4/g-net-15-vs-plain-s4-g01-s4000.json",
+            "result": "1-0",
+            "plies": 235,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s4/g-net-15-vs-plain-s4-g02-s4001.json",
+            "result": "1/2-1/2",
+            "plies": 83,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s4/g-net-15-vs-plain-s4-g03-s4002.json",
+            "result": "0-1",
+            "plies": 118,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s4/g-net-15-vs-plain-s4-g04-s4003.json",
+            "result": "0-1",
+            "plies": 94,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s5/g-net-15-vs-plain-s5-g01-s5000.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s5/g-net-15-vs-plain-s5-g02-s5001.json",
+            "result": "0-1",
+            "plies": 148,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s5/g-net-15-vs-plain-s5-g03-s5002.json",
+            "result": "1-0",
+            "plies": 65,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s5/g-net-15-vs-plain-s5-g04-s5003.json",
+            "result": "1/2-1/2",
+            "plies": 255,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s6/g-net-15-vs-plain-s6-g01-s6000.json",
+            "result": "0-1",
+            "plies": 98,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s6/g-net-15-vs-plain-s6-g02-s6001.json",
+            "result": "1-0",
+            "plies": 193,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s6/g-net-15-vs-plain-s6-g03-s6002.json",
+            "result": "0-1",
+            "plies": 90,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s6/g-net-15-vs-plain-s6-g04-s6003.json",
+            "result": "0-1",
+            "plies": 154,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s7/g-net-15-vs-plain-s7-g01-s7000.json",
+            "result": "1-0",
+            "plies": 157,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s7/g-net-15-vs-plain-s7-g02-s7001.json",
+            "result": "1/2-1/2",
+            "plies": 265,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s7/g-net-15-vs-plain-s7-g03-s7002.json",
+            "result": "0-1",
+            "plies": 244,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s7/g-net-15-vs-plain-s7-g04-s7003.json",
+            "result": "0-1",
+            "plies": 146,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s8/g-net-15-vs-plain-s8-g01-s8000.json",
+            "result": "0-1",
+            "plies": 102,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s8/g-net-15-vs-plain-s8-g02-s8001.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s8/g-net-15-vs-plain-s8-g03-s8002.json",
+            "result": "1/2-1/2",
+            "plies": 198,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s8/g-net-15-vs-plain-s8-g04-s8003.json",
+            "result": "1/2-1/2",
+            "plies": 288,
+            "counts": 3,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s9/g-net-15-vs-plain-s9-g01-s9000.json",
+            "result": "0-1",
+            "plies": 146,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s9/g-net-15-vs-plain-s9-g02-s9001.json",
+            "result": "1-0",
+            "plies": 103,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s9/g-net-15-vs-plain-s9-g03-s9002.json",
+            "result": "0-1",
+            "plies": 50,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "G net 15 vs plain",
+            "job": "g-net-15-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/g-net-15-vs-plain-s9/g-net-15-vs-plain-s9-g04-s9003.json",
+            "result": "1-0",
+            "plies": 121,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s1/h-residual-net-vs-plain-s1-g01-s1000.json",
+            "result": "0-1",
+            "plies": 50,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s1/h-residual-net-vs-plain-s1-g02-s1001.json",
+            "result": "0-1",
+            "plies": 148,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s1/h-residual-net-vs-plain-s1-g03-s1002.json",
+            "result": "0-1",
+            "plies": 84,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s1",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s1/h-residual-net-vs-plain-s1-g04-s1003.json",
+            "result": "0-1",
+            "plies": 60,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s10/h-residual-net-vs-plain-s10-g01-s10000.json",
+            "result": "0-1",
+            "plies": 134,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s10/h-residual-net-vs-plain-s10-g02-s10001.json",
+            "result": "1-0",
+            "plies": 145,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s10/h-residual-net-vs-plain-s10-g03-s10002.json",
+            "result": "1-0",
+            "plies": 147,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s10",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s10/h-residual-net-vs-plain-s10-g04-s10003.json",
+            "result": "1-0",
+            "plies": 117,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s11/h-residual-net-vs-plain-s11-g01-s11000.json",
+            "result": "0-1",
+            "plies": 80,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s11/h-residual-net-vs-plain-s11-g02-s11001.json",
+            "result": "1-0",
+            "plies": 75,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s11/h-residual-net-vs-plain-s11-g03-s11002.json",
+            "result": "0-1",
+            "plies": 104,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s11",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s11/h-residual-net-vs-plain-s11-g04-s11003.json",
+            "result": "1-0",
+            "plies": 103,
+            "counts": 2,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s12/h-residual-net-vs-plain-s12-g01-s12000.json",
+            "result": "0-1",
+            "plies": 280,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s12/h-residual-net-vs-plain-s12-g02-s12001.json",
+            "result": "0-1",
+            "plies": 102,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s12/h-residual-net-vs-plain-s12-g03-s12002.json",
+            "result": "1-0",
+            "plies": 119,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s12",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s12/h-residual-net-vs-plain-s12-g04-s12003.json",
+            "result": "0-1",
+            "plies": 50,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s13/h-residual-net-vs-plain-s13-g01-s13000.json",
+            "result": "0-1",
+            "plies": 106,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s13/h-residual-net-vs-plain-s13-g02-s13001.json",
+            "result": "0-1",
+            "plies": 112,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s13/h-residual-net-vs-plain-s13-g03-s13002.json",
+            "result": "0-1",
+            "plies": 138,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s13",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s13/h-residual-net-vs-plain-s13-g04-s13003.json",
+            "result": "1-0",
+            "plies": 63,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s14/h-residual-net-vs-plain-s14-g01-s14000.json",
+            "result": "1-0",
+            "plies": 111,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s14/h-residual-net-vs-plain-s14-g02-s14001.json",
+            "result": "1-0",
+            "plies": 111,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s14/h-residual-net-vs-plain-s14-g03-s14002.json",
+            "result": "1-0",
+            "plies": 131,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s14",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s14/h-residual-net-vs-plain-s14-g04-s14003.json",
+            "result": "1-0",
+            "plies": 143,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s15/h-residual-net-vs-plain-s15-g01-s15000.json",
+            "result": "0-1",
+            "plies": 106,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s15/h-residual-net-vs-plain-s15-g02-s15001.json",
+            "result": "0-1",
+            "plies": 100,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s15/h-residual-net-vs-plain-s15-g03-s15002.json",
+            "result": "0-1",
+            "plies": 86,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s15",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s15/h-residual-net-vs-plain-s15-g04-s15003.json",
+            "result": "1-0",
+            "plies": 155,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s16/h-residual-net-vs-plain-s16-g01-s16000.json",
+            "result": "1/2-1/2",
+            "plies": 214,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s16/h-residual-net-vs-plain-s16-g02-s16001.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s16/h-residual-net-vs-plain-s16-g03-s16002.json",
+            "result": "1-0",
+            "plies": 117,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s16",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s16/h-residual-net-vs-plain-s16-g04-s16003.json",
+            "result": "1-0",
+            "plies": 97,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s17/h-residual-net-vs-plain-s17-g01-s17000.json",
+            "result": "0-1",
+            "plies": 232,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s17/h-residual-net-vs-plain-s17-g02-s17001.json",
+            "result": "0-1",
+            "plies": 132,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s17/h-residual-net-vs-plain-s17-g03-s17002.json",
+            "result": "0-1",
+            "plies": 108,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s17",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s17/h-residual-net-vs-plain-s17-g04-s17003.json",
+            "result": "0-1",
+            "plies": 58,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s18/h-residual-net-vs-plain-s18-g01-s18000.json",
+            "result": "1/2-1/2",
+            "plies": 137,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s18/h-residual-net-vs-plain-s18-g02-s18001.json",
+            "result": "0-1",
+            "plies": 138,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s18/h-residual-net-vs-plain-s18-g03-s18002.json",
+            "result": "0-1",
+            "plies": 88,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s18",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s18/h-residual-net-vs-plain-s18-g04-s18003.json",
+            "result": "0-1",
+            "plies": 92,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s19/h-residual-net-vs-plain-s19-g01-s19000.json",
+            "result": "0-1",
+            "plies": 92,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s19/h-residual-net-vs-plain-s19-g02-s19001.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s19/h-residual-net-vs-plain-s19-g03-s19002.json",
+            "result": "1/2-1/2",
+            "plies": 293,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s19",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s19/h-residual-net-vs-plain-s19-g04-s19003.json",
+            "result": "1-0",
+            "plies": 47,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s2/h-residual-net-vs-plain-s2-g01-s2000.json",
+            "result": "1-0",
+            "plies": 91,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s2/h-residual-net-vs-plain-s2-g02-s2001.json",
+            "result": "0-1",
+            "plies": 128,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s2/h-residual-net-vs-plain-s2-g03-s2002.json",
+            "result": "0-1",
+            "plies": 128,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s2",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s2/h-residual-net-vs-plain-s2-g04-s2003.json",
+            "result": "1-0",
+            "plies": 145,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s20/h-residual-net-vs-plain-s20-g01-s20000.json",
+            "result": "1-0",
+            "plies": 93,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s20/h-residual-net-vs-plain-s20-g02-s20001.json",
+            "result": "1-0",
+            "plies": 91,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s20/h-residual-net-vs-plain-s20-g03-s20002.json",
+            "result": "1-0",
+            "plies": 91,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s20",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s20/h-residual-net-vs-plain-s20-g04-s20003.json",
+            "result": "1/2-1/2",
+            "plies": 132,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s21/h-residual-net-vs-plain-s21-g01-s21000.json",
+            "result": "1-0",
+            "plies": 119,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s21/h-residual-net-vs-plain-s21-g02-s21001.json",
+            "result": "1/2-1/2",
+            "plies": 282,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s21/h-residual-net-vs-plain-s21-g03-s21002.json",
+            "result": "1-0",
+            "plies": 73,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s21",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s21/h-residual-net-vs-plain-s21-g04-s21003.json",
+            "result": "1-0",
+            "plies": 81,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s22/h-residual-net-vs-plain-s22-g01-s22000.json",
+            "result": "0-1",
+            "plies": 158,
+            "counts": 3,
+            "crownMoves": 3
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s22/h-residual-net-vs-plain-s22-g02-s22001.json",
+            "result": "1-0",
+            "plies": 67,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s22/h-residual-net-vs-plain-s22-g03-s22002.json",
+            "result": "1-0",
+            "plies": 93,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s22",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s22/h-residual-net-vs-plain-s22-g04-s22003.json",
+            "result": "0-1",
+            "plies": 96,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s23/h-residual-net-vs-plain-s23-g01-s23000.json",
+            "result": "1-0",
+            "plies": 49,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s23/h-residual-net-vs-plain-s23-g02-s23001.json",
+            "result": "1-0",
+            "plies": 159,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s23/h-residual-net-vs-plain-s23-g03-s23002.json",
+            "result": "0-1",
+            "plies": 132,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s23",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s23/h-residual-net-vs-plain-s23-g04-s23003.json",
+            "result": "1/2-1/2",
+            "plies": 250,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s24/h-residual-net-vs-plain-s24-g01-s24000.json",
+            "result": "1-0",
+            "plies": 75,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s24/h-residual-net-vs-plain-s24-g02-s24001.json",
+            "result": "1/2-1/2",
+            "plies": 263,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s24/h-residual-net-vs-plain-s24-g03-s24002.json",
+            "result": "1-0",
+            "plies": 79,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s24",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s24/h-residual-net-vs-plain-s24-g04-s24003.json",
+            "result": "0-1",
+            "plies": 114,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s25/h-residual-net-vs-plain-s25-g01-s25000.json",
+            "result": "0-1",
+            "plies": 118,
+            "counts": 2,
+            "crownMoves": 2
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s25/h-residual-net-vs-plain-s25-g02-s25001.json",
+            "result": "1-0",
+            "plies": 93,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s25/h-residual-net-vs-plain-s25-g03-s25002.json",
+            "result": "0-1",
+            "plies": 76,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s25",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s25/h-residual-net-vs-plain-s25-g04-s25003.json",
+            "result": "0-1",
+            "plies": 94,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s3/h-residual-net-vs-plain-s3-g01-s3000.json",
+            "result": "1-0",
+            "plies": 137,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s3/h-residual-net-vs-plain-s3-g02-s3001.json",
+            "result": "0-1",
+            "plies": 62,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s3/h-residual-net-vs-plain-s3-g03-s3002.json",
+            "result": "0-1",
+            "plies": 66,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s3",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s3/h-residual-net-vs-plain-s3-g04-s3003.json",
+            "result": "1-0",
+            "plies": 127,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s4/h-residual-net-vs-plain-s4-g01-s4000.json",
+            "result": "0-1",
+            "plies": 150,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s4/h-residual-net-vs-plain-s4-g02-s4001.json",
+            "result": "0-1",
+            "plies": 128,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s4/h-residual-net-vs-plain-s4-g03-s4002.json",
+            "result": "0-1",
+            "plies": 90,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s4",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s4/h-residual-net-vs-plain-s4-g04-s4003.json",
+            "result": "0-1",
+            "plies": 122,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s5/h-residual-net-vs-plain-s5-g01-s5000.json",
+            "result": "0-1",
+            "plies": 118,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s5/h-residual-net-vs-plain-s5-g02-s5001.json",
+            "result": "1/2-1/2",
+            "plies": 111,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s5/h-residual-net-vs-plain-s5-g03-s5002.json",
+            "result": "1/2-1/2",
+            "plies": 182,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s5",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s5/h-residual-net-vs-plain-s5-g04-s5003.json",
+            "result": "0-1",
+            "plies": 120,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s6/h-residual-net-vs-plain-s6-g01-s6000.json",
+            "result": "0-1",
+            "plies": 86,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s6/h-residual-net-vs-plain-s6-g02-s6001.json",
+            "result": "0-1",
+            "plies": 164,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s6/h-residual-net-vs-plain-s6-g03-s6002.json",
+            "result": "1/2-1/2",
+            "plies": 272,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s6",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s6/h-residual-net-vs-plain-s6-g04-s6003.json",
+            "result": "1-0",
+            "plies": 121,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s7/h-residual-net-vs-plain-s7-g01-s7000.json",
+            "result": "0-1",
+            "plies": 36,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s7/h-residual-net-vs-plain-s7-g02-s7001.json",
+            "result": "0-1",
+            "plies": 88,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s7/h-residual-net-vs-plain-s7-g03-s7002.json",
+            "result": "0-1",
+            "plies": 54,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s7",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s7/h-residual-net-vs-plain-s7-g04-s7003.json",
+            "result": "0-1",
+            "plies": 260,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s8/h-residual-net-vs-plain-s8-g01-s8000.json",
+            "result": "0-1",
+            "plies": 122,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s8/h-residual-net-vs-plain-s8-g02-s8001.json",
+            "result": "1-0",
+            "plies": 107,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s8/h-residual-net-vs-plain-s8-g03-s8002.json",
+            "result": "0-1",
+            "plies": 82,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s8",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s8/h-residual-net-vs-plain-s8-g04-s8003.json",
+            "result": "0-1",
+            "plies": 112,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s9/h-residual-net-vs-plain-s9-g01-s9000.json",
+            "result": "1-0",
+            "plies": 145,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s9/h-residual-net-vs-plain-s9-g02-s9001.json",
+            "result": "1-0",
+            "plies": 61,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s9/h-residual-net-vs-plain-s9-g03-s9002.json",
+            "result": "1-0",
+            "plies": 119,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "H residual net vs plain",
+            "job": "h-residual-net-vs-plain-s9",
+            "file": "/Users/user/code/chess/orrery/netcheck/results/h-residual-net-vs-plain-s9/h-residual-net-vs-plain-s9-g04-s9003.json",
+            "result": "0-1",
+            "plies": 62,
+            "counts": 0,
+            "crownMoves": 0
+        }
+    ]
+}

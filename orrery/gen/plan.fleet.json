@@ -1,0 +1,63 @@
+{
+ "about": "Fleet template (not running): generation g002 at scale. Copy to an Orrery queue directory whose config.json names bin/orrery-gen.php as planner. CPU lanes need PHP 8.2+ and the repository at ~/parliament-chess; the GPU lane needs .venv with train/requirements-pascal.txt (torch 2.14.1+cu126).",
+ "generations": [
+  {
+   "name": "g002",
+   "label": {
+    "jobs": 400,
+    "games": 8,
+    "depth": 3,
+    "player": "medium/populist",
+    "every": 3
+   },
+   "train": {
+    "needs": "gpu",
+    "epochs": 16,
+    "h1": 128,
+    "h2": 32,
+    "batch": 2048,
+    "warm": false,
+    "mode": "residual",
+    "lam": 0.1
+   },
+   "gauntlet": {
+    "jobs": 50,
+    "games": 4,
+    "challenger": "medium+net2",
+    "champion": "medium"
+   },
+   "bar": {
+    "z": 2.0
+   }
+  },
+  {
+   "name": "g003",
+   "label": {
+    "jobs": 400,
+    "games": 8,
+    "depth": 3,
+    "player": "champion",
+    "every": 3
+   },
+   "train": {
+    "needs": "gpu",
+    "epochs": 16,
+    "h1": 128,
+    "h2": 32,
+    "batch": 2048,
+    "warm": true,
+    "mode": "residual",
+    "lam": 0.1
+   },
+   "gauntlet": {
+    "jobs": 50,
+    "games": 4,
+    "challenger": "medium+net2",
+    "champion": "champion"
+   },
+   "bar": {
+    "z": 2.0
+   }
+  }
+ ]
+}

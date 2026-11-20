@@ -1,0 +1,3 @@
+# Any recent PyTorch for Apple silicon (MPS), CPU, or Volta-and-newer CUDA cards.
+torch
+numpy

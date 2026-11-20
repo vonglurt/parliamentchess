@@ -1,0 +1,18 @@
+{
+ "hosts": [
+  {
+   "name": "mac",
+   "target": "-",
+   "caps": [
+    "cpu",
+    "gpu"
+   ],
+   "nice": 10
+  }
+ ],
+ "planner": "php /Users/user/code/chess/bin/orrery-gen.php DIR",
+ "low_water": 8,
+ "poll_s": 5,
+ "max_failures_in_a_row": 5,
+ "sync_s": 1800
+}

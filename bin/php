@@ -1,0 +1,5 @@
+#!/bin/sh
+# PHP with the tracing JIT on: the engine runs several times faster with it.
+PHP_BIN="${PHP_BIN:-$(command -v php 2>/dev/null || echo /opt/homebrew/bin/php)}"
+[ -x "$PHP_BIN" ] || PHP_BIN=/opt/homebrew/bin/php
+exec "$PHP_BIN" -d opcache.enable_cli=1 -d opcache.jit=tracing -d opcache.jit_buffer_size=64M -d memory_limit=1G "$@"

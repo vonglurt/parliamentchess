@@ -1,0 +1,49 @@
+{
+    "job": "demo-02-scholars-mate-s1",
+    "white": "medium",
+    "black": "medium",
+    "seed": 1,
+    "elections": true,
+    "fen": null,
+    "seconds": 0.1,
+    "files": [
+        "demo-02-scholars-mate-s1-g01-s1000.json"
+    ],
+    "census": {
+        "games": 1,
+        "whiteWins": 1,
+        "blackWins": 0,
+        "draws": 0,
+        "avgPlies": 7,
+        "writsPerGame": 0,
+        "countsPerGame": 0,
+        "crownMovesPerGame": 0,
+        "outcomes": [],
+        "trailingGames": 0,
+        "trailingScore": null,
+        "pawnCoronations": 0,
+        "terminations": {
+            "checkmate": 1
+        },
+        "decisive": 1,
+        "whiteScore": 1
+    },
+    "games": [
+        {
+            "plies": 7,
+            "result": "1-0",
+            "termination": "checkmate",
+            "writs": {
+                "1": 0,
+                "-1": 0
+            },
+            "outcomes": [],
+            "firstWritPly": null,
+            "crownMoves": 0,
+            "pawnCoronations": 0,
+            "trailing": null,
+            "trailingScore": null,
+            "deficit": 0
+        }
+    ]
+}

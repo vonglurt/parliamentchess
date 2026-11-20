@@ -1,0 +1,21 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Medium vs Medium from the opening book"]
+[Result "1-0"]
+[Termination "checkmate"]
+
+1. d4 f5 2. g3 Nf6 3. Bg2 e6 4. Nf3 Be7 5. O-O O-O 6. c4 d6 7. Nc3 Ng4 8. h3 Nf6
+9. Qc2 d5 10. cxd5 Nxd5 11. e4 fxe4 12. Nxe4 b5 13. b3 a6 14. Re1 c6 15. Neg5
+Bxg5 16. Nxg5 g6 17. Nxe6 Bxe6 18. Rxe6 Qd7 19. Re5 Qd6 20. Bh6 Rd8 21. a4 Nd7
+22. Bxd5+ cxd5 23. Re2 Rac8 24. Qa2 Re8 25. Rae1 Nf6 26. Rxe8+ Rxe8 27. Rxe8+
+Nxe8 28. Bf4 Qb4 29. Be5 Qe1+ 30. Kh2 b4 31. Qc2 a5 32. f3 Qc3 33. Qd1 Qb2+ 34.
+Kg1 h6 35. Qd3 Qc1+ 36. Kg2 Qb2+ 37. Kf1 Qc1+ 38. Kg2 Qb2+ 39. Kh1 Qc1+ 40. Kh2
+Qc6 41. f4 Ng7 42. g4 Qe6 43. Qb5 Kh8 44. Qxa5 h5 45. gxh5 gxh5 46. Qb5 h4 47.
+a5 Kg8 48. Qb8+ Ne8 49. Qxb4 Nf6 50. Qe1 W@d5 51. Qxh4 {Black count for d5:
+Commons 0-0, College 0-0 => contested} g7 52. Qg5 Ne4 53. Qd8+ Kc6 54. Qb6+ Kd7
+55. Qb7+ Kd8 56. Qxe4 Qxb3 57. Qa8+ Kd7 58. Qa7+ Ke6 59. Qb6+ Qxb6 60. axb6 Kd5
+61. b7 g5 62. fxg5 Ke4 63. h4 Kd5 64. g6 Ke4 65. g7 Ke3 66. b8=Q Ke4 67. h5 Ke3
+68. h6 Kf3 69. h7 Ke3 70. h8=Q Ke4 71. Qb1+ Kd5 72. Qb3+ Kc6 73. Qe8# 1-0

@@ -1,0 +1,17 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Royal Swap: the Commons back the Candidate, the College keeps the King"]
+[Result "1-0"]
+[Termination "checkmate"]
+[FEN "7k/p7/8/8/4P3/3P1P2/1N6/K7 w - - 0 20"]
+[SetUp "1"]
+
+20. W@e4 a6 {White count for e4: Commons 2-0, College 0-2 => swap} 21. d4 Kg7
+22. d5 Kf6 23. d6 Ke6 24. Nc4 a5 25. f4 a4 26. f5+ Kd7 27. f6 Ke6 28. Nb6 Kxf6
+29. d7 Ke7 30. Kd5 a3 31. a2 W@a3 32. Kc6 {Black count for a3: Commons 0-0,
+College 0-0 => defeat} Kd8 33. Nc4 Ke7 34. Kc7 Ke6 35. d8=Q Kf5 36. Qd4 Ke6 37.
+Qe4+ Kf6 38. Qg4 Kf7 39. Qf4+ Kg7 40. Kd7 Kg6 41. Qe5 Kf7 42. Qd6 Kg7 43. Ne5
+Kh8 44. Qf8+ Kh7 45. Qf7+ Kh8 46. Ng6# 1-0

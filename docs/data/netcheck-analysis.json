@@ -1,0 +1,298 @@
+{
+    "generated": "2026-11-20T20:08:56+00:00",
+    "runs": {
+        "F net vs plain": {
+            "styles": [
+                "medium+net",
+                "medium"
+            ],
+            "games": 100,
+            "firstStyleScore": {
+                "n": 100,
+                "mean": 0.285,
+                "lo": 0.203,
+                "hi": 0.367,
+                "se": 0.0416
+            },
+            "whiteScore": {
+                "n": 100,
+                "mean": 0.555,
+                "lo": 0.464,
+                "hi": 0.646,
+                "se": 0.0465
+            },
+            "decisive": {
+                "n": 100,
+                "mean": 0.87,
+                "lo": 0.804,
+                "hi": 0.936,
+                "se": 0.0338
+            },
+            "plies": {
+                "n": 100,
+                "mean": 123.08,
+                "lo": 111.719,
+                "hi": 134.441,
+                "se": 5.7962
+            },
+            "countsPerGame": {
+                "n": 100,
+                "mean": 1.38,
+                "lo": 1.12,
+                "hi": 1.64,
+                "se": 0.1324
+            },
+            "trailingScore": {
+                "n": 55,
+                "mean": 0.191,
+                "lo": 0.094,
+                "hi": 0.288,
+                "se": 0.0494
+            },
+            "abstainShare": {
+                "n": 110,
+                "mean": 0.264,
+                "lo": 0.21,
+                "hi": 0.319,
+                "se": 0.0278
+            },
+            "failedShare": {
+                "n": 138,
+                "mean": 0.123,
+                "lo": 0.068,
+                "hi": 0.178,
+                "se": 0.0281
+            },
+            "crownMovedShare": {
+                "n": 138,
+                "mean": 0.413,
+                "lo": 0.331,
+                "hi": 0.495,
+                "se": 0.0421
+            },
+            "firstWritPlyMedian": 70,
+            "outcomesByCandidate": {
+                "4": {
+                    "defeat": 22,
+                    "swap": 2,
+                    "failed": 1
+                },
+                "1": {
+                    "swap": 16,
+                    "contested": 26,
+                    "defeat": 32,
+                    "coronation": 12,
+                    "failed": 14
+                },
+                "3": {
+                    "defeat": 5,
+                    "swap": 1,
+                    "failed": 1
+                },
+                "2": {
+                    "defeat": 5,
+                    "failed": 1
+                }
+            }
+        },
+        "G net 15 vs plain": {
+            "styles": [
+                "medium+net:0.15",
+                "medium"
+            ],
+            "games": 100,
+            "firstStyleScore": {
+                "n": 100,
+                "mean": 0.41,
+                "lo": 0.32,
+                "hi": 0.5,
+                "se": 0.0457
+            },
+            "whiteScore": {
+                "n": 100,
+                "mean": 0.53,
+                "lo": 0.439,
+                "hi": 0.621,
+                "se": 0.0465
+            },
+            "decisive": {
+                "n": 100,
+                "mean": 0.86,
+                "lo": 0.792,
+                "hi": 0.928,
+                "se": 0.0349
+            },
+            "plies": {
+                "n": 100,
+                "mean": 126.89,
+                "lo": 114.899,
+                "hi": 138.881,
+                "se": 6.1181
+            },
+            "countsPerGame": {
+                "n": 100,
+                "mean": 0.89,
+                "lo": 0.678,
+                "hi": 1.102,
+                "se": 0.1081
+            },
+            "trailingScore": {
+                "n": 52,
+                "mean": 0.308,
+                "lo": 0.19,
+                "hi": 0.425,
+                "se": 0.0601
+            },
+            "abstainShare": {
+                "n": 77,
+                "mean": 0.348,
+                "lo": 0.274,
+                "hi": 0.421,
+                "se": 0.0374
+            },
+            "failedShare": {
+                "n": 89,
+                "mean": 0.09,
+                "lo": 0.03,
+                "hi": 0.15,
+                "se": 0.0305
+            },
+            "crownMovedShare": {
+                "n": 89,
+                "mean": 0.573,
+                "lo": 0.47,
+                "hi": 0.676,
+                "se": 0.0527
+            },
+            "firstWritPlyMedian": 88,
+            "outcomesByCandidate": {
+                "1": {
+                    "failed": 7,
+                    "contested": 17,
+                    "coronation": 12,
+                    "defeat": 15,
+                    "swap": 15
+                },
+                "4": {
+                    "defeat": 7,
+                    "swap": 4,
+                    "contested": 1
+                },
+                "2": {
+                    "defeat": 3
+                },
+                "3": {
+                    "defeat": 5,
+                    "swap": 2,
+                    "failed": 1
+                }
+            }
+        },
+        "H residual net vs plain": {
+            "styles": [
+                "medium+net2:\/Users\/user\/code\/chess\/data\/models\/net2-g001r.json",
+                "medium"
+            ],
+            "games": 100,
+            "firstStyleScore": {
+                "n": 100,
+                "mean": 0.45,
+                "lo": 0.357,
+                "hi": 0.543,
+                "se": 0.0474
+            },
+            "whiteScore": {
+                "n": 100,
+                "mean": 0.44,
+                "lo": 0.347,
+                "hi": 0.533,
+                "se": 0.0473
+            },
+            "decisive": {
+                "n": 100,
+                "mean": 0.9,
+                "lo": 0.841,
+                "hi": 0.959,
+                "se": 0.0302
+            },
+            "plies": {
+                "n": 100,
+                "mean": 118.93,
+                "lo": 108.32,
+                "hi": 129.54,
+                "se": 5.4134
+            },
+            "countsPerGame": {
+                "n": 100,
+                "mean": 0.61,
+                "lo": 0.463,
+                "hi": 0.757,
+                "se": 0.0751
+            },
+            "trailingScore": {
+                "n": 55,
+                "mean": 0.182,
+                "lo": 0.085,
+                "hi": 0.278,
+                "se": 0.0492
+            },
+            "abstainShare": {
+                "n": 51,
+                "mean": 0.308,
+                "lo": 0.226,
+                "hi": 0.39,
+                "se": 0.0418
+            },
+            "failedShare": {
+                "n": 61,
+                "mean": 0.148,
+                "lo": 0.058,
+                "hi": 0.237,
+                "se": 0.0458
+            },
+            "crownMovedShare": {
+                "n": 61,
+                "mean": 0.656,
+                "lo": 0.536,
+                "hi": 0.776,
+                "se": 0.0613
+            },
+            "firstWritPlyMedian": 73,
+            "outcomesByCandidate": {
+                "4": {
+                    "defeat": 3,
+                    "swap": 4
+                },
+                "1": {
+                    "coronation": 10,
+                    "contested": 13,
+                    "swap": 10,
+                    "defeat": 8,
+                    "failed": 9
+                },
+                "2": {
+                    "swap": 1
+                },
+                "3": {
+                    "defeat": 1,
+                    "swap": 2
+                }
+            }
+        }
+    },
+    "crownReach": {
+        "samples": 0,
+        "barred": {
+            "n": 0,
+            "mean": null,
+            "lo": null,
+            "hi": null
+        },
+        "regency": {
+            "n": 0,
+            "mean": null,
+            "lo": null,
+            "hi": null
+        }
+    }
+}

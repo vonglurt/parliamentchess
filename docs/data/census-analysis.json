@@ -1,0 +1,477 @@
+{
+    "generated": "2026-11-20T19:13:33+00:00",
+    "runs": {
+        "A standard chess": {
+            "styles": [
+                "medium",
+                "medium"
+            ],
+            "games": 400,
+            "firstStyleScore": {
+                "n": 400,
+                "mean": 0.476,
+                "lo": 0.43,
+                "hi": 0.523,
+                "se": 0.0236
+            },
+            "whiteScore": {
+                "n": 400,
+                "mean": 0.476,
+                "lo": 0.43,
+                "hi": 0.523,
+                "se": 0.0236
+            },
+            "decisive": {
+                "n": 400,
+                "mean": 0.893,
+                "lo": 0.862,
+                "hi": 0.923,
+                "se": 0.0155
+            },
+            "plies": {
+                "n": 400,
+                "mean": 122.253,
+                "lo": 117.06,
+                "hi": 127.445,
+                "se": 2.6495
+            },
+            "countsPerGame": {
+                "n": 400,
+                "mean": 0,
+                "lo": 0,
+                "hi": 0,
+                "se": 0
+            },
+            "trailingScore": {
+                "n": 173,
+                "mean": 0.22,
+                "lo": 0.162,
+                "hi": 0.278,
+                "se": 0.0296
+            },
+            "abstainShare": {
+                "n": 0,
+                "mean": null,
+                "lo": null,
+                "hi": null
+            },
+            "failedShare": {
+                "n": 0,
+                "mean": null,
+                "lo": null,
+                "hi": null
+            },
+            "crownMovedShare": {
+                "n": 0,
+                "mean": null,
+                "lo": null,
+                "hi": null
+            },
+            "firstWritPlyMedian": null,
+            "outcomesByCandidate": []
+        },
+        "B parliament": {
+            "styles": [
+                "medium",
+                "medium"
+            ],
+            "games": 400,
+            "firstStyleScore": {
+                "n": 400,
+                "mean": 0.5,
+                "lo": 0.454,
+                "hi": 0.546,
+                "se": 0.0235
+            },
+            "whiteScore": {
+                "n": 400,
+                "mean": 0.5,
+                "lo": 0.454,
+                "hi": 0.546,
+                "se": 0.0235
+            },
+            "decisive": {
+                "n": 400,
+                "mean": 0.88,
+                "lo": 0.848,
+                "hi": 0.912,
+                "se": 0.0163
+            },
+            "plies": {
+                "n": 400,
+                "mean": 124.05,
+                "lo": 119.488,
+                "hi": 128.612,
+                "se": 2.3277
+            },
+            "countsPerGame": {
+                "n": 400,
+                "mean": 0.703,
+                "lo": 0.615,
+                "hi": 0.79,
+                "se": 0.0447
+            },
+            "trailingScore": {
+                "n": 174,
+                "mean": 0.187,
+                "lo": 0.133,
+                "hi": 0.241,
+                "se": 0.0274
+            },
+            "abstainShare": {
+                "n": 224,
+                "mean": 0.304,
+                "lo": 0.268,
+                "hi": 0.341,
+                "se": 0.0187
+            },
+            "failedShare": {
+                "n": 281,
+                "mean": 0.167,
+                "lo": 0.124,
+                "hi": 0.211,
+                "se": 0.0223
+            },
+            "crownMovedShare": {
+                "n": 281,
+                "mean": 0.58,
+                "lo": 0.522,
+                "hi": 0.638,
+                "se": 0.0295
+            },
+            "firstWritPlyMedian": 80,
+            "outcomesByCandidate": {
+                "1": {
+                    "defeat": 53,
+                    "coronation": 36,
+                    "failed": 43,
+                    "contested": 57,
+                    "swap": 45
+                },
+                "3": {
+                    "swap": 8,
+                    "defeat": 2
+                },
+                "2": {
+                    "contested": 1,
+                    "defeat": 5,
+                    "coronation": 1,
+                    "swap": 3,
+                    "failed": 2
+                },
+                "4": {
+                    "defeat": 9,
+                    "void": 2,
+                    "swap": 12,
+                    "failed": 2
+                }
+            }
+        },
+        "C populist vs monarchist": {
+            "styles": [
+                "medium\/populist",
+                "medium\/monarchist"
+            ],
+            "games": 100,
+            "firstStyleScore": {
+                "n": 100,
+                "mean": 0.485,
+                "lo": 0.394,
+                "hi": 0.576,
+                "se": 0.0463
+            },
+            "whiteScore": {
+                "n": 100,
+                "mean": 0.555,
+                "lo": 0.465,
+                "hi": 0.645,
+                "se": 0.046
+            },
+            "decisive": {
+                "n": 100,
+                "mean": 0.85,
+                "lo": 0.78,
+                "hi": 0.92,
+                "se": 0.0359
+            },
+            "plies": {
+                "n": 100,
+                "mean": 135.74,
+                "lo": 126.155,
+                "hi": 145.325,
+                "se": 4.8902
+            },
+            "countsPerGame": {
+                "n": 100,
+                "mean": 1.49,
+                "lo": 1.273,
+                "hi": 1.707,
+                "se": 0.1105
+            },
+            "trailingScore": {
+                "n": 43,
+                "mean": 0.151,
+                "lo": 0.062,
+                "hi": 0.241,
+                "se": 0.0457
+            },
+            "abstainShare": {
+                "n": 140,
+                "mean": 0.226,
+                "lo": 0.191,
+                "hi": 0.26,
+                "se": 0.0174
+            },
+            "failedShare": {
+                "n": 149,
+                "mean": 0.047,
+                "lo": 0.013,
+                "hi": 0.081,
+                "se": 0.0174
+            },
+            "crownMovedShare": {
+                "n": 149,
+                "mean": 0.839,
+                "lo": 0.78,
+                "hi": 0.898,
+                "se": 0.0302
+            },
+            "firstWritPlyMedian": 63,
+            "outcomesByCandidate": {
+                "1": {
+                    "coronation": 39,
+                    "contested": 74,
+                    "defeat": 14,
+                    "swap": 4,
+                    "failed": 6
+                },
+                "2": {
+                    "failed": 1,
+                    "swap": 2,
+                    "contested": 1
+                },
+                "4": {
+                    "swap": 3,
+                    "defeat": 2
+                },
+                "3": {
+                    "swap": 1,
+                    "contested": 1,
+                    "defeat": 1
+                }
+            }
+        },
+        "D populist vs populist": {
+            "styles": [
+                "medium\/populist",
+                "medium\/populist"
+            ],
+            "games": 400,
+            "firstStyleScore": {
+                "n": 400,
+                "mean": 0.471,
+                "lo": 0.426,
+                "hi": 0.517,
+                "se": 0.0233
+            },
+            "whiteScore": {
+                "n": 400,
+                "mean": 0.471,
+                "lo": 0.426,
+                "hi": 0.517,
+                "se": 0.0233
+            },
+            "decisive": {
+                "n": 400,
+                "mean": 0.868,
+                "lo": 0.834,
+                "hi": 0.901,
+                "se": 0.017
+            },
+            "plies": {
+                "n": 400,
+                "mean": 130.638,
+                "lo": 125.605,
+                "hi": 135.67,
+                "se": 2.5674
+            },
+            "countsPerGame": {
+                "n": 400,
+                "mean": 2.335,
+                "lo": 2.182,
+                "hi": 2.488,
+                "se": 0.078
+            },
+            "trailingScore": {
+                "n": 186,
+                "mean": 0.253,
+                "lo": 0.195,
+                "hi": 0.31,
+                "se": 0.0293
+            },
+            "abstainShare": {
+                "n": 797,
+                "mean": 0.215,
+                "lo": 0.2,
+                "hi": 0.23,
+                "se": 0.0075
+            },
+            "failedShare": {
+                "n": 934,
+                "mean": 0.134,
+                "lo": 0.112,
+                "hi": 0.156,
+                "se": 0.0111
+            },
+            "crownMovedShare": {
+                "n": 934,
+                "mean": 0.734,
+                "lo": 0.706,
+                "hi": 0.763,
+                "se": 0.0145
+            },
+            "firstWritPlyMedian": 64,
+            "outcomesByCandidate": {
+                "1": {
+                    "defeat": 102,
+                    "contested": 410,
+                    "coronation": 183,
+                    "failed": 116,
+                    "swap": 66
+                },
+                "3": {
+                    "coronation": 1,
+                    "contested": 5,
+                    "defeat": 5,
+                    "swap": 5
+                },
+                "4": {
+                    "defeat": 15,
+                    "failed": 4,
+                    "swap": 7
+                },
+                "2": {
+                    "failed": 4,
+                    "swap": 6,
+                    "contested": 3,
+                    "defeat": 1
+                },
+                "0": {
+                    "failed": 1
+                }
+            }
+        },
+        "E regency": {
+            "styles": [
+                "medium\/populist",
+                "medium\/populist"
+            ],
+            "games": 100,
+            "firstStyleScore": {
+                "n": 100,
+                "mean": 0.515,
+                "lo": 0.424,
+                "hi": 0.606,
+                "se": 0.0463
+            },
+            "whiteScore": {
+                "n": 100,
+                "mean": 0.515,
+                "lo": 0.424,
+                "hi": 0.606,
+                "se": 0.0463
+            },
+            "decisive": {
+                "n": 100,
+                "mean": 0.85,
+                "lo": 0.78,
+                "hi": 0.92,
+                "se": 0.0359
+            },
+            "plies": {
+                "n": 100,
+                "mean": 132.71,
+                "lo": 124.275,
+                "hi": 141.145,
+                "se": 4.3034
+            },
+            "countsPerGame": {
+                "n": 100,
+                "mean": 2.35,
+                "lo": 2.061,
+                "hi": 2.639,
+                "se": 0.1473
+            },
+            "trailingScore": {
+                "n": 44,
+                "mean": 0.307,
+                "lo": 0.175,
+                "hi": 0.439,
+                "se": 0.0675
+            },
+            "abstainShare": {
+                "n": 194,
+                "mean": 0.226,
+                "lo": 0.194,
+                "hi": 0.258,
+                "se": 0.0162
+            },
+            "failedShare": {
+                "n": 235,
+                "mean": 0.153,
+                "lo": 0.107,
+                "hi": 0.199,
+                "se": 0.0235
+            },
+            "crownMovedShare": {
+                "n": 235,
+                "mean": 0.715,
+                "lo": 0.657,
+                "hi": 0.773,
+                "se": 0.0295
+            },
+            "firstWritPlyMedian": 62,
+            "outcomesByCandidate": {
+                "1": {
+                    "defeat": 22,
+                    "contested": 101,
+                    "coronation": 46,
+                    "failed": 32,
+                    "swap": 15
+                },
+                "3": {
+                    "coronation": 1,
+                    "contested": 2,
+                    "defeat": 3,
+                    "swap": 1
+                },
+                "4": {
+                    "defeat": 5,
+                    "failed": 1,
+                    "swap": 2
+                },
+                "2": {
+                    "failed": 3,
+                    "defeat": 1
+                }
+            }
+        }
+    },
+    "crownReach": {
+        "samples": 121,
+        "barred": {
+            "n": 121,
+            "mean": 24.322,
+            "lo": 22.761,
+            "hi": 25.884,
+            "se": 0.7968
+        },
+        "regency": {
+            "n": 121,
+            "mean": 26.917,
+            "lo": 25.141,
+            "hi": 28.694,
+            "se": 0.9064
+        }
+    }
+}

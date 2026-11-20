@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parliament Chess</title>
+<meta name="description" content="Every move FIDE, every crown elected: a chess variant where the King is voted in.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<style>
+:root { --bench:#0f2c24; --bench-2:#163a30; --parch:#f3ead6; --parch-2:#e8dcc0; --ink:#1e1a14; --ink-2:#5b5244; --gold:#d4a62a; --gold-2:#f0cf6a; --lords:#9b2a3a; --commons:#2f7a57;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace; }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #1f4a3d, var(--bench) 60%) fixed; color: var(--parch); font: 16px/1.6 var(--sans); }
+a { color: var(--gold-2); }
+main { max-width: 1040px; margin: 0 auto; padding: 0 16px 56px; }
+header { padding: 56px 0 28px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
+@media (max-width: 820px) { header { grid-template-columns: 1fr; padding-top: 32px; } }
+.crest { font-size: 40px; color: var(--gold); line-height: 1; }
+h1 { font: 600 52px/1.05 var(--serif); margin: 8px 0 6px; letter-spacing: .01em; }
+.sub { font: italic 22px var(--serif); color: var(--gold-2); margin: 0 0 18px; }
+.lede { font: 19px/1.55 var(--serif); color: var(--parch-2); margin: 0 0 24px; }
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-block; text-decoration: none; padding: 11px 18px; border-radius: 9px; font-weight: 600; background: var(--bench-2); color: var(--parch); border: 1px solid rgba(240,207,106,.3); }
+.btn.gold { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.btn:hover { filter: brightness(1.08); }
+figure { margin: 0; }
+figure img, figure video { width: 100%; border-radius: 12px; box-shadow: 0 16px 50px rgba(0,0,0,.45); display: block; background: #000; }
+figcaption { font-size: 13px; opacity: .75; margin-top: 8px; }
+h2 { font: 600 28px var(--serif); margin: 48px 0 16px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.card { background: var(--parch); color: var(--ink); border-radius: 12px; padding: 18px; }
+.card h3 { font: 600 20px var(--serif); margin: 0 0 6px; }
+.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.tally { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 14px; }
+.tally div { background: #fffaf0; border-radius: 8px; padding: 8px 10px; }
+.tally b { display: block; font: 600 15px var(--serif); }
+pre { background: #081a15; border: 1px solid rgba(240,207,106,.2); border-radius: 10px; padding: 16px; overflow-x: auto; font: 14px/1.6 var(--mono); color: var(--parch); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.fact { border-top: 2px solid var(--gold); padding-top: 10px; }
+.fact b { display: block; font: 600 26px var(--serif); color: var(--gold-2); }
+.fact span { font-size: 14px; opacity: .85; }
+footer { border-top: 1px solid rgba(240,207,106,.18); margin-top: 56px; padding-top: 18px; font-size: 13px; opacity: .7; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <div class="crest">&#9818;&#xFE0E;</div>
+    <h1>Parliament Chess</h1>
+    <p class="sub">Vote King</p>
+    <p class="lede">Every move is FIDE chess. Every crown is elected. File a Writ and your own pieces vote by proximity: pawns in the Commons; Knights, Bishops and Rooks in the College. A dethroned King becomes a pawn.</p>
+    <div class="buttons">
+      <a class="btn gold" href="/play.html">Play now</a>
+      <a class="btn" href="/play.html?rules=1">The rules</a>
+      <a class="btn" href="/docs/parliament-chess-lab-report.html">Lab report</a>
+      <a class="btn" href="#film">The film</a>
+    </div>
+  </div>
+  <figure>
+    <img src="/docs/media/parliament_chess_writ_and_count.gif" alt="A Writ is filed for the d3 pawn; the opponent checks; the count crowns the pawn and the old King becomes a Pretender pawn">
+    <figcaption>A Writ for d3, a check during the campaign, and the count that carries the crown out of the net.</figcaption>
+  </figure>
+</header>
+
+<h2>How a crown changes hands</h2>
+<div class="cards">
+  <div class="card"><h3>1. The Writ</h3><p>From move 10, instead of moving, name a Candidate: any of your pieces except the King and the Queen, never crowned, not under attack. It costs your whole turn.</p></div>
+  <div class="card"><h3>2. The campaign</h3><p>Your opponent gets one move to answer: attack the Candidate's square, capture your voters, or attack them so they abstain.</p></div>
+  <div class="card"><h3>3. The count</h3><p>Each voter backs whichever is nearer, Candidate or King. Two chambers decide:</p>
+    <div class="tally"><div><b>Coronation</b>both back the Candidate</div><div><b>Contested</b>only the College does</div><div><b>Royal Swap</b>only the Commons do</div><div><b>Defeat</b>neither does</div></div></div>
+  <div class="card"><h3>4. The Ledger</h3><p>A dethroned King becomes a Pretender pawn that can promote only to Rook, Bishop or Knight. No piece reigns twice.</p></div>
+</div>
+
+<h2>What 1,400 self-play games showed</h2>
+<div class="facts">
+  <div class="fact"><b>87&ndash;89%</b><span>of games decisive, against 89% in plain chess</span></div>
+  <div class="fact"><b>0.7&ndash;2.3</b><span>elections a game, nearly always crowning a pawn</span></div>
+  <div class="fact"><b>13&ndash;17%</b><span>of counts failed on an attacked Candidate square</span></div>
+  <div class="fact"><b>0.45</b><span>a residual net's score against plain Medium: level, not yet stronger</span></div>
+</div>
+
+<h2 id="film">The film</h2>
+<figure>
+  <video controls preload="metadata" poster="/docs/media/still-board.png" src="/docs/media/parliament_chess.mp4"></video>
+  <figcaption>91 seconds, made with Manim: the Writ, the districts, the count, the Ledger and the evidence.</figcaption>
+</figure>
+
+<h2 id="run">Running it</h2>
+<pre>git clone https://github.com/vonglurt/parlamentchess.git
+cd parlamentchess
+make up          # the server in the background: http://localhost:8080
+make test        # 45 rule tests, and two browsers playing through the server
+make down        # stop it</pre>
+<p>You are on the running server. Play two browsers against each other, play the machine (it takes the name of a nut, a legume or a squash), or watch two bots; every game keeps a record of its moves, players and times.</p>
+
+<footer>
+  <span>MIT License &middot; every move FIDE, every crown elected</span>
+  <span><a href="https://github.com/vonglurt/parlamentchess">github.com/vonglurt/parlamentchess</a></span>
+</footer>
+</main>
+</body>
+</html>

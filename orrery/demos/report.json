@@ -1,0 +1,322 @@
+{
+    "generated": "2026-11-20T18:52:42+00:00",
+    "runs": {
+        "demo 01 fools mate": {
+            "games": 1,
+            "whiteWins": 0,
+            "blackWins": 1,
+            "draws": 0,
+            "avgPlies": 4,
+            "writsPerGame": 0,
+            "countsPerGame": 0,
+            "crownMovesPerGame": 0,
+            "outcomes": [],
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 0,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 0
+        },
+        "demo 02 scholars mate": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 7,
+            "writsPerGame": 0,
+            "countsPerGame": 0,
+            "crownMovesPerGame": 0,
+            "outcomes": [],
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 0,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 03 royal swap escape": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 63,
+            "writsPerGame": 1,
+            "countsPerGame": 1,
+            "crownMovesPerGame": 1,
+            "outcomes": {
+                "coronation": 1
+            },
+            "trailingGames": 1,
+            "trailingScore": 0,
+            "pawnCoronations": 1,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 04 pawn to crown": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 45,
+            "writsPerGame": 1,
+            "countsPerGame": 1,
+            "crownMovesPerGame": 1,
+            "outcomes": {
+                "coronation": 1
+            },
+            "trailingGames": 1,
+            "trailingScore": 0,
+            "pawnCoronations": 1,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 05 contested coronation": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 43,
+            "writsPerGame": 1,
+            "countsPerGame": 1,
+            "crownMovesPerGame": 1,
+            "outcomes": {
+                "contested": 1
+            },
+            "trailingGames": 1,
+            "trailingScore": 0,
+            "pawnCoronations": 1,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 06 the swap": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 53,
+            "writsPerGame": 2,
+            "countsPerGame": 2,
+            "crownMovesPerGame": 1,
+            "outcomes": {
+                "swap": 1,
+                "defeat": 1
+            },
+            "trailingGames": 1,
+            "trailingScore": 0,
+            "pawnCoronations": 0,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 07 disqualified": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 25,
+            "writsPerGame": 1,
+            "countsPerGame": 1,
+            "crownMovesPerGame": 0,
+            "outcomes": {
+                "failed": 1
+            },
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 0,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 08 whig vs whig": {
+            "games": 1,
+            "whiteWins": 1,
+            "blackWins": 0,
+            "draws": 0,
+            "avgPlies": 145,
+            "writsPerGame": 1,
+            "countsPerGame": 1,
+            "crownMovesPerGame": 1,
+            "outcomes": {
+                "contested": 1
+            },
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 1,
+            "terminations": {
+                "checkmate": 1
+            },
+            "decisive": 1,
+            "whiteScore": 1
+        },
+        "demo 09 populist vs monarchist": {
+            "games": 2,
+            "whiteWins": 1,
+            "blackWins": 1,
+            "draws": 0,
+            "avgPlies": 142.5,
+            "writsPerGame": 3,
+            "countsPerGame": 3,
+            "crownMovesPerGame": 2.5,
+            "outcomes": {
+                "coronation": 3,
+                "defeat": 1,
+                "contested": 2
+            },
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 5,
+            "terminations": {
+                "checkmate": 2
+            },
+            "decisive": 1,
+            "whiteScore": 0.5
+        },
+        "demo 10 hard vs medium": {
+            "games": 2,
+            "whiteWins": 1,
+            "blackWins": 1,
+            "draws": 0,
+            "avgPlies": 124.5,
+            "writsPerGame": 0,
+            "countsPerGame": 0,
+            "crownMovesPerGame": 0,
+            "outcomes": [],
+            "trailingGames": 0,
+            "trailingScore": null,
+            "pawnCoronations": 0,
+            "terminations": {
+                "checkmate": 2
+            },
+            "decisive": 1,
+            "whiteScore": 0.5
+        }
+    },
+    "recordings": [
+        {
+            "run": "demo 01 fools mate",
+            "job": "demo-01-fools-mate-s1",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-01-fools-mate-s1/demo-01-fools-mate-s1-g01-s1000.json",
+            "result": "0-1",
+            "plies": 4,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "demo 02 scholars mate",
+            "job": "demo-02-scholars-mate-s1",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-02-scholars-mate-s1/demo-02-scholars-mate-s1-g01-s1000.json",
+            "result": "1-0",
+            "plies": 7,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "demo 03 royal swap escape",
+            "job": "demo-03-royal-swap-escape-s3",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-03-royal-swap-escape-s3/demo-03-royal-swap-escape-s3-g01-s3000.json",
+            "result": "1-0",
+            "plies": 63,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "demo 04 pawn to crown",
+            "job": "demo-04-pawn-to-crown-s4",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-04-pawn-to-crown-s4/demo-04-pawn-to-crown-s4-g01-s4000.json",
+            "result": "1-0",
+            "plies": 45,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "demo 05 contested coronation",
+            "job": "demo-05-contested-coronation-s5",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-05-contested-coronation-s5/demo-05-contested-coronation-s5-g01-s5000.json",
+            "result": "1-0",
+            "plies": 43,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "demo 06 the swap",
+            "job": "demo-06-the-swap-s6",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-06-the-swap-s6/demo-06-the-swap-s6-g01-s6000.json",
+            "result": "1-0",
+            "plies": 53,
+            "counts": 2,
+            "crownMoves": 1
+        },
+        {
+            "run": "demo 07 disqualified",
+            "job": "demo-07-disqualified-s7",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-07-disqualified-s7/demo-07-disqualified-s7-g01-s7000.json",
+            "result": "1-0",
+            "plies": 25,
+            "counts": 1,
+            "crownMoves": 0
+        },
+        {
+            "run": "demo 08 whig vs whig",
+            "job": "demo-08-whig-vs-whig-s11",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-08-whig-vs-whig-s11/demo-08-whig-vs-whig-s11-g01-s11000.json",
+            "result": "1-0",
+            "plies": 145,
+            "counts": 1,
+            "crownMoves": 1
+        },
+        {
+            "run": "demo 09 populist vs monarchist",
+            "job": "demo-09-populist-vs-monarchist-s12",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-09-populist-vs-monarchist-s12/demo-09-populist-vs-monarchist-s12-g01-s12000.json",
+            "result": "1-0",
+            "plies": 117,
+            "counts": 3,
+            "crownMoves": 2
+        },
+        {
+            "run": "demo 09 populist vs monarchist",
+            "job": "demo-09-populist-vs-monarchist-s12",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-09-populist-vs-monarchist-s12/demo-09-populist-vs-monarchist-s12-g02-s12001.json",
+            "result": "0-1",
+            "plies": 168,
+            "counts": 3,
+            "crownMoves": 3
+        },
+        {
+            "run": "demo 10 hard vs medium",
+            "job": "demo-10-hard-vs-medium-s13",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-10-hard-vs-medium-s13/demo-10-hard-vs-medium-s13-g01-s13000.json",
+            "result": "1-0",
+            "plies": 129,
+            "counts": 0,
+            "crownMoves": 0
+        },
+        {
+            "run": "demo 10 hard vs medium",
+            "job": "demo-10-hard-vs-medium-s13",
+            "file": "/Users/user/code/chess/orrery/demos/results/demo-10-hard-vs-medium-s13/demo-10-hard-vs-medium-s13-g02-s13001.json",
+            "result": "0-1",
+            "plies": 120,
+            "counts": 0,
+            "crownMoves": 0
+        }
+    ]
+}

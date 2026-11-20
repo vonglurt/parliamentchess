@@ -1,0 +1,15 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Contested Coronation: the College overrules the Commons"]
+[Result "1-0"]
+[Termination "checkmate"]
+[FEN "7k/p7/8/4N3/4P3/8/PP6/K7 w - - 0 20"]
+[SetUp "1"]
+
+20. W@e4 a6 {White count for e4: Commons 0-2, College 2-0 => contested} 21. b3
+a5 22. Nc4 Kg7 23. a4 Kf6 24. a2 Ke6 25. a3 Kf6 26. Kd4 Kf5 27. Ke3 Ke6 28. Kd4
+Kf6 29. Nxa5 Ke6 30. b4 Kf5 31. b5 Ke6 32. b6 Kf5 33. b7 Ke6 34. Nc4 Kf6 35. a5
+Ke6 36. a6 Kf5 37. a7 Ke6 38. b8=Q Kf7 39. Qe5 Kf8 40. a8=Q+ Kf7 41. Qae8# 1-0

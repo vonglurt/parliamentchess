@@ -1,0 +1,66 @@
+{
+    "job": "demo-10-hard-vs-medium-s13",
+    "white": "hard",
+    "black": "medium",
+    "seed": 13,
+    "elections": true,
+    "fen": null,
+    "seconds": 22.3,
+    "files": [
+        "demo-10-hard-vs-medium-s13-g01-s13000.json",
+        "demo-10-hard-vs-medium-s13-g02-s13001.json"
+    ],
+    "census": {
+        "games": 2,
+        "whiteWins": 1,
+        "blackWins": 1,
+        "draws": 0,
+        "avgPlies": 124.5,
+        "writsPerGame": 0,
+        "countsPerGame": 0,
+        "crownMovesPerGame": 0,
+        "outcomes": [],
+        "trailingGames": 0,
+        "trailingScore": null,
+        "pawnCoronations": 0,
+        "terminations": {
+            "checkmate": 2
+        },
+        "decisive": 1,
+        "whiteScore": 0.5
+    },
+    "games": [
+        {
+            "plies": 129,
+            "result": "1-0",
+            "termination": "checkmate",
+            "writs": {
+                "1": 0,
+                "-1": 0
+            },
+            "outcomes": [],
+            "firstWritPly": null,
+            "crownMoves": 0,
+            "pawnCoronations": 0,
+            "trailing": null,
+            "trailingScore": null,
+            "deficit": 0
+        },
+        {
+            "plies": 120,
+            "result": "0-1",
+            "termination": "checkmate",
+            "writs": {
+                "1": 0,
+                "-1": 0
+            },
+            "outcomes": [],
+            "firstWritPly": null,
+            "crownMoves": 0,
+            "pawnCoronations": 0,
+            "trailing": null,
+            "trailingScore": null,
+            "deficit": 0
+        }
+    ]
+}

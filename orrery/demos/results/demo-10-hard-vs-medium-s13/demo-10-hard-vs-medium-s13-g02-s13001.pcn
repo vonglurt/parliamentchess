@@ -1,0 +1,19 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "hard"]
+[Date "2026.11.20"]
+[Annotator "Hard (3 ply) vs Medium (2 ply)"]
+[Result "0-1"]
+[Termination "checkmate"]
+
+1. Nf3 d5 2. g3 Nf6 3. Bg2 e6 4. O-O Be7 5. d3 O-O 6. Ne5 Nbd7 7. f4 Nxe5 8.
+fxe5 Ng4 9. d4 Bg5 10. Qd3 Bxc1 11. Rxc1 c5 12. Nc3 cxd4 13. Qxd4 Qg5 14. Qf4
+Qh5 15. h4 Nxe5 16. Bf3 Nxf3+ 17. exf3 e5 18. Qg5 Qxg5 19. hxg5 d4 20. Nd5 Rd8
+21. Ne7+ Kf8 22. Nxc8 Raxc8 23. a3 a5 24. g4 a4 25. Kh2 b5 26. Kg2 Rc6 27. Kf2
+Rdc8 28. c3 d3 29. Rd1 Rd6 30. Rd2 Kg8 31. Rh1 h6 32. gxh6 gxh6 33. Ke1 Kg7 34.
+Rhh2 f6 35. Kf1 Rc7 36. Rd1 Rd8 37. Rhd2 Rcd7 38. Kf2 f5 39. gxf5 h5 40. Ke3 Kf6
+41. Rxd3 Rxd3+ 42. Rxd3 Rxd3+ 43. Kxd3 Kxf5 44. c4 bxc4+ 45. Kxc4 h4 46. b3 h3
+47. bxa4 h2 48. a5 h1=Q 49. a4 Qxf3 50. Kc5 Qc3+ 51. Kb5 Qb3+ 52. Kc5 Qxa4 53.
+Kb6 Qb4+ 54. Ka6 e4 55. Ka7 Qxa5+ 56. Kb7 e3 57. Kc6 e2 58. Kd6 e1=Q 59. Kc6
+Qe4+ 60. Kd6 Qe6# 0-1

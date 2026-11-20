@@ -1,0 +1,10 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Scholar's Mate: the Coronation Peace protects nobody from a blunder"]
+[Result "1-0"]
+[Termination "checkmate"]
+
+1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0

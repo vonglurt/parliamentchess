@@ -1,0 +1,23 @@
+[
+    {
+        "name": "g001",
+        "gi": 0,
+        "games": 100,
+        "score": 0.035,
+        "se": 0.0178,
+        "z": -26.16,
+        "bar": 2,
+        "elected": false,
+        "labels": 18602,
+        "device": "mps",
+        "valValueMSE": 0.12274,
+        "valPolicyTop1": 0.1785,
+        "laneSeconds": {
+            "label": 11105.7,
+            "train": 24.2,
+            "gauntlet": 1633
+        },
+        "wallSeconds": 1894,
+        "decided": "2026-11-20T20:03:34+00:00"
+    }
+]

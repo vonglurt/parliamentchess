@@ -1,0 +1,16 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Pawn to Crown: a full Coronation, the old King becomes a Pretender"]
+[Result "1-0"]
+[Termination "checkmate"]
+[FEN "7k/p7/8/4N3/4P3/3P1P2/8/K7 w - - 0 20"]
+[SetUp "1"]
+
+20. W@e4 a6 {White count for e4: Commons 2-0, College 2-0 => coronation} 21. f4
+Kg7 22. f5 Kf6 23. Nd7+ Ke7 24. Nc5 Kf6 25. Nxa6 Kg5 26. d4 Kf6 27. d5 Ke7 28.
+Nc5 Kd6 29. Kd4 Ke7 30. Ke5 Kf7 31. f6 Kg6 32. d6 Kg5 33. f7 Kg6 34. f8=Q Kg5
+35. d7 Kh5 36. Qf7+ Kh6 37. Qe6+ Kh7 38. Qf7+ Kh6 39. Qf6+ Kh5 40. Qg7 Kh4 41.
+d8=Q+ Kh3 42. Qdh8# 1-0

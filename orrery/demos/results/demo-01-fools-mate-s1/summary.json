@@ -1,0 +1,49 @@
+{
+    "job": "demo-01-fools-mate-s1",
+    "white": "medium",
+    "black": "medium",
+    "seed": 1,
+    "elections": true,
+    "fen": null,
+    "seconds": 0,
+    "files": [
+        "demo-01-fools-mate-s1-g01-s1000.json"
+    ],
+    "census": {
+        "games": 1,
+        "whiteWins": 0,
+        "blackWins": 1,
+        "draws": 0,
+        "avgPlies": 4,
+        "writsPerGame": 0,
+        "countsPerGame": 0,
+        "crownMovesPerGame": 0,
+        "outcomes": [],
+        "trailingGames": 0,
+        "trailingScore": null,
+        "pawnCoronations": 0,
+        "terminations": {
+            "checkmate": 1
+        },
+        "decisive": 1,
+        "whiteScore": 0
+    },
+    "games": [
+        {
+            "plies": 4,
+            "result": "0-1",
+            "termination": "checkmate",
+            "writs": {
+                "1": 0,
+                "-1": 0
+            },
+            "outcomes": [],
+            "firstWritPly": null,
+            "crownMoves": 0,
+            "pawnCoronations": 0,
+            "trailing": null,
+            "trailingScore": null,
+            "deficit": 0
+        }
+    ]
+}

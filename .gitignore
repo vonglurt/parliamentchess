@@ -1,0 +1,29 @@
+# The server's runtime: pid, log, games in play, finished live games, the learned book
+.run/
+data/games/
+data/recordings/
+data/book/
+data/labels/
+data/models/
+# Big or regenerable self-play output (the plans and reports are kept)
+orrery/census/results/
+orrery/gen/results/
+orrery/netcheck/results/
+orrery/*/queue/
+orrery/*/running/
+orrery/*/stopped/
+orrery/*/failed/
+orrery/*/done/
+orrery/*/logs/
+orrery/*/lanes/
+orrery/*/events.jsonl
+orrery/*/keeper.log
+orrery/*/parliament/dist/
+# Tools
+.venv/
+__pycache__/
+film/media/
+film/__pycache__/
+.DS_Store
+*.swp
+film/out/

@@ -1,0 +1,123 @@
+{
+ "about": "Demo games for the Parliament Chess release: every rule on film, one job each.",
+ "runs": [
+  {
+   "name": "demo 01 fools mate",
+   "kind": "demo",
+   "title": "Fool's Mate: a win before any vote is possible",
+   "moves": "f3 e5 g4 Qh4",
+   "games": 1,
+   "seeds": [
+    1
+   ]
+  },
+  {
+   "name": "demo 02 scholars mate",
+   "kind": "demo",
+   "title": "Scholar's Mate: the Coronation Peace protects nobody from a blunder",
+   "moves": "e4 e5 Bc4 Nc6 Qh5 Nf6 Qxf7",
+   "games": 1,
+   "seeds": [
+    1
+   ]
+  },
+  {
+   "name": "demo 03 royal swap escape",
+   "kind": "demo",
+   "title": "The crown escapes a check delivered during the campaign",
+   "fen": "6k1/5ppp/8/r7/8/2PPP3/1N6/7K w - - 0 20",
+   "moves": "W@d3 Rh5",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    3
+   ]
+  },
+  {
+   "name": "demo 04 pawn to crown",
+   "kind": "demo",
+   "title": "Pawn to Crown: a full Coronation, the old King becomes a Pretender",
+   "fen": "7k/p7/8/4N3/4P3/3P1P2/8/K7 w - - 0 20",
+   "moves": "W@e4 a6",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    4
+   ]
+  },
+  {
+   "name": "demo 05 contested coronation",
+   "kind": "demo",
+   "title": "Contested Coronation: the College overrules the Commons",
+   "fen": "7k/p7/8/4N3/4P3/8/PP6/K7 w - - 0 20",
+   "moves": "W@e4 a6",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    5
+   ]
+  },
+  {
+   "name": "demo 06 the swap",
+   "kind": "demo",
+   "title": "Royal Swap: the Commons back the Candidate, the College keeps the King",
+   "fen": "7k/p7/8/8/4P3/3P1P2/1N6/K7 w - - 0 20",
+   "moves": "W@e4 a6",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    6
+   ]
+  },
+  {
+   "name": "demo 07 disqualified",
+   "kind": "demo",
+   "title": "Disqualified: the opponent attacks the Candidate's square",
+   "fen": "7k/p7/8/4N3/4P3/3P1P2/6r1/K7 w - - 0 20",
+   "moves": "W@e4 Rg4",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    7
+   ]
+  },
+  {
+   "name": "demo 08 whig vs whig",
+   "kind": "demo",
+   "title": "Medium vs Medium from the opening book",
+   "white": "medium",
+   "black": "medium",
+   "games": 1,
+   "seeds": [
+    11
+   ]
+  },
+  {
+   "name": "demo 09 populist vs monarchist",
+   "kind": "demo",
+   "title": "Populist vs Monarchist",
+   "white": "medium/populist",
+   "black": "medium/monarchist",
+   "games": 2,
+   "seeds": [
+    12
+   ]
+  },
+  {
+   "name": "demo 10 hard vs medium",
+   "kind": "demo",
+   "title": "Hard (3 ply) vs Medium (2 ply)",
+   "white": "hard",
+   "black": "medium",
+   "games": 2,
+   "seeds": [
+    13
+   ]
+  }
+ ]
+}

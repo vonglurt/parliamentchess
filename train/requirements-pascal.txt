@@ -1,0 +1,7 @@
+# GTX 1080 Ti / 1080 / 1070 Ti (compute capability 6.1, Pascal) with a CUDA 12 driver.
+# PyTorch 2.15 dropped Pascal; 2.14.1's cu126 wheels are the last that run on these cards.
+# Run eagerly: torch.compile's default backend (Triton) needs compute capability 7.0+.
+#   python3 -m venv .venv && .venv/bin/pip install -r train/requirements-pascal.txt
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.14.1+cu126
+numpy

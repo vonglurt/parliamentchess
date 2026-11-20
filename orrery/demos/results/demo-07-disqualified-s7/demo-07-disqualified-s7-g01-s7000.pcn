@@ -1,0 +1,14 @@
+[Event "Parliament Chess"]
+[Variant "Parliament Chess (Vote King) 1.0"]
+[White "medium"]
+[Black "medium"]
+[Date "2026.11.20"]
+[Annotator "Disqualified: the opponent attacks the Candidate's square"]
+[Result "1-0"]
+[Termination "checkmate"]
+[FEN "7k/p7/8/4N3/4P3/3P1P2/6r1/K7 w - - 0 20"]
+[SetUp "1"]
+
+20. W@e4 Rg4 {White count: failed, candidate square attacked} 21. fxg4 a5 22. g5
+a4 23. Kb2 Kh7 24. Ka3 Kg7 25. d4 Kg8 26. g6 Kg7 27. Kb4 Kf6 28. Ka3 Ke6 29. g7
+Kf6 30. g8=Q Ke7 31. Qf7+ Kd6 32. Qd7# 1-0

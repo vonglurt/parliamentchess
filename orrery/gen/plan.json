@@ -1,0 +1,32 @@
+{
+ "about": "Generation chain for the second-generation net: label on CPU lanes (teacher one ply deeper), train on a GPU lane, gauntlet on CPU lanes, elect at z > 2.",
+ "generations": [
+  {
+   "name": "g001",
+   "label": {
+    "jobs": 60,
+    "games": 8,
+    "depth": 3,
+    "player": "medium/populist",
+    "every": 3
+   },
+   "train": {
+    "needs": "gpu",
+    "epochs": 12,
+    "h1": 128,
+    "h2": 32,
+    "batch": 1024,
+    "warm": true
+   },
+   "gauntlet": {
+    "jobs": 25,
+    "games": 4,
+    "challenger": "medium+net2",
+    "champion": "medium"
+   },
+   "bar": {
+    "z": 2.0
+   }
+  }
+ ]
+}

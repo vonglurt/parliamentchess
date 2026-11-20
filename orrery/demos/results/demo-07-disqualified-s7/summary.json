@@ -1,0 +1,53 @@
+{
+    "job": "demo-07-disqualified-s7",
+    "white": "medium",
+    "black": "medium",
+    "seed": 7,
+    "elections": true,
+    "fen": "7k\/p7\/8\/4N3\/4P3\/3P1P2\/6r1\/K7 w - - 0 20",
+    "seconds": 0.3,
+    "files": [
+        "demo-07-disqualified-s7-g01-s7000.json"
+    ],
+    "census": {
+        "games": 1,
+        "whiteWins": 1,
+        "blackWins": 0,
+        "draws": 0,
+        "avgPlies": 25,
+        "writsPerGame": 1,
+        "countsPerGame": 1,
+        "crownMovesPerGame": 0,
+        "outcomes": {
+            "failed": 1
+        },
+        "trailingGames": 0,
+        "trailingScore": null,
+        "pawnCoronations": 0,
+        "terminations": {
+            "checkmate": 1
+        },
+        "decisive": 1,
+        "whiteScore": 1
+    },
+    "games": [
+        {
+            "plies": 25,
+            "result": "1-0",
+            "termination": "checkmate",
+            "writs": {
+                "1": 1,
+                "-1": 0
+            },
+            "outcomes": {
+                "failed": 1
+            },
+            "firstWritPly": 1,
+            "crownMoves": 0,
+            "pawnCoronations": 0,
+            "trailing": null,
+            "trailingScore": null,
+            "deficit": 0
+        }
+    ]
+}

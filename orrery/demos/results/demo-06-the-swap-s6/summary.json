@@ -1,0 +1,55 @@
+{
+    "job": "demo-06-the-swap-s6",
+    "white": "medium",
+    "black": "medium",
+    "seed": 6,
+    "elections": true,
+    "fen": "7k\/p7\/8\/8\/4P3\/3P1P2\/1N6\/K7 w - - 0 20",
+    "seconds": 0.6,
+    "files": [
+        "demo-06-the-swap-s6-g01-s6000.json"
+    ],
+    "census": {
+        "games": 1,
+        "whiteWins": 1,
+        "blackWins": 0,
+        "draws": 0,
+        "avgPlies": 53,
+        "writsPerGame": 2,
+        "countsPerGame": 2,
+        "crownMovesPerGame": 1,
+        "outcomes": {
+            "swap": 1,
+            "defeat": 1
+        },
+        "trailingGames": 1,
+        "trailingScore": 0,
+        "pawnCoronations": 0,
+        "terminations": {
+            "checkmate": 1
+        },
+        "decisive": 1,
+        "whiteScore": 1
+    },
+    "games": [
+        {
+            "plies": 53,
+            "result": "1-0",
+            "termination": "checkmate",
+            "writs": {
+                "1": 1,
+                "-1": 1
+            },
+            "outcomes": {
+                "swap": 1,
+                "defeat": 1
+            },
+            "firstWritPly": 1,
+            "crownMoves": 1,
+            "pawnCoronations": 0,
+            "trailing": -1,
+            "trailingScore": 0,
+            "deficit": 1220
+        }
+    ]
+}
