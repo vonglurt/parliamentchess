@@ -329,13 +329,101 @@ function decide(string $dir, string $state): array
     return $rows;
 }
 
+/**
+ * plan.continue = {"max": N}: when the last listed generation has been decided, the next one is
+ * written into plan.json as a copy of it (g006 -> g007), until N generations are listed. So the
+ * chain runs on by itself, a generation after each verdict, with nobody watching.
+ */
+function extendPlan(string $state, array $decided): void
+{
+    $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
+    $max = (int)($plan['continue']['max'] ?? 0);
+    $gens = $plan['generations'] ?? [];
+    $last = $gens ? $gens[count($gens) - 1] : null;
+    if ($max <= 0 || !$last || !in_array($last['name'], $decided, true) || count($gens) >= $max) {
+        return;
+    }
+    $next = $last;
+    $next['name'] = sprintf('g%03d', (int)substr($last['name'], 1) + 1);
+    $plan['generations'][] = $next;
+    $tmp = "$state/plan.json.tmp";
+    file_put_contents($tmp, json_encode($plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
+    rename($tmp, "$state/plan.json");
+}
+
+/**
+ * plan.git = {"commit": true, "push": false, "branch": "main"}: every verdict is committed to the
+ * Parliament Chess repository, docs/data/generations.json and lineage.tsv, and every elected
+ * generation's net as models/gNNN.json. Only those paths are committed (git commit --only), so
+ * whatever else is changed or staged in the checkout is left alone. It runs at every plan pass
+ * and does nothing when nothing changed, so a commit that failed (a lock, a rebase under way) is
+ * made at the next pass. Failures go to STATE/publish.log and never stop the planner.
+ */
+function publish(string $dir, string $state): void
+{
+    $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
+    $git = $plan['git'] ?? [];
+    if (empty($git['commit'])) {
+        return;
+    }
+    $repo = (string)realpath(getenv('PC_PUBLISH_REPO') ?: REPO);
+    $rows = json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [];
+    if (!$rows || !is_dir("$repo/.git")) {
+        return;
+    }
+    $want = ['docs/data/generations.json' => (string)file_get_contents("$state/generations.json"),
+        'docs/data/lineage.tsv' => (string)@file_get_contents("$state/lineage.tsv")];
+    foreach ($rows as $r) {
+        if (!empty($r['elected']) && is_file($net = rp($dir, 'pc-' . $r['name'] . '-train', 'net2.json'))) {
+            $want["models/{$r['name']}.json"] = (string)file_get_contents($net);
+        }
+    }
+    $changed = [];
+    foreach ($want as $rel => $body) {
+        if (@file_get_contents("$repo/$rel") !== $body) {
+            @mkdir(dirname("$repo/$rel"), 0775, true);
+            file_put_contents("$repo/$rel", $body);
+            $changed[] = $rel;
+        }
+    }
+    $tracked = trim((string)shell_exec('git -C ' . escapeshellarg($repo) . ' status --porcelain -- '
+        . implode(' ', array_map('escapeshellarg', array_keys($want))) . ' 2>/dev/null'));
+    if (!$changed && $tracked === '') {
+        return;
+    }
+    $last = $rows[count($rows) - 1];
+    $msg = sprintf("Orrery: generation %s %s (score %.3f, z %.2f, %d games, %d elections)",
+        $last['name'], $last['elected'] ? 'ELECTED' : 'not elected', $last['score'], $last['z'], $last['games'],
+        $last['politics']['elections'] ?? 0);
+    $paths = implode(' ', array_map('escapeshellarg', array_keys($want)));
+    $g = 'git -C ' . escapeshellarg($repo);
+    $log = [];
+    exec("$g add -- $paths 2>&1", $log, $rc);
+    if ($rc === 0) {
+        exec("$g commit -q --only -m " . escapeshellarg($msg) . " -- $paths 2>&1", $log, $rc);
+    }
+    if ($rc === 0 && !empty($git['push'])) {
+        $branch = trim((string)shell_exec("$g rev-parse --abbrev-ref HEAD 2>/dev/null"));
+        if ($branch === ($git['branch'] ?? 'main')) {
+            exec("$g -c credential.helper= -c 'credential.helper=!gh auth git-credential' push -q origin "
+                . escapeshellarg($branch) . " 2>&1", $log, $rc);
+        } else {
+            $log[] = "not pushed: the checkout is on $branch";
+        }
+    }
+    file_put_contents("$state/publish.log", date('c') . ($rc === 0 ? " committed: $msg" : " FAILED ($rc)") . "\n"
+        . ($log ? '    ' . implode("\n    ", $log) . "\n" : ''), FILE_APPEND);
+}
+
 if ($verb === 'plan') {
     $n = (int)($argv[3] ?? 8);
     if (!is_file("$state/plan.json")) {
         echo "[]\n";
         exit(0);
     }
-    decide($dir, $state);
+    $rowsNow = decide($dir, $state);
+    extendPlan($state, array_column($rowsNow, 'name'));
+    publish($dir, $state);
     $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
     $have = jobs($dir);
     $decided = array_column(json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [], 'name');
