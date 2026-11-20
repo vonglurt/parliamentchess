@@ -615,11 +615,14 @@ The game taught its own lesson. The Writ was chosen to crown after every one of 
 
 ### G. Open
 
-- [ ] Generation 2 labelled 5,292 positions and trained on calber-cuda in 14.3 s (held-out sign accuracy 0.851). Its four gauntlet jobs wait behind treadcore's work on the two PHP lanes; the verdict, with its election count, lands in grove's `parliament/generations.json`.
-- [ ] Generation 3 then starts on the new code: about 70,000 labels, grown to 160/40, with cookies, the result blend and the replay window. It is the first test of whether any of them makes play stronger.
+Generation 2 is decided and not elected. Trained on 5,292 labels in 14.3 s on calber-cuda, it scored 0.266 ± 0.074 over 32 games against plain Medium (z = −3.15), while holding 12 elections. That is an honest negative from a smoke run on the old code with a random start, and it shows the gate counting elections on fleet data. Generation 3, the first on the new code, started at 15:22 pinned to version 2f1743bbcd.
+
+From 15:22 the fleet runs at full tilt for this training. The hearth regulator's `full` mode resumed columbia and woke jaguaribe and bosporus. nasser and xinanjiang rejoined with PHP, taking generation 3's first label jobs. Parliament's label, gauntlet and setup jobs now queue ahead of standing work, with up to 8 waiting.
+
+- [ ] Generation 3: about 70,000 labels, grown to 160/40, with cookies, the result blend and the replay window. It is the first test of whether any of them makes play stronger.
 - [ ] Measure the cookies directly: g003 against the same run without cookies, if g003 is elected.
 - [ ] Pre-pack the training data on the GPU once a generation passes a million positions.
-- [ ] More PHP lanes would shorten labelling the most; installing PHP on whitewolf, boburner, calber and macmini still awaits your decision.
+- [ ] PHP on whitewolf, boburner, calber and macmini would add four more lanes; it needs root, which the fleet's recipes leave to a person typing the password in a Sessions tile.
 
 ## References
 
