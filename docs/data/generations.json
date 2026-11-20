@@ -1,0 +1,39 @@
+[
+    {
+        "name": "g002",
+        "gi": 0,
+        "games": 32,
+        "score": 0.2656,
+        "se": 0.0744,
+        "z": -3.15,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 12,
+            "elections": 12,
+            "crownMoves": 5,
+            "coronations": 4,
+            "promotions": 6
+        },
+        "why": "not stronger by the bar",
+        "labels": 5292,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.20628,
+        "valPolicyTop1": 0.11,
+        "laneSeconds": {
+            "label": 388,
+            "train": 14.3,
+            "gauntlet": 66
+        },
+        "wallSeconds": 7169,
+        "hosts": [
+            "jaguaribe",
+            "columbia",
+            "saskatchewan",
+            "saskatchewan-2",
+            "calber-cuda"
+        ],
+        "decided": "2026-11-20T23:21:13+00:00"
+    }
+]
