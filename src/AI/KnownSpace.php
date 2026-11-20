@@ -25,9 +25,13 @@ final class KnownSpace
 
     public function __construct(string $path)
     {
-        $this->db = new \PDO('sqlite:' . $path);
+        // The busy timeout comes first: several workers may open a fresh book at once, and the switch
+        // to WAL needs an exclusive lock. Set after it (as it once was), a worker that lost the race
+        // failed at once with "database is locked" instead of waiting its turn.
+        $this->db = new \PDO('sqlite:' . $path, null, null, [\PDO::ATTR_TIMEOUT => 15]);
         $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-        $this->db->exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;');
+        $this->db->exec('PRAGMA busy_timeout=15000');
+        $this->db->exec('PRAGMA journal_mode=WAL');
         $this->db->exec('CREATE TABLE IF NOT EXISTS known (
             h INTEGER NOT NULL, mv TEXT NOT NULL, w INTEGER NOT NULL DEFAULT 0, d INTEGER NOT NULL DEFAULT 0,
             l INTEGER NOT NULL DEFAULT 0, theory INTEGER NOT NULL DEFAULT 0, ply INTEGER NOT NULL DEFAULT 0,

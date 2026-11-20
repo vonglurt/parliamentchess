@@ -18,6 +18,7 @@ declare(strict_types=1);
  *   r   final game result for the side to move (1, 0, -1)
  *   p   action values: [policy index, score, flags] for every legal root move
  *       (flags: 1 promotion, 2 Writ, 4 castling, 8 capture, 16 a Writ whose poll already crowns)
+ *   --no-book: the players open without the opening book (the fleet's label jobs use it)
  * The teacher sees depth plies plus quiescence; the student learns to see it in one look.
  * DIR/summary.json records counts and timing, the generation's labelling cost.
  */
@@ -29,7 +30,9 @@ use Parliament\AI\Search;
 use Parliament\AI\Sensors;
 use Parliament\Engine\Game;
 
-$o = getopt('', ['games:', 'depth:', 'seed:', 'out:', 'player:', 'every:', 'from-ply:', 'opening-random:', 'job:', 'max-plies:', 'workers:']);
+$o = getopt('', ['games:', 'depth:', 'seed:', 'out:', 'player:', 'every:', 'from-ply:', 'opening-random:', 'job:', 'max-plies:', 'workers:', 'no-book']);
+// --no-book: the players open without the book, so every lane labels alike (lanes without SQLite have none).
+$noBook = isset($o['no-book']);
 $games = (int)($o['games'] ?? 10);
 $depth = (int)($o['depth'] ?? 3);
 $seed = (int)($o['seed'] ?? 1);
@@ -48,8 +51,8 @@ if ($workers === 0) {
 }
 if ($workers > 1) {
     $t0 = microtime(true);
-    $codes = \Parliament\Engine\Workers::run(__FILE__, $workers, function (int $i) use ($o, $out, $seed, $depth, $games, $player, $every, $fromPly, $randomPlies, $maxPlies): array {
-        return ['--games', (string)$games, '--depth', (string)$depth, '--seed', (string)($seed * 100 + $i), '--player', $player,
+    $codes = \Parliament\Engine\Workers::run(__FILE__, $workers, function (int $i) use ($o, $out, $seed, $depth, $games, $player, $every, $fromPly, $randomPlies, $maxPlies, $noBook): array {
+        return [...($noBook ? ['--no-book'] : []), '--games', (string)$games, '--depth', (string)$depth, '--seed', (string)($seed * 100 + $i), '--player', $player,
             '--every', (string)$every, '--from-ply', (string)$fromPly, '--opening-random', (string)$randomPlies,
             '--max-plies', (string)$maxPlies, '--job', ($o['job'] ?? 'local') . "-w$i", '--out', "$out/w$i"];
     }, "$out/logs");
@@ -80,7 +83,7 @@ if ($workers > 1) {
     exit($sum['labels'] > 0 ? 0 : 1);
 }
 $gz = gzopen("$out/shard.jsonl.gz", 'wb6');
-$book = Players::book();
+$book = $noBook ? null : Players::book();
 $handEval = new Evaluator(); // the static evaluation a residual net learns to correct
 $t0 = microtime(true);
 $teacherMs = 0.0;

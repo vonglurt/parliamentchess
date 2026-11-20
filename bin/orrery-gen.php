@@ -215,6 +215,7 @@ function generation(array $gen, int $gi, array $have): array
     }
     $done = fn(array $ids) => count(array_filter($ids, fn($i) => state($have, $i) === 'done')) === count($ids);
     return ['name' => $name, 'gi' => $gi, 'L' => $L, 'T' => $T, 'G' => $G, 'labels' => $labels,
+        'bookless' => ($gen['label']['book'] ?? true) === false, // label.book false: --no-book (code from 2026-11-20 on)
         'train' => "pc-$name-train", 'gaunts' => $gaunts, 'labelsDone' => $done($labels),
         'trainDone' => state($have, "pc-$name-train") === 'done', 'gauntDone' => $done($gaunts)];
 }
@@ -383,7 +384,7 @@ if ($verb === 'plan') {
                 'needs' => $L['needs'], 'send' => $L['player'] === 'champion' ? $champSend : [], 'stage' => 'label',
                 'cmd' => prelude($lanes ? $d['hash'] : '') . 'sh bin/php bin/label.php --job ' . $id . ' --games ' . (int)$L['games'] . ' --workers ' . (int)$L['workers']
                     . ' --depth ' . (int)$L['depth'] . ' --every ' . (int)$L['every'] . ' --seed ' . (($gi + 1) * 1000 + $k + 1)
-                    . ' --player "' . $spec2($L['player']) . '" --out "$HOME/pc-out/' . $id . '"',
+                    . ' --player "' . $spec2($L['player']) . '"' . (!empty($g['bookless']) ? ' --no-book' : '') . ' --out "$HOME/pc-out/' . $id . '"',
                 'fetch' => "pc-out/$id"]);
         }
         if ($g['labelsDone'] && !isset($have[$g['train']]) && count($out) < $n) {
