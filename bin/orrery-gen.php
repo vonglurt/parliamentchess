@@ -359,6 +359,9 @@ if ($verb === 'plan') {
         // Setup first, on every lane that can take this project's work, once per code version.
         foreach ($lanes as $lane => $caps) {
             $p = prepJob($lane, $caps, $d, $needs);
+            if ($p && !empty($plan['priority'])) {
+                $p['priority'] = $plan['priority']; // a lane's setup must not wait behind the work it unlocks
+            }
             if ($p && !isset($have[$p['id']]) && count($out) < $n) {
                 $out[] = $p;
             }
@@ -367,7 +370,9 @@ if ($verb === 'plan') {
         $champ = championBefore($state, $gi);
         $champSend = $champ ? [['src' => rp($dir, 'pc-' . $champ['name'] . '-train', 'net2.json'), 'dst' => "pc-data/$name/champion.json"]] : [];
         $spec2 = fn(string $s) => $s === 'champion' ? ($champ ? 'medium+net2:$HOME/pc-data/' . $name . '/champion.json' : 'medium') : $s;
-        $common = fn(array $j) => job($j + array_filter(['after_host' => $afterHost, 'gen' => $name, 'replan' => true]));
+        // plan.priority "high" puts label and gauntlet jobs ahead of the standing work (training is always high).
+        $common = fn(array $j) => job($j + array_filter(['after_host' => $afterHost, 'gen' => $name, 'replan' => true,
+            'priority' => $plan['priority'] ?? null]));
         foreach ($g['labels'] as $k => $id) {
             if (isset($have[$id]) || count($out) >= $n || $room <= 0) {
                 continue;
