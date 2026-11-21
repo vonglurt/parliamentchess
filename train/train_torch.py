@@ -182,6 +182,116 @@ def batches(recs, size, device, lam, temp, shuffle, mode="value", args=None):
                vt.to(device), mask.to(device), target.to(device), best.to(device), chunk, w.to(device))
 
 
+class Packed:
+    """The whole dataset as tensors on the device, built once. An epoch is then index arithmetic on
+    the device; building every batch in Python held a GTX 1080 Ti to 12 s an epoch (g003).
+
+    feats/fmask  [N, Fmax]  active input indices, padded with 0 at weight 0
+    ids/valid    [N, Pmax]  legal moves' policy indices; tgt the teacher's policy over them
+    best [N], vt [N], w [N] the teacher's best move, the value target, the loss weight
+    h, s, r      [N]        hand evaluation, teacher score, result, for the held-out checks"""
+
+    def __init__(self, recs, device, lam, temp, mode, args=None):
+        n = len(recs)
+        self.n = n
+        cook = args is not None and bool(args.cookie_writ or args.cookie_promo)
+        flen = torch.tensor([len(r["f"]) for r in recs])
+        fflat = torch.tensor([x for r in recs for x in r["f"]], dtype=torch.long)
+        # One policy slot per from-to pair: the four promotions of one pawn share a slot. Their teacher
+        # probabilities are summed into it (a log-sum-exp of their scores at the temperature), and its
+        # best score is their best. (The old batches kept the last promotion's probability only.)
+        pid_l, raw_l, sc_l, plen_l = [], [], [], []
+        for r in recs:
+            slots = {}
+            for m in r["p"]:
+                sc = m[1] + (cookie(m, args) if cook else 0.0)
+                e = slots.get(m[0])
+                if e is None:
+                    slots[m[0]] = [m[1], [sc]]
+                else:
+                    e[0] = max(e[0], m[1])
+                    e[1].append(sc)
+            plen_l.append(len(slots))
+            for i, (best_raw, scs) in slots.items():
+                top = max(scs)
+                pid_l.append(i)
+                raw_l.append(float(best_raw))
+                sc_l.append(top if len(scs) == 1 else top + temp * math.log(sum(math.exp((x - top) / temp) for x in scs)))
+        plen = torch.tensor(plen_l)
+        pid = torch.tensor(pid_l, dtype=torch.long)
+        raw = torch.tensor(raw_l)
+        sc_all = torch.tensor(sc_l)
+
+        def pad(flat, lens, fill):
+            rows = torch.repeat_interleave(torch.arange(n), lens)
+            start = torch.cumsum(lens, 0) - lens
+            cols = torch.arange(len(flat)) - torch.repeat_interleave(start, lens)
+            out = torch.full((n, int(lens.max())), fill, dtype=flat.dtype)
+            out[rows, cols] = flat
+            return out
+
+        self.feats = pad(fflat, flen, 0)
+        self.fmask = pad(torch.ones(len(fflat)), flen, 0.0)
+        self.ids = pad(pid, plen, 0)
+        self.valid = pad(torch.ones(len(pid), dtype=torch.bool), plen, False)
+        rawp = pad(raw, plen, float("-inf"))
+        scp = pad(sc_all, plen, float("-inf"))
+        self.tgt = torch.softmax(scp / temp, 1).nan_to_num(0.0)
+        self.best = self.ids.gather(1, rawp.argmax(1, keepdim=True)).squeeze(1)
+        self.vt = torch.tensor([value_target(r, lam, mode, args) for r in recs])
+        self.w = torch.tensor([special_weight(r, args) if args is not None else 1.0 for r in recs])
+        self.h = torch.tensor([float(r.get("h", 0)) for r in recs])
+        self.s = torch.tensor([float(r["s"]) for r in recs])
+        self.r = torch.tensor([float(r.get("r", 0)) for r in recs])
+        for k in ("feats", "fmask", "ids", "valid", "tgt", "best", "vt", "w", "h", "s", "r"):
+            setattr(self, k, getattr(self, k).to(device))
+
+
+def forward_packed(model, P, idx):
+    """SensorNet's forward on rows idx of a Packed set: the value, and the logits of the legal moves only
+    (the same numbers the full forward gives them; illegal moves never enter the softmax either way)."""
+    x = torch.clamp(model.ft(P.feats[idx], per_sample_weights=P.fmask[idx]) + model.ft_bias, 0, 1)
+    h = torch.clamp(model.l2(x), 0, 1)
+    v = model.value(h).squeeze(1)
+    if not model.residual:
+        v = torch.tanh(v)
+    ids = P.ids[idx]
+    # A multiply and a sum, not einsum: torch 2.14 sends a batched product's backward to a Triton
+    # kernel even in eager mode, and Triton cannot build on the Pascal lanes (no Python headers there).
+    lg = (h.unsqueeze(1) * model.move_vectors()[ids]).sum(-1) + model.mbias[ids]
+    return v, lg.masked_fill(~P.valid[idx], float("-inf"))
+
+
+def losses_packed(model, P, idx, args):
+    v, lg = forward_packed(model, P, idx)
+    w = P.w[idx]
+    wn = w / w.mean()
+    loss_v = (wn * (v - P.vt[idx]) ** 2).mean()
+    logp = F.log_softmax(lg, 1).masked_fill(~P.valid[idx], 0.0)
+    loss_p = (wn * -(P.tgt[idx] * logp).sum(1)).mean()
+    return loss_v, loss_p
+
+
+def evaluate_packed(model, P, args):
+    model.eval()
+    se = agree = ok = cnt = 0.0
+    with torch.no_grad():
+        for i in range(0, P.n, 4096):
+            idx = torch.arange(i, min(P.n, i + 4096), device=P.vt.device)
+            v, lg = forward_packed(model, P, idx)
+            se += float(((v - P.vt[idx]) ** 2).sum())
+            agree += float((P.ids[idx].gather(1, lg.argmax(1, keepdim=True)).squeeze(1) == P.best[idx]).sum())
+            if args.mode == "residual":  # does hand + correction land on the teacher's side of zero?
+                m = P.s[idx] != 0
+                ok += float((((P.h[idx] + 400 * v) > 0) == (P.s[idx] > 0))[m].sum())
+            else:
+                m = P.r[idx] != 0
+                ok += float(((v > 0) == (P.r[idx] > 0))[m].sum())
+            cnt += float(m.sum())
+    model.train()
+    return se / max(1, P.n), agree / max(1, P.n), ok / max(1.0, cnt)
+
+
 def evaluate(model, recs, args, device):
     model.eval()
     se = n = agree = sign_ok = sign_n = 0.0
@@ -242,6 +352,7 @@ def main():
     ap.add_argument("--cookie-promo", type=float, default=0.0)
     ap.add_argument("--weight-special", type=float, default=1.0)
     ap.add_argument("--reinforce", type=float, default=0.0, help="residual mode: weight of the game result in the target")
+    ap.add_argument("--unpacked", action="store_true", help="build every batch in Python, as before 20 November (slower)")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
     random.seed(args.seed)
@@ -309,9 +420,35 @@ def main():
     base = sum(value_target(r, args.lam, args.mode) ** 2 for r in val) / max(1, len(val))
     print(f"held-out baseline (predict 0) value MSE {base:.4f}", flush=True)
     history = []
+    if not args.unpacked:
+        tp = time.time()
+        PT = Packed(train, device, args.lam, args.temp, args.mode, args)
+        PV = Packed(val, device, args.lam, args.temp, args.mode)  # held out: the teacher's own targets
+        print(f"packed {PT.n} + {PV.n} positions onto {device} in {time.time() - tp:.1f}s", flush=True)
     for ep in range(1, args.epochs + 1):
         te = time.time()
         tot = vl = pl = 0.0
+        if not args.unpacked:
+            perm = torch.randperm(PT.n, device=device)
+            for i in range(0, PT.n, args.batch):
+                idx = perm[i:i + args.batch]
+                loss_v, loss_p = losses_packed(model, PT, idx, args)
+                loss = loss_v + args.beta * loss_p
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                b = len(idx)
+                tot += b
+                vl += loss_v.item() * b
+                pl += loss_p.item() * b
+            sched.step()
+            mse, top1, sign = evaluate_packed(model, PV, args)
+            row = {"epoch": ep, "trainValueMSE": round(vl / tot, 5), "trainPolicyCE": round(pl / tot, 4),
+                   "valValueMSE": round(mse, 5), "valPolicyTop1": round(top1, 4), "valSignAcc": round(sign, 4),
+                   "seconds": round(time.time() - te, 2)}
+            history.append(row)
+            print(json.dumps(row), flush=True)
+            continue
         for flat, offs, vt, mask, target, best, chunk, w in batches(train, args.batch, device, args.lam, args.temp, True, args.mode, args):
             v, logits = model(flat, offs)
             wn = w / w.mean()
