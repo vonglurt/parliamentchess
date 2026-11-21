@@ -121,7 +121,7 @@ class PlayersGuide(Scene):
 
         # 1. Start the server.
         term = VGroup(*[T(s, 26, c, font=MONO) for s, c in [
-            ("$ git clone https://github.com/vonglurt/parlamentchess.git", GREY_L), ("$ cd parlamentchess", GREY_L),
+            ("$ git clone https://github.com/vonglurt/parliamentchess.git", GREY_L), ("$ cd parliamentchess", GREY_L),
             ("$ make up", GOLD), ("up: http://localhost:8080", GREEN)]]).arrange(DOWN, aligned_edge=LEFT, buff=0.22)
         frame = RoundedRectangle(corner_radius=0.15, width=term.width + 0.8, height=term.height + 0.7, stroke_color=GREY_D, fill_color="#0b0b0b", fill_opacity=1)
         tg = VGroup(frame, term.move_to(frame)).scale_to_fit_width(IMG_W).move_to(IMG_C)
@@ -280,7 +280,7 @@ class PlayersGuide(Scene):
         self.play(FadeOut(img), FadeOut(self.cap), run_time=0.6)
         self.remove(mask)
         end = VGroup(T("make up", 40, GOLD, font=MONO), T("make test", 40, GOLD, font=MONO), T("make down", 40, GOLD, font=MONO)).arrange(DOWN, buff=0.25)
-        url = T("github.com/vonglurt/parlamentchess", 32, GREY_L)
+        url = T("github.com/vonglurt/parliamentchess", 32, GREY_L)
         fin = T("Every move FIDE. Every crown elected.", 40, WHITE)
         VGroup(fin, end, url).arrange(DOWN, buff=0.55)
         self.play(FadeIn(fin, shift=UP * 0.2), run_time=0.8)

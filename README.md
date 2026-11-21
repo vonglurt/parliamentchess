@@ -2,25 +2,156 @@
 
 **Every move FIDE. Every crown elected.**
 
-Parliament Chess is chess with one new office: the crown. File a *Writ* and your own
-pieces vote by proximity — pawns in the Commons, Knights, Bishops and Rooks in the
-College — on whether the crown should pass from your King to a Candidate. A dethroned
-King becomes a pawn, a *Pretender*, who may never again promote higher than a Rook.
+![A Writ is filed for the d3 pawn, the opponent checks, and the count crowns the pawn](docs/media/parliament_chess_writ_and_count.gif)
 
-It is a parody in the tradition of Rock Paper Scissors Lizard Spock: the base game is
-untouched, the extension is the joke, and the joke has to be balanced.
+Parliament Chess is chess with one new office: the crown. Halfway through a game you can call an
+election, and your own pieces vote on whether the crown should leave your King for another piece.
+Win the vote and that piece becomes your King, while the old King steps down to be a humble pawn.
+It is a parody in the spirit of Rock Paper Scissors Lizard Spock: the chess is untouched, the
+politics are the joke, and the joke is balanced.
 
-- **Rules:** [RULES.md](RULES.md) (also served at `/?rules=1`)
+**[Website](https://vonglurt.github.io/parliamentchess/)** ·
+**[Player's guide video](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)** (106 s) ·
+**[Rules](RULES.md)** · **[Lab reports](docs/parliament-chess-lab-report.md)** · MIT License
+
+## Play in a minute
+
+```bash
+git clone https://github.com/vonglurt/parliamentchess.git
+cd parliamentchess
+make up          # then open http://localhost:8080 and press Play now
+```
+
+You need PHP 8.2 or later and nothing else. `make down` stops the server.
+
+![The lobby: your name, then two browsers, the machine, or two machines](docs/media/guide/lobby.jpg)
+
+You arrive as a pumpkin or another giant squash (Atlantic Giant, Big Max, Jarrahdale ...); type a new
+name if you like. Then pick a way to play:
+
+| | |
+| --- | --- |
+| **Two browsers** | Create a game and send the second link to a friend. Anyone with the watch link can follow live. |
+| **Play the machine** | Easy, Medium or Hard, as a Whig, a Populist or a Monarchist, with either colour. |
+| **Watch the machines** | Two bots argue it out while you watch. |
+
+[![The player's guide: your first game, in 106 seconds](docs/media/still-guide.png)](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)
+
+## How a game goes
+
+### 1. It's chess
+
+Every move is a normal chess move: castling, en passant, promotion, all of it. Fool's Mate still
+mates. For the first nine moves nothing else can happen (the *Coronation Peace*), so your openings
+are safe.
+
+### 2. From move 10, you may file a Writ
+
+On your turn, instead of moving, press **File a Writ** and name a **Candidate**: one of your own
+pieces that could be King instead. It can't be your King or a Queen, it can't have worn the crown
+before, and it can't be under attack. The gold squares show who may stand. Pick one, and the board
+previews the vote as it stands right now. Filing costs your whole turn.
+
+<p>
+<img src="docs/media/guide/candidates.jpg" width="49%" alt="Gold squares: the pieces that may stand for the crown">
+<img src="docs/media/guide/forecast.jpg" width="40%" alt="The forecast: Commons 4 to 1, College 7 to 5, a Coronation if nothing changes">
+</p>
+
+### 3. The campaign: your opponent gets one move
+
+They can attack the Candidate's square, which makes the election fail. They can capture your voters,
+or attack them so they're too scared to vote. Or they can ignore you and file a Writ of their own.
+
+### 4. The count
+
+At the start of your next turn, your pieces vote. Each one backs whichever is **nearer**, the
+Candidate or the King, counting king-steps; a tie backs the King. A piece under attack abstains.
+
+- **Commons:** every pawn has 1 vote.
+- **College:** a Knight has 2, a Bishop 2, a Rook 3.
+- **Speaker:** the Queen votes only to break a tie in the College.
+
+![Who votes: every line is a vote the engine counted in a real game](docs/media/fig-election.png)
+
+| | Commons back the Candidate | Commons back the King |
+| --- | --- | --- |
+| **College backs the Candidate** | **Coronation:** the Candidate is King, the old King becomes a pawn | **Contested Coronation:** the same, and your opponent gets a bonus Writ |
+| **College backs the King** | **Royal Swap:** King and Candidate swap squares | **Defeat:** nothing happens |
+
+A result that would leave your new King in check, or give check, doesn't count. When the crown
+moves, you lose your castling rights. Then you play your move as usual.
+
+## A king vote, step by step
+
+![A king vote: White files for the c1 Bishop, Black answers, and the Bishop is crowned](docs/media/guide/king-vote.jpg)
+
+This is a real game from the player's guide, an Italian opening.
+
+1. **Move 11.** White's King sits on g1, so White files a Writ for the Bishop on c1. The preview looks
+   comfortable: the a2, b2, c3 and d3 pawns back c1 (Commons 4 to 1), and the a1 Rook, the b3 Bishop
+   and the d2 Knight outvote the e1 Rook and the f3 Knight (College 7 to 5).
+2. **Black has one move,** and finds a clever one: **Be6**, attacking the Bishop on b3.
+3. **The count.** The b3 Bishop is under attack, so it abstains. That takes 2 votes away and leaves
+   the College tied at 5 to 5. The Queen on d1 is nearer c1 than g1, so as Speaker she breaks the tie
+   for the Candidate. With the Commons already 4 to 1, it's a **Coronation**. The Bishop on c1 is the
+   new King (its badge says it was born a Bishop), and the old King on g1 is now a Pretender pawn.
+   It looks like castling queenside, done by election.
+
+<p><img src="docs/media/guide/tally.jpg" width="42%" alt="The tally: Commons 4 to 1, College 5 to 5, Coronation"></p>
+
+## Writs, terms and the Ledger
+
+- **Writs:** you start with 1. Each time you lose a Knight, Bishop, Rook or Queen you gain 1 (a
+  *grievance*), up to 3. A Contested Coronation hands your opponent one too.
+- **Terms:** after a count you wait 5 full moves before your next Writ. No Writ while in check, and
+  one election at a time.
+- **One term only:** a piece that has worn the crown can never be elected again. The starting Kings
+  already have.
+- **Pretenders:** a dethroned King becomes a pawn, and it may only ever promote to a Rook, Bishop or
+  Knight.
+- **Stranded pawns:** a pawn put on its last rank by an election can't move, but it still votes. A
+  pawn on its own first rank steps one square, never two.
+
+**Winning** is plain chess: checkmate whoever wears the crown. A mate delivered during your opponent's
+campaign only counts after their count, because the count may carry the crown out of the net.
+
+## Tips: when to move the crown
+
+Like castling, the crown move has a right moment. In 1,712 Writs from 1,100 self-play games:
+
+1. **Count first.** File a Writ only when the preview already wins it: those moved the crown 79% of
+   the time, the rest 5.5%.
+2. **Crown before the storm.** With no square around your King attacked, 85% succeeded; with three or
+   more attacked, 51%.
+3. **Crown early.** Moves 10 to 29: 76%. Move 45 or later: 60%.
+4. **Guard your voters.** Like Be6 above, the reply that wins is usually an attack on a voter, not on
+   the Candidate.
+
+![How often the crown moved after a Writ, by the position when it was filed](docs/media/fig-crown-theory.png)
+
+## Your game, on the record
+
+<p><img src="docs/media/guide/record.jpg" width="40%" alt="The game record: every move with its player and its time, the Writ in red, and the Ledger of careers">
+<img src="docs/media/guide/bot.jpg" width="40%" alt="A bot opponent: Ceratonia siliqua, the carob, bot, medium, whig"></p>
+
+The side panel lists every move with its player and the time it was played, during the game and after
+it, and **CSV**, **JSON** and **PCN** download the whole record. The Ledger keeps each piece's career:
+born a Bishop, crowned on c1. Bots are named after sixty nuts, legumes and squash, by common or Latin
+name: you might lose to *Ceratonia siliqua* (the carob) or a Black-eyed Pea.
+
+---
+
+# For developers
+
 - **Lab reports:** [docs/parliament-chess-lab-report.md](docs/parliament-chess-lab-report.md)
-  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–IX, from the rules to the fleet.
+  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–X, from the rules to the fleet.
   The data behind them is in [docs/data](docs/data) and the figures in [docs/media](docs/media)
-- **Film:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim
-- **Player's guide:** `docs/media/players_guide.mp4`, your first game on the real client in 106 seconds (`sh film/render.sh guide`)
-- **License:** MIT
+- **Films:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim;
+  `docs/media/players_guide.mp4`, the player's guide (`sh film/render.sh guide`)
+- **Training:** generations of nets train on an Orrery fleet and commit each verdict here
+  (`docs/data/generations.json`; an elected net lands in `models/`)
 
 ## Run it
-
-Requires PHP 8.2+ (tested on 8.5 and 8.6); `pdo_sqlite` adds the opening book. No Composer, no other dependencies.
 
 ```bash
 make up        # the server in the background: http://localhost:8080 (make up PORT=8081 for another port)
@@ -28,25 +159,13 @@ make down      # stop it
 make test      # 45 rule tests, then two browsers playing each other through a server of their own
 ```
 
-`/` is the landing page and `/play.html` the game. From the game's lobby you can:
+PHP 8.2+ (tested on 8.3, 8.5 and 8.6); `pdo_sqlite` adds the opening book. No Composer, no other
+dependencies. `/` is the landing page and `/play.html` the game; besides the ways to play above, the
+lobby has **Replays** (every recorded game; step, scrub or autoplay), **Record** (any game to WebM,
+since the board is a canvas) and **Orrery** (the self-play queues drawn as orbits).
 
-| | |
-| --- | --- |
-| **Two browsers** | Create a game; send the second link to your opponent. Each link carries its own token. |
-| **Play the machine** | Easy (1 ply), Medium (2 ply) or Hard (3 ply), as a Whig, Populist or Monarchist. |
-| **Watch the machines** | Two bots play while you watch; any number of spectators can follow by link. |
-| **Replays** | Every recorded game, the demo reel included; step, scrub or autoplay. |
-| **Record** | Any live game or replay records straight to WebM (the board is a canvas). |
-| **Orrery** | The self-play queues drawn as orbits, with their census tables. |
-
-**Names.** You start as a pumpkin or another large squash (Atlantic Giant, Big Max, Jarrahdale ...)
-and can rename yourself in the lobby or mid-game; your name is kept in your browser. Bots are named at
-random from sixty nuts, legumes and squash, by their common or their Latin name: *Cicer arietinum*,
-Macadamia, *Cucurbita argyrosperma*, Black-eyed Pea ...
-
-**The game record.** During the game and after it, the side panel lists every move with its number,
-its player and its time; **CSV**, **JSON** and **PCN** download the whole record (`/api/record?id=`
-gives it as JSON: player, notation, UCI and an ISO 8601 UTC timestamp per move).
+**The record as data.** `/api/record?id=` gives a game as JSON: player, notation, UCI and an ISO 8601
+UTC timestamp per move.
 
 **Every combination.** Two people (two browsers), a person against a bot (either colour, three
 levels, three styles), or two bots with spectators. Every chess rule is in: castling on both sides,
