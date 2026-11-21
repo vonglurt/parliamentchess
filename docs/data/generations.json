@@ -119,5 +119,45 @@
             "xinanjiang"
         ],
         "decided": "2026-11-21T01:37:34+00:00"
+    },
+    {
+        "name": "g005",
+        "gi": 3,
+        "games": 200,
+        "score": 0.57,
+        "se": 0.0323,
+        "z": 2.17,
+        "bar": 2,
+        "elected": true,
+        "minElections": 1,
+        "politics": {
+            "writs": 132,
+            "elections": 132,
+            "crownMoves": 48,
+            "coronations": 26,
+            "promotions": 74
+        },
+        "why": "stronger, and it holds elections",
+        "labels": 72729,
+        "device": "NVIDIA GeForce GTX 1080",
+        "valValueMSE": 0.16452,
+        "valPolicyTop1": 0.171,
+        "laneSeconds": {
+            "label": 824.2,
+            "train": 470,
+            "gauntlet": 656.7
+        },
+        "wallSeconds": 2515,
+        "hosts": [
+            "jaguaribe",
+            "boburner",
+            "saskatchewan",
+            "xinanjiang",
+            "whitewolf",
+            "columbia",
+            "saskatchewan-2",
+            "calber"
+        ],
+        "decided": "2026-11-21T02:22:31+00:00"
     }
 ]
