@@ -200,5 +200,47 @@
             "columbia"
         ],
         "decided": "2026-11-21T03:04:51+00:00"
+    },
+    {
+        "name": "g007",
+        "gi": 5,
+        "games": 200,
+        "score": 0.475,
+        "se": 0.0341,
+        "z": -0.73,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 95,
+            "elections": 95,
+            "crownMoves": 38,
+            "coronations": 26,
+            "promotions": 76
+        },
+        "why": "not stronger by the bar",
+        "labels": 71010,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.16328,
+        "valPolicyTop1": 0.1637,
+        "laneSeconds": {
+            "label": 5532.6,
+            "train": 430.8,
+            "gauntlet": 794.6
+        },
+        "wallSeconds": 2988,
+        "hosts": [
+            "bosporus",
+            "whitewolf",
+            "boburner",
+            "saskatchewan-2",
+            "jaguaribe",
+            "calber",
+            "saskatchewan",
+            "xinanjiang",
+            "columbia",
+            "nasser"
+        ],
+        "decided": "2026-11-21T03:56:27+00:00"
     }
 ]
