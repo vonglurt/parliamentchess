@@ -687,17 +687,20 @@ The fleet figure was measured before the last two speed-ups, so it is a floor. A
 
 ### E. The generations so far
 
-No generation has been elected yet; each verdict commits and pushes itself to the repository (`docs/data/generations.json`).
+Generation 5, the first to label in Rust, is the first elected: it beat plain Medium by more than two standard errors while holding the most elections of any generation. Each verdict commits and pushes itself to the repository (`docs/data/generations.json`).
 
-| Generation | Labels | Labeller | Gauntlet score vs plain Medium | z | Elections held | Verdict |
+| Generation | Trained on | Labeller | Gauntlet score vs plain Medium | z | Elections held | Verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| g002 (smoke run, old code) | 5,292 | PHP | 0.266 ± 0.074, 32 games | −3.15 | 12 | not elected |
-| g003 (zero start, cookies, 160/40) | 72,791 | PHP | 0.410 ± 0.033, 200 games | −2.71 | 97 | not elected |
-| g004 (no book in label games) | about 70,000 | PHP | under way |  |  |  |
+| g002 (smoke run, old code) | 5,292 positions | PHP | 0.266 ± 0.074, 32 games | −3.15 | 12 | not elected |
+| g003 (zero start, cookies, 160/40) | 78,083 | PHP | 0.410 ± 0.033, 200 games | −2.71 | 97 | not elected |
+| g004 (no book in label games) | 152,898 | PHP | 0.525 ± 0.033, 200 games | +0.77 | 78 | not elected |
+| g005 (Rust labels, packed trainer) | 220,335 | Rust | 0.570 ± 0.032, 200 games | +2.17 | 132 | **elected** |
+
+Generation 5 took 42 minutes from its first job to its verdict, against generation 3's 69. Its 30 Rust label jobs took about 9 minutes on ten lanes, with none failing; boburner ran one in 11 s against a median of 57 s for generation 4's PHP jobs of half the size. Trained on three generations of labels through the replay window, its held-out value error fell from 0.321 to 0.165 (generation 3's fell from 0.331 to 0.308), and its sign accuracy reached 0.911. Its net is in the repository as `models/g005.json`. Generation 6 now labels with games played by it, through the Rust labeller's net, and warm-starts from it.
 
 Generation 5 is the first to label in Rust: 30 jobs of 8 games, the same 1,920 games as before. Its setup job builds `pc-label` on each PHP lane; the command it will run was rehearsed by hand on nasser and passed. With labelling about 6.6 times faster and no wait for a GPU, a generation should take about 25 minutes instead of 69, and the PHP gauntlet becomes its largest stage.
 
-- [ ] Generation 5: the first Rust labels, and the first measured generation time with all three speed-ups.
+- [ ] Generation 6: the first generation built on a champion, labelled from its games and challenging it in the gauntlet.
 - [ ] Gauntlets in Rust: they are now the slowest stage, but they need the game record (moves, counts, results) that the verdict reads.
 - [ ] A depth-4 teacher, now affordable: a decision for the next generation, since it changes what the net learns.
 
