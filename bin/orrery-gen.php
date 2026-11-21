@@ -405,8 +405,13 @@ function publish(string $dir, string $state): void
     if ($rc === 0 && !empty($git['push'])) {
         $branch = trim((string)shell_exec("$g rev-parse --abbrev-ref HEAD 2>/dev/null"));
         if ($branch === ($git['branch'] ?? 'main')) {
-            exec("$g -c credential.helper= -c 'credential.helper=!gh auth git-credential' push -q origin "
-                . escapeshellarg($branch) . " 2>&1", $log, $rc);
+            // gh by its full path: the keeper's PATH is whatever it was started with.
+            $gh = trim((string)shell_exec('command -v gh 2>/dev/null'));
+            foreach (['/opt/homebrew/bin/gh', '/usr/local/bin/gh'] as $p) {
+                $gh = $gh !== '' ? $gh : (is_executable($p) ? $p : '');
+            }
+            exec("$g -c credential.helper= -c " . escapeshellarg("credential.helper=!" . ($gh ?: 'gh') . " auth git-credential")
+                . " push -q origin " . escapeshellarg($branch) . " 2>&1", $log, $rc);
         } else {
             $log[] = "not pushed: the checkout is on $branch";
         }
