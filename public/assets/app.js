@@ -541,8 +541,11 @@ async function lobby(app) {
     h('div', { class: 'section' }, h('h2', {}, 'In session'), h('div', { class: 'list', id: 'live' }, h('div', { class: 'empty' }, 'Loading…'))),
   );
   api.get('nets').then(({ nets, champion }) => {
-    const c = nets.find((n) => n.name === champion);
-    if (c) $('#netline').textContent = `Generation ${c.name.slice(1).replace(/^0+/, '')}, the champion: trained by the Orrery fleet, it scored ${Math.round(c.score * 100)}% against plain Medium over 200 games. Its mind is drawn under the board on every move.`;
+    const i = nets.findIndex((n) => n.name === champion), c = nets[i];
+    const gen = (n) => n.name.slice(1).replace(/^0+/, '');
+    // Each champion was elected against the one before it (the first, against plain Medium).
+    const rival = i > 0 ? `generation ${gen(nets[i - 1])}, the champion before it` : 'plain Medium';
+    if (c) $('#netline').textContent = `Generation ${gen(c)}, the champion: trained by the Orrery fleet, it scored ${Math.round(c.score * 100)}% against ${rival}. Its mind is drawn under the board on every move.`;
   }).catch(() => {});
   try {
     const { games } = await api.get('games');
