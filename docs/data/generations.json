@@ -442,5 +442,45 @@
             "calber"
         ],
         "decided": "2026-11-21T18:50:44+00:00"
+    },
+    {
+        "name": "g013",
+        "gi": 11,
+        "games": 200,
+        "score": 0.54,
+        "se": 0.0335,
+        "z": 1.19,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 96,
+            "elections": 96,
+            "crownMoves": 43,
+            "coronations": 26,
+            "promotions": 85
+        },
+        "why": "not stronger by the bar",
+        "labels": 70700,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.17846,
+        "valPolicyTop1": 0.156,
+        "laneSeconds": {
+            "label": 4309.1,
+            "train": 415.4,
+            "gauntlet": 880.4
+        },
+        "wallSeconds": 2514,
+        "hosts": [
+            "jaguaribe",
+            "whitewolf",
+            "saskatchewan",
+            "saskatchewan-2",
+            "calber",
+            "bosporus",
+            "boburner",
+            "columbia"
+        ],
+        "decided": "2026-11-21T19:38:16+00:00"
     }
 ]
