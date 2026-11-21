@@ -283,5 +283,45 @@
             "jaguaribe"
         ],
         "decided": "2026-11-21T04:49:25+00:00"
+    },
+    {
+        "name": "g009",
+        "gi": 7,
+        "games": 200,
+        "score": 0.52,
+        "se": 0.033,
+        "z": 0.61,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 96,
+            "elections": 96,
+            "crownMoves": 36,
+            "coronations": 17,
+            "promotions": 83
+        },
+        "why": "not stronger by the bar",
+        "labels": 68526,
+        "device": "NVIDIA GeForce GTX 1080",
+        "valValueMSE": 0.17959,
+        "valPolicyTop1": 0.1535,
+        "laneSeconds": {
+            "label": 5815.2,
+            "train": 414.4,
+            "gauntlet": 1228.7
+        },
+        "wallSeconds": 3944,
+        "hosts": [
+            "jaguaribe",
+            "boburner",
+            "saskatchewan",
+            "bosporus",
+            "saskatchewan-2",
+            "calber",
+            "whitewolf",
+            "columbia"
+        ],
+        "decided": "2026-11-21T16:01:41+00:00"
     }
 ]
