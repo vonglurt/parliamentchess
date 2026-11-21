@@ -1,0 +1,15 @@
+[package]
+name = "parliament"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Parliament Chess: the PHP engine's rules, evaluation, search and features in Rust, for fast labelling"
+
+# No dependencies: the fleet builds this offline, on Alpine and Ubuntu alike.
+[dependencies]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

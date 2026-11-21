@@ -28,3 +28,4 @@ film/__pycache__/
 *.swp
 film/out/
 film/guide-shots/
+rust/target/

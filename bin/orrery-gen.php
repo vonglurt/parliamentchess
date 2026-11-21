@@ -110,11 +110,16 @@ function dist(string $state): array
 {
     $root = (string)realpath(REPO);
     $files = [];
-    foreach (['src', 'bin'] as $d) {
+    foreach (['src', 'bin', 'rust'] as $d) {
+        if (!is_dir("$root/$d")) {
+            continue;
+        }
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator("$root/$d", FilesystemIterator::SKIP_DOTS));
         foreach ($it as $f) {
-            if ($f->isFile()) {
-                $files[] = substr($f->getPathname(), strlen($root) + 1);
+            $rel = substr($f->getPathname(), strlen($root) + 1);
+            // The Rust engine's sources travel; its build folder does not (each lane builds its own).
+            if ($f->isFile() && !str_starts_with($rel, 'rust/target/')) {
+                $files[] = $rel;
             }
         }
     }
@@ -163,7 +168,7 @@ function lanes(string $dir): array
 }
 
 /** The setup job for one lane and one code version. */
-function prepJob(string $name, array $caps, array $d, array $needs): ?array
+function prepJob(string $name, array $caps, array $d, array $needs, bool $rust = false): ?array
 {
     $isCuda = in_array($needs['train'], $caps, true);
     $isPhp = in_array($needs['label'], $caps, true) || in_array($needs['gauntlet'], $caps, true);
@@ -179,6 +184,12 @@ function prepJob(string $name, array $caps, array $d, array $needs): ?array
     if ($isPhp) {
         $cmd .= 'php -r \'exit(version_compare(PHP_VERSION, "8.2", "<") ? 1 : 0);\'; '
             . 'php -v | head -1 > ' . $out . '/php.txt; sh bin/php bin/test.php --quick > ' . $out . '/test.log 2>&1; ';
+        if ($rust) {
+            // The Rust labeller, built once per code version on each PHP lane (no dependencies, so
+            // offline); Ubuntu lanes keep cargo in ~/.cargo, Alpine's comes from its own packages.
+            $cmd .= '[ -f ~/.cargo/env ] && . ~/.cargo/env; export PATH="$HOME/.cargo/bin:$PATH"; '
+                . '(cd rust && cargo build --release -q) > ' . $out . '/cargo.log 2>&1; test -x rust/target/release/pc-label; ';
+        }
     }
     if ($isCuda) {
         if (!$d['pip']) {
@@ -452,7 +463,7 @@ if ($verb === 'plan') {
         $needs = ['label' => $g['L']['needs'], 'train' => $g['T']['needs'], 'gauntlet' => $g['G']['needs']];
         // Setup first, on every lane that can take this project's work, once per code version.
         foreach ($lanes as $lane => $caps) {
-            $p = prepJob($lane, $caps, $d, $needs);
+            $p = prepJob($lane, $caps, $d, $needs, ($g['L']['engine'] ?? 'php') === 'rust');
             if ($p && !empty($plan['priority'])) {
                 $p['priority'] = $plan['priority']; // a lane's setup must not wait behind the work it unlocks
             }
@@ -475,7 +486,9 @@ if ($verb === 'plan') {
             $L = $g['L'];
             $out[] = $common(['id' => $id, 'kind' => 'pc-label', 'title' => "Parliament $name: label at depth {$L['depth']} ($id)",
                 'needs' => $L['needs'], 'send' => $L['player'] === 'champion' ? $champSend : [], 'stage' => 'label',
-                'cmd' => prelude($lanes ? $d['hash'] : '') . 'sh bin/php bin/label.php --job ' . $id . ' --games ' . (int)$L['games'] . ' --workers ' . (int)$L['workers']
+                // label.engine "rust": the Rust labeller (rust/, the same labels as label.php, checked
+                // position by position by its pc-parity), built by this generation's setup job.
+                'cmd' => prelude($lanes ? $d['hash'] : '') . (($L['engine'] ?? 'php') === 'rust' ? 'rust/target/release/pc-label' : 'sh bin/php bin/label.php') . ' --job ' . $id . ' --games ' . (int)$L['games'] . ' --workers ' . (int)$L['workers']
                     . ' --depth ' . (int)$L['depth'] . ' --every ' . (int)$L['every'] . ' --seed ' . (($gi + 1) * 1000 + $k + 1)
                     . ' --player "' . $spec2($L['player']) . '"' . (!empty($g['bookless']) ? ' --no-book' : '') . ' --out "$HOME/pc-out/' . $id . '"',
                 'fetch' => "pc-out/$id"]);
