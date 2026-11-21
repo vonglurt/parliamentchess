@@ -167,5 +167,37 @@ $copy = Game::fromArray(json_decode(json_encode($g->toArray()), true));
 check($copy->pos->toFen() === $g->pos->toFen() && count($copy->log) === 6, 'a recording rebuilds the same game');
 echo $g->pcn(['White' => 'test', 'Black' => 'test']);
 
+echo "\nThe net's mind\n";
+check(\Parliament\AI\Players::safeSpec('medium+net2:champion') && \Parliament\AI\Players::safeSpec('hard/populist+net2:g005')
+    && \Parliament\AI\Players::safeSpec('easy'), 'the browser may ask for levels, styles and published nets');
+check(!\Parliament\AI\Players::safeSpec('medium+net2:/etc/hosts') && !\Parliament\AI\Players::safeSpec('medium+net2:../models/g005')
+    && !\Parliament\AI\Players::safeSpec('medium+net2'), 'but never for a path, or for the server\'s private default net');
+// The fleet's code tarball carries no models/, so the champion may not exist here: skip, don't crash.
+try {
+    $champ = \Parliament\AI\Players::netPath('champion');
+} catch (\InvalidArgumentException) {
+    $champ = '';
+}
+if (is_file($champ)) {
+    $net = \Parliament\AI\Net2::load($champ);
+    $g = new Game();
+    foreach (['e4', 'e5', 'Nf3', 'Nc6', 'Bb5'] as $mv) {
+        $g->play($mv);
+    }
+    $p = $g->pos;
+    $moves = $p->legalMoves();
+    $t = $net->trace($p, $moves, $moves[3]);
+    $same = abs($t['raw'] - $net->raw($p)) < 1e-3 && max(array_map(fn($a, $b) => abs($a - $b), $t['a2'], $net->trunk($p))) < 1e-3;
+    check($same, 'the trace computes what the net computes (layer 2 and the value input)');
+    $logits = $net->logits($p, $moves);
+    $byLogit = array_column($t['policy'], 'logit');
+    check(abs(max($logits) - $byLogit[0]) < 1e-2 && abs(array_sum(array_column($t['policy'], 'p')) - 1) < 1e-2,
+        'the policy rows are the logits, best first, and their softmax sums to one');
+    check(count(array_filter($t['policy'], fn($r) => isset($r['edges']))) >= 8 && isset($t['policy'][array_search($moves[3], array_column($t['policy'], 'm'))]['edges']),
+        'the eight favourites and the move played carry their connections');
+} else {
+    echo "  (skipped: no published net in models/)\n";
+}
+
 echo "\n$passes passed, $fails failed\n";
 exit($fails ? 1 : 0);

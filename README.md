@@ -12,6 +12,7 @@ politics are the joke, and the joke is balanced.
 
 **[Website](https://vonglurt.github.io/parliamentchess/)** ·
 **[Player's guide video](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)** (106 s) ·
+**[How a neural net plays](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)** (192 s) ·
 **[Rules](RULES.md)** · **[Lab reports](docs/parliament-chess-lab-report.md)** · MIT License
 
 ## Play in a minute
@@ -33,6 +34,7 @@ name if you like. Then pick a way to play:
 | --- | --- |
 | **Two browsers** | Create a game and send the second link to a friend. Anyone with the watch link can follow live. |
 | **Play the machine** | Easy, Medium or Hard, as a Whig, a Populist or a Monarchist, with either colour. |
+| **Play the neural net** | The champion of the training runs, with its mind drawn beside the board on every move. Or press **Watch it think**. |
 | **Watch the machines** | Two bots argue it out while you watch. |
 
 [![The player's guide: your first game, in 106 seconds](docs/media/still-guide.png)](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)
@@ -129,6 +131,43 @@ Like castling, the crown move has a right moment. In 1,712 Writs from 1,100 self
 
 ![How often the crown moved after a Writ, by the position when it was filed](docs/media/fig-crown-theory.png)
 
+## Play the neural net
+
+![The net's mind: 1,203 inputs from the side to move, two layers of 160 and 40 units, the value and the policy's favourite moves, with the move played in gold](docs/media/net-mind.png)
+
+The lobby's **Play the neural net** card puts you against the champion: generation 5, which beat
+plain Medium 57% of the time over 200 games. Every time it moves, the panel under the board (or
+beside it: **Side by side**) draws what it computed, and animates it from left to right:
+
+1. **It sees 1,203 switches**, each on or off, always from the side to move: eighteen little boards
+   (where every piece stands, its former Kings, every square each side attacks, every piece left
+   hanging) and 51 summaries (pressure on each King, mobility, the worst piece hanging, Writs in
+   hand, whether a Writ may be filed and how the best Candidate would poll, check). About 90 are on.
+2. **Layer 1, 160 units.** Each lit switch adds its row of learned weights; a unit whose sum is above
+   zero fires. **Layer 2, 40 units,** mixes them. The lines are the strongest pushes: gold excites, blue
+   inhibits.
+3. **Two heads answer.** The value says who is winning (a correction to the hand-written evaluation,
+   in centipawns). The policy scores every legal move; the bars are its percentages.
+4. **A search decides.** Two moves deep, it tries the policy's favourites first and scores every
+   position it reaches with the hand evaluation plus the net's correction. The gold row and the gold
+   arrow on the board are the move played; blue arrows are the policy's other favourites.
+
+Hover any switch, unit or move to read its numbers; in a game between bots, hovering also holds the
+game while you read. To beat it: it sees two moves ahead, so quiet three-move plans and a well-timed
+Writ are your weapons, and when *Their worst hang* lights up, it has spotted your loose piece.
+
+**Each side's calculation.** Two cards above the panel show both sides at once. A side played by a
+net shows its own calculation. Any other side, you or a bot without a net, is *read* by the game's
+net: the net is run on the position that side faced, and the move actually played is marked. Each
+card shows the last move and where the net ranked it, the net's value for that side (with hand + net
+= total), and a tally over the game: how often that side played the net's favourite, the average
+rank and probability of its moves, and the average size of the net's correction. A strip draws the
+net's evaluation after every move from White's side (dots for a net's own moves, rings for readings).
+Click a card, or **White** / **Black**, to hold the panel on that side; **Both** draws one panel per
+side. **Net against net** in the lobby puts the champion on both sides (Populist against Whig).
+
+[![How a neural net plays: the champion against Medium Populist, with its mind beside the board](docs/media/still-net-mind.png)](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)
+
 ## Your game, on the record
 
 <p><img src="docs/media/guide/record.jpg" width="40%" alt="The game record: every move with its player and its time, the Writ in red, and the Ledger of careers">
@@ -144,10 +183,11 @@ name: you might lose to *Ceratonia siliqua* (the carob) or a Black-eyed Pea.
 # For developers
 
 - **Lab reports:** [docs/parliament-chess-lab-report.md](docs/parliament-chess-lab-report.md)
-  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–XI, from the rules to the Rust labeller.
+  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–XII, from the rules to reading the net's mind.
   The data behind them is in [docs/data](docs/data) and the figures in [docs/media](docs/media)
 - **Films:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim;
-  `docs/media/players_guide.mp4`, the player's guide (`sh film/render.sh guide`)
+  `docs/media/players_guide.mp4`, the player's guide (`sh film/render.sh guide`);
+  `docs/media/net_mind.mp4`, how a neural net plays, recorded from the live game (`node film/brain_demo.mjs`)
 - **Training:** generations of nets train on an Orrery fleet and commit each verdict here
   (`docs/data/generations.json`; an elected net lands in `models/`)
 
@@ -156,7 +196,7 @@ name: you might lose to *Ceratonia siliqua* (the carob) or a Black-eyed Pea.
 ```bash
 make up        # the server in the background: http://localhost:8080 (make up PORT=8081 for another port)
 make down      # stop it
-make test      # 45 rule tests, then two browsers playing each other through a server of their own
+make test      # 50 rule tests, then two browsers playing each other through a server of their own
 ```
 
 PHP 8.2+ (tested on 8.3, 8.5 and 8.6); `pdo_sqlite` adds the opening book. No Composer, no other
@@ -185,6 +225,8 @@ make export EXPORT=export.html                # the lab report, from the shared 
 sh film/render.sh                             # render the Manim film
 node film/guide_shots.mjs && sh film/render.sh guide   # the player's guide (screenshots need a server on :8091)
 sh bin/php bin/crown-theory.php               # when to move the crown, from the census Writs
+sh bin/php tools/brain_stats.php --games 8    # what the net's mind shows across eight games (Report XII)
+node film/brain_demo.mjs film/out/net_mind.mp4 # the neural-net film (needs a server on :8094)
 ```
 
 ## Training the second-generation net (GPU)
@@ -208,7 +250,8 @@ php bin/orrery-local.php orrery/gen                                       # a wh
 becomes champion only if it beats the incumbent by more than two standard errors, crucible's ladder
 rule, and later generations label with the champion (expert iteration). `lineage.tsv` and
 `generations.json` record each generation's score, election and lane-seconds per stage. Players
-`medium+net2` use the trained weights: a residual net (the default, `--mode residual`) adds its
+`medium+net2` use the trained weights (`+net2:g005` a published generation, `+net2:champion` the newest
+in `models/`; the browser may ask only for those, never for a path): a residual net (the default, `--mode residual`) adds its
 correction to the hand-written evaluation, a value net replaces it, and either orders moves with its
 policy head; `medium+net2policy` only orders moves. On the fleet's Pascal cards install
 `train/requirements-pascal.txt` (PyTorch 2.14.1+cu126, the last build with Pascal kernels) and run

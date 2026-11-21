@@ -1,0 +1,129 @@
+{
+    "net": "g005",
+    "games": 8,
+    "netMoves": 415,
+    "results": [
+        {
+            "net": "White",
+            "result": "0-1",
+            "plies": 84
+        },
+        {
+            "net": "Black",
+            "result": "0-1",
+            "plies": 82
+        },
+        {
+            "net": "White",
+            "result": "*",
+            "plies": 160
+        },
+        {
+            "net": "Black",
+            "result": "1-0",
+            "plies": 131
+        },
+        {
+            "net": "White",
+            "result": "0-1",
+            "plies": 94
+        },
+        {
+            "net": "Black",
+            "result": "0-1",
+            "plies": 80
+        },
+        {
+            "net": "White",
+            "result": "1-0",
+            "plies": 59
+        },
+        {
+            "net": "Black",
+            "result": "1/2-1/2",
+            "plies": 157
+        }
+    ],
+    "activeInputs": {
+        "mean": 89.19,
+        "median": 95,
+        "min": 33,
+        "max": 125,
+        "p90": 114
+    },
+    "layer1Fired": {
+        "mean": 99.275,
+        "median": 100,
+        "min": 79,
+        "max": 112,
+        "p90": 106
+    },
+    "layer1Saturated": {
+        "mean": 54.988,
+        "median": 62,
+        "min": 10,
+        "max": 78,
+        "p90": 72
+    },
+    "layer2Fired": {
+        "mean": 38.063,
+        "median": 38,
+        "min": 35,
+        "max": 39,
+        "p90": 39
+    },
+    "legalMoves": {
+        "mean": 27.164,
+        "median": 30,
+        "min": 1,
+        "max": 58,
+        "p90": 48
+    },
+    "policyTop1P": {
+        "mean": 0.129,
+        "median": 0.07,
+        "min": 0.027,
+        "max": 1,
+        "p90": 0.277
+    },
+    "playedRank": {
+        "mean": 11.027,
+        "median": 6,
+        "min": 1,
+        "max": 49,
+        "p90": 28
+    },
+    "playedIsPolicyTop1": 0.14,
+    "playedInPolicyTop3": 0.308,
+    "policyTop1IsSearchBest": 0.152,
+    "absCorrectionCp": {
+        "mean": 130.723,
+        "median": 60.28,
+        "min": 0.12,
+        "max": 616.8,
+        "p90": 384.96
+    },
+    "traceMs": {
+        "mean": 29.652,
+        "median": 29.196,
+        "min": 9.751,
+        "max": 77.926,
+        "p90": 42.791
+    },
+    "searchMs": {
+        "mean": 182.581,
+        "median": 152,
+        "min": 2,
+        "max": 945,
+        "p90": 419
+    },
+    "traceBytes": {
+        "mean": 20338.925,
+        "median": 20434,
+        "min": 17252,
+        "max": 22398,
+        "p90": 21584
+    },
+    "writsFiled": 7,
+    "movesWhereAWritWasLegal": 280
+}

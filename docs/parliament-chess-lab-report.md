@@ -704,6 +704,130 @@ Generation 5 is the first to label in Rust: 30 jobs of 8 games, the same 1,920 g
 - [ ] Gauntlets in Rust: they are now the slowest stage, but they need the game record (moves, counts, results) that the verdict reads.
 - [ ] A depth-4 teacher, now affordable: a decision for the next generation, since it changes what the net learns.
 
+## Lab Report XII — The net's mind: a live trace from inputs to move
+
+The game now draws what a net player computed for every move it makes, beside the board, as the game runs. The panel shows the 1,203 inputs it saw, the 160 and 40 units that fired, and the strongest connections between them. It then shows the value, the policy's score for every legal move, the search's verdict and the move played, animated from left to right each time the net moves. The trace costs 30 ms in PHP and 20 KB per move. Over 415 moves in eight games, the champion's policy ranked the move it played first only 14% of the time: the instinct orders the search, and the search decides. A film recorded from the live game shows it, and a description of how a neural net plays is now in the game, the README and section B below.
+
+The request was for a video demonstration, a lab write-up, a description of how to play a neural net, and the "input calculation matrix" with the lines of the transform from input to output, in the game itself as it runs, animated whenever a computer plays.
+
+![The net's mind after 11. Qc4 in a live game: 113 of 1,203 inputs lit (left), 100 of 160 layer-1 units and 35 of 40 layer-2 units firing, the strongest connections between them (gold excites, blue inhibits), the value (hand +24, net +11, total +35 cp) and the policy's favourites with the search's score for each. The move played, Qc4, was the policy's tenth choice; the search scored it −152 cp, the best of the moves shown (Qb3 next at −154), while the policy's favourite, Qxd4, scored −617.](media/net-mind.png)
+
+### A. The network as played
+
+The panel draws exactly the computation the server runs when a net player moves. The player is the champion, generation 5 (`medium+net2:champion`): a Medium search whose leaves are scored by the hand-written evaluation plus the net's correction, and whose quiet moves and Writs are tried in the order the net's policy prefers.
+
+| Stage | Size | What it computes |
+| --- | --- | --- |
+| Inputs (Sensors v2) | 1,203 switches, each 0 or 1 | Eighteen 8×8 planes: our and their pawns, knights, bishops, rooks, queens and king; our and their ex-Kings (Pretender pawns); every square each side attacks; every piece left hanging. Then 51 summaries: pressure on each King's zone, each side's mobility, each side's worst piece hanging, Writs in hand, the election state (a Writ may be filed, a count pending, Peace over, Terms up), how the best Candidate would poll, whether a pending count would win, check. Always seen from the side to move; Black's board is mirrored. |
+| Layer 1 | 160 units | clip(b1 + Σ the rows of the lit inputs), clipped to [0, 1] |
+| Layer 2 | 40 units | clip(b2 + W2 · layer 1) |
+| Value head | 1 | tanh(bv + wv · layer 2): who is winning, for the side to move. The net is residual: the search adds 400 · clip(raw, ±2) centipawns to the hand evaluation |
+| Policy head | 4,160 move slots | bias + layer 2 · (from-square vector + to-square vector), or · the Writ vector for a Writ; a softmax over the legal moves gives the percentages |
+| Search | 2 plies, quiescence, check extensions | Moves ordered by the policy; leaves scored hand + net; moves within 12 cp of the best may be chosen for variety, a Writ only when it is best outright |
+
+### B. How a neural net plays chess: a description for players
+
+A neural net does not think in moves. It reads a picture of the position and answers two questions at once, and a small search does the rest.
+
+1. **It sees.** The position becomes 1,203 switches. A typical position lights about 90 (33 to 125 over eight measured games): one per piece on its square, one per attacked square, one per loose piece, and one in each summary row.
+2. **It thinks in two layers.** Each lit switch adds its learned row of 160 numbers into layer 1. A unit whose total is above zero fires, up to 1; the others stay silent. Layer 2 weighs the 160 into 40. No unit means anything a person named; each is a pattern the training found useful.
+3. **It answers twice.** The value head says who is winning, from −1 to +1. The policy head gives every legal move a score, and a softmax turns the scores into percentages: its instinct.
+4. **A search decides.** Instinct alone blunders. The search looks two moves ahead, trying the instinct's favourites first, and scores every position it reaches with the hand evaluation plus the net's correction. The move with the best search score (within 12 centipawns, for variety) is played.
+5. **It learned all of this from search.** Each generation's labels are positions scored by a deeper search (3 plies) played by the previous champion; the net learns to guess in one look what that search would say. The fleet then makes it play 200 games against plain Medium, and elects it only if it is better by more than two standard errors.
+
+**Playing against it.** In the lobby, **Play the neural net** starts a game against the champion with your chosen colour; **Watch it think** sets it against Medium Populist. The net's mind is drawn under the board, or beside it with **Side by side**. It sees two moves ahead and a little further by instinct, so a quiet plan of three moves or more is your best weapon, and a Writ filed when its Election and Best poll rows are dark may catch it unprepared. When *Their worst hang* lights up, it has seen your loose piece.
+
+### C. Method: the trace and the panel
+
+**The trace.** `Net2::trace` runs the forward pass again on the position the player faced and keeps every intermediate: the active inputs, both layers before and after their clipped ReLU, the value input and every legal move's logit and probability. Three new rule tests check that it computes what the net computes: layer 2 and the value input agree with `trunk` and `raw` within 10⁻³, and the policy rows are the logits, best first, with probabilities summing to one. The server takes the trace in `/api/ai` before it plays the move, adds the hand evaluation, the search's score for every root move, each move's notation and the move chosen, stores it in the game record and sends it with every state, so a watcher sees what a player sees.
+
+**The lines.** A position has about 90 × 100 = 9,000 live connections into layer 1 and about 100 × 38 = 3,800 into layer 2, too many to draw. The panel draws the strongest: the 260 largest weights from a lit input into a unit that fired, the 180 largest products a₁·w₂ into layer 2, every fired unit's push on the value, and the 8 strongest pushes on each of the policy's eight favourites and the move played. Those last are measured against the average legal move: a softmax is unchanged when the same amount is added to every logit, so only a push that differs between moves can make one more likely than another. For hovering, each fired unit also carries its own four strongest inputs. Gold is a positive push, blue a negative one; width and opacity follow the size.
+
+**The animation.** When a net player's trace arrives, the panel replays the computation from left to right, and the board shows its arrows when the outputs are reached.
+
+| Phase | Starts | Lasts |
+| --- | --- | --- |
+| The lit inputs appear, in Sensors order | 0 ms | 600 ms |
+| Lines into layer 1 grow from their inputs | 450 ms | 900 ms |
+| Layer 1 bars fill to their activations | 1,000 ms | 500 ms |
+| Lines into layer 2 | 1,450 ms | 800 ms |
+| Layer 2 discs fill | 2,000 ms | 400 ms |
+| Lines to the value and the moves | 2,300 ms | 700 ms |
+| Value gauge and policy bars | 2,650 ms | 600 ms |
+| The move played outlined in gold; board arrows (gold: played; blue: the policy's other top three) | 2,700 to 3,200 ms | 400 to 500 ms |
+
+Between two bots the next move waits until the animation has finished and 0.9 s more, and a pointer over the panel holds the game until it leaves. **Side by side** puts the board and the mind in one view on a wide screen. A book move still gets its trace, marked as played from the opening book.
+
+**Safety.** A player's name came from the browser and went to `Players::make`, which loads whatever file follows `+net2:`. The browser may now ask only for a level, a style and a published net by name (`+net2:g005`, `+net2:champion`), checked by a pattern before anything loads; a path is refused, and two rule tests hold the line.
+
+### D. What the panel shows, measured
+
+`tools/brain_stats.php` played the champion against Medium Populist for eight games, colours alternating, two random plies first and no book, and took the trace at each of the net's 415 moves exactly as the server does (`docs/data/brain-stats.json`). The net won three, lost three and drew one; the eighth was still going at 160 plies.
+
+| Quantity, per net move | Mean | Median | Range (90th percentile) |
+| --- | --- | --- | --- |
+| Inputs lit, of 1,203 | 89.2 | 95 | 33 to 125 (114) |
+| Layer 1 units firing, of 160 | 99.3 | 100 | 79 to 112 (106) |
+| … of them at the clip, 1.0 | 55.0 | 62 | 10 to 78 (72) |
+| Layer 2 units firing, of 40 | 38.1 | 38 | 35 to 39 (39) |
+| Legal moves | 27.2 | 30 | 1 to 58 (48) |
+| The policy's top probability | 12.9% | 7.0% | 2.7% to 100% (27.7%) |
+| The policy's rank for the move played | 11.0 | 6 | 1 to 49 (28) |
+| The net's correction to the hand evaluation, absolute | 131 cp | 60 cp | 0 to 617 cp (385) |
+| Trace time in PHP (JIT) | 29.7 ms | 29.2 ms | 9.8 to 77.9 ms (42.8) |
+| Search time, Medium with the net | 183 ms | 152 ms | 2 to 945 ms (419) |
+| Trace size as JSON | 20.3 KB | 20.4 KB | 17.3 to 22.4 KB |
+
+| How often | Share of the 415 moves |
+| --- | --- |
+| The move played was the policy's favourite | 14.0% |
+| The move played was in the policy's top three | 30.8% |
+| The policy's favourite was the search's best root move | 15.2% |
+| A Writ was legal | 280 moves (67%) |
+| The net filed one | 7 Writs |
+
+The trace costs a sixth of the search it explains and adds about 20 KB to a game's state, so it is taken on every net move. The surprise is the policy: its instinct picks the move the search plays only one time in seven, and its favourite holds a median 7% of the probability. Generation 5's policy is nearly flat. Its job is to order the search's moves, and whether that ordering saves nodes was not measured here. The panel shows plainly that the search, not the instinct, decides. The value head does the real work, moving the evaluation by a median 60 cp and by more than 385 cp in one position in ten.
+
+### E. The film
+
+`film/brain_demo.mjs` records the demonstration from the live game rather than animating a model of it. Headless Chrome, driven over the DevTools protocol, opens the lobby, presses **Watch it think** and follows the champion against Medium Populist side by side with its mind. Captions read the panel, and a pointer hovers an input, a layer-1 unit, a layer-2 unit, the value and the move played. Every frame the browser paints is kept (`Page.startScreencast`, 8,569 frames), each lasting until the next one was painted, and ffmpeg makes them a 30 fps film: `docs/media/net_mind.mp4`, 3 min 12 s, 1920×1080, with the game reaching move 22.
+
+Two recordings failed first, and both failures were bugs. The first captured nothing: the recorder attached its socket's open listener after the socket had opened, and waited forever. In the second the game stopped at move 6 for five minutes: a lost or unanswered bot-move request left the watching browser waiting for a state change that could never come. A replay of the same path with every request logged did not stall, so the cause of the lost request is not known. The client now has a watchdog: if a bot is to move and nothing changes for 5 s, it asks again, and a request in flight for 30 s is abandoned and retried. The server ignores a request for a version that has passed, so a repeated request is harmless.
+
+### F. Generations since Report XI
+
+The chain ran on its own while this was built. Since generation 5's election, each challenger plays 200 games against generation 5 itself, so 0.5 means level with the champion.
+
+| Generation | Labels (its own) | Held-out value MSE | Held-out policy top-1 | Score vs the champion | z | Elections | Wall time | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| g005 (vs plain Medium) | 72,729 | 0.165 | 17.1% | 0.570 ± 0.032 | +2.17 | 132 | 42 min | **elected** |
+| g006 | 70,440 | 0.163 | 17.8% | 0.470 ± 0.033 | −0.90 | 102 | 41 min | not elected |
+| g007 | 71,010 | 0.163 | 16.4% | 0.475 ± 0.034 | −0.73 | 95 | 50 min | not elected |
+| g008 | 69,834 | 0.181 | 15.4% | 0.488 ± 0.034 | −0.37 | 83 | 51 min | not elected |
+
+Three challengers in a row have played the champion close to level and none has beaten it by the two standard errors the election demands. The held-out numbers are drifting the wrong way: generation 8's held-out value error is the worst since generation 3, and its policy picks the teacher's best move less often than any net since generation 2. Each retrains from the champion's weights on three generations of labels for 16 epochs, and Report XI found that run overfits after its first epoch. Early stopping, which keeps each run's best held-out epoch, remains the first fix to try; a deeper teacher is the second. Generation 9 is queued with the same recipe.
+
+### G. Discussion and limits
+
+- **A sample of the lines, not all of them.** The panel draws about 500 of roughly 13,000 live connections. They are the largest, but many small pushes can outweigh a few large ones; a unit's sum and activation, shown on hover, are exact.
+- **The root, not the tree.** The trace reads the position the player faced. The search looked at a few thousand positions below it, each scored with the net, and its verdict is the search column beside each move, not the panel's lines.
+- **Units have no names.** Layer 1 and layer 2 units are not concepts anyone chose. Hovering shows what drives a unit, which is often readable (a unit fed by *Their worst hang* and *We attack* on the same squares), but the panel does not claim to explain a unit.
+- **A flat policy is visible now.** With the move played ranked a median sixth, a viewer will see the instinct disagree with the decision most of the time. That is the honest picture of generation 5, and a target for the next ones: depth-4 teacher labels and early stopping (Report XI's overfitting) both bear on it.
+- **Cost.** 30 ms in PHP and 20 KB a state are fine for a game in a browser; a trace in the Rust engine would make it free if traces were ever wanted for training data.
+- **Book moves.** In the server the net player may open from the book; the panel then shows the net's reading of a position whose move it did not choose, and says so.
+
+### H. Conclusion
+
+A neural net's move can now be read as it is made: what it saw, which units fired, what it valued, which moves its instinct liked, and what the search chose instead. The panel costs 30 ms and 20 KB per move, needs no new dependency, and is the same code for a player and for a spectator. Fifty rule tests and 34 browser tests pass. What it shows most clearly is where the champion's strength comes from: a value head that moves the evaluation by a median 60 cp, and a search that overrules a nearly flat policy six times in seven. The next generations can be judged by eye as well as by score: a better policy will show as gold rows that the search agrees with.
+
+| Deliverable | Where |
+| --- | --- |
+| The panel, in the game | lobby → **Play the neural net** or **Watch it think**; any game with a `+net2` player |
+| The film | `docs/media/net_mind.mp4` (3 min 12 s), on the project's website under *How a neural net plays* |
+| How a neural net plays, for players | section B; the README's *Play the neural net*; the panel's own fold-out guide |
+| The measurements | `tools/brain_stats.php`, `docs/data/brain-stats.json` |
+| The trace | `Net2::trace`, `/api/ai`, the `brain` field of every game state |
+
 ## References
 
 Game and history sources are linked in Report II; every link there was opened on 20 November 2026.

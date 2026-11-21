@@ -28,7 +28,8 @@ final class Players
     public static function make(string $spec, ?KnownSpace $book = null, ?int $seed = null): Search
     {
         // "+net2" makes the second-generation net the evaluation and its policy the move order;
-        // "+net2:/path/net.json" names the weights (default $PC_NET2, then data/models/net2.json).
+        // "+net2:/path/net.json" names the weights (default $PC_NET2, then data/models/net2.json),
+        // "+net2:g005" a published generation in models/, "+net2:champion" the newest one there.
         $net2 = null;
         $policyOnly = false;
         if (preg_match('/\+net2policy(?::(\S+))?$/', $spec, $mm)) {
@@ -36,7 +37,7 @@ final class Players
             $spec = str_replace('+net2policy', '+net2', $spec);
         }
         if (preg_match('/\+net2(?::(\S+))?$/', $spec, $mm)) {
-            $net2 = $mm[1] ?? (getenv('PC_NET2') ?: pc_root() . '/data/models/net2.json');
+            $net2 = self::netPath($mm[1] ?? (getenv('PC_NET2') ?: pc_root() . '/data/models/net2.json'));
             $spec = substr($spec, 0, -strlen($mm[0]));
         }
         // "+net" blends the trained value net in at 35%; "+net:0.15" picks the blend.
@@ -63,6 +64,26 @@ final class Players
             $ev->net2Eval = !$policyOnly;
         }
         return new Search($ev, $book, $lv['depth'], $lv['margin'], $seed);
+    }
+
+    /** A net by name: a generation published in models/ ("g005"), "champion" (the newest), or a path. */
+    public static function netPath(string $name): string
+    {
+        if ($name === 'champion') {
+            $all = glob(pc_root() . '/models/g[0-9][0-9][0-9].json') ?: [];
+            sort($all);
+            return $all ? end($all) : throw new \InvalidArgumentException('no published generation in models/');
+        }
+        if (preg_match('/^g\d{3}$/', $name)) {
+            return pc_root() . "/models/$name.json";
+        }
+        return $name;
+    }
+
+    /** Is this a player the browser may ask for? Levels, styles and published nets only, never a path. */
+    public static function safeSpec(string $spec): bool
+    {
+        return (bool)preg_match('#^(easy|medium|hard)(/(whig|monarchist|populist))?(\+net2(policy)?:(g\d{3}|champion))?$#', $spec);
     }
 
     /** The known-space book, or null where PHP has no SQLite (then players simply search). */

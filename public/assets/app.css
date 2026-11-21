@@ -176,3 +176,47 @@ canvas.orrery { width: 100%; max-width: 1200px; aspect-ratio: 1200 / 560; displa
 .record td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .record td.mono { font-family: var(--mono); }
 .record tr.writ td.mono { color: var(--lords); font-weight: 700; }
+
+/* The net's mind */
+.brain-sec { margin-top: 26px; }
+.brain-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.brain-head h2 { margin: 0; font: 600 22px var(--serif); color: var(--parch); }
+.brain-head .hint { color: var(--parch-2); opacity: 0.75; font-size: 14px; flex: 1; }
+canvas.brain { width: 100%; aspect-ratio: 1240 / 600; display: block; border-radius: 12px; box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45); }
+.brain-help { background: var(--parch); color: var(--ink); border-radius: var(--radius); padding: 12px 18px; margin-top: 14px; }
+.brain-help summary { cursor: pointer; font: 600 15px var(--serif); }
+.brain-help .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 28px; }
+@media (max-width: 760px) { .brain-help .cols { grid-template-columns: 1fr; } }
+.brain-help h4 { margin: 12px 0 4px; font: 600 12px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.brain-help p { margin: 0; font-size: 14px; line-height: 1.55; }
+.card.net { border: 2px solid var(--gold); }
+/* Side by side: the board (its panel stacked under it) and the net's mind */
+body.theatre main { max-width: none; display: grid; grid-template-columns: minmax(0, 37fr) minmax(0, 63fr); gap: 24px; align-items: start; }
+body.theatre .game { grid-template-columns: 1fr; }
+body.theatre canvas.board { width: min(100%, calc((100vh - 110px) * 0.9057)); max-width: none; }
+body.theatre .brain-sec { margin-top: 0; }
+@media (max-width: 1100px) { body.theatre main { grid-template-columns: 1fr; } }
+.brain-note { color: var(--parch-2); opacity: 0.6; font-size: 12px; margin-top: 6px; }
+/* Each side's calculation: two cards, the evaluation strip, a second panel in "Both" */
+.seg { display: inline-flex; border: 1px solid rgba(243, 234, 214, 0.3); border-radius: 999px; overflow: hidden; }
+.seg button { background: none; border: 0; color: var(--parch); font: 500 13px var(--sans); padding: 5px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid rgba(243, 234, 214, 0.2); }
+.seg button.on { background: var(--gold-2); color: var(--ink); }
+.brain-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 760px) { .brain-sides { grid-template-columns: 1fr; } }
+.side-card { text-align: left; font: 13px/1.45 var(--sans); color: var(--parch); background: #0a201a; border: 1px solid rgba(243, 234, 214, 0.14);
+  border-radius: 12px; padding: 10px 14px; cursor: pointer; display: grid; gap: 4px; align-content: start; }
+.side-card:hover { border-color: rgba(240, 207, 106, 0.5); }
+.side-card.on { border-color: var(--gold-2); box-shadow: 0 0 0 1px var(--gold-2) inset; }
+.side-card .sc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.side-card .sc-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(243, 234, 214, 0.6); flex: none; }
+.side-card.white .sc-dot { background: var(--parch); }
+.side-card.black .sc-dot { background: #1e1a14; }
+.side-card .sc-who { opacity: 0.6; font-size: 12px; }
+.side-card .sc-dim { opacity: 0.68; }
+.side-card .sc-val { display: flex; align-items: center; gap: 8px; }
+.side-card .sc-bar { width: 90px; height: 8px; border-radius: 4px; background: rgba(243, 234, 214, 0.14); overflow: hidden; flex: none; }
+.side-card .sc-bar i { display: block; height: 100%; background: var(--gold-2); }
+.side-card .sc-tally { font-size: 12px; opacity: 0.75; border-top: 1px solid rgba(243, 234, 214, 0.12); padding-top: 5px; margin-top: 2px; }
+canvas.evalstrip { width: 100%; aspect-ratio: 1240 / 130; display: block; border-radius: 12px; margin-bottom: 12px; }
+canvas.brain.second { margin-top: 12px; }

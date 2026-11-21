@@ -28,6 +28,10 @@ Cookies for non-standard moves (labels carry move flags: 1 promotion, 2 Writ, 4 
                        and in the value target (the position is worth its best move counting the cookie)
     --cookie-promo CP  the same for a promotion
     --weight-special W loss weight for positions where a Writ or promotion is within 50 cp of best
+Early stopping:
+    --patience N       stop after N epochs in a row without a better held-out loss (default 3; 0 runs
+                       every epoch); the best epoch's weights are exported, epoch 0 (the start) included
+    --last             export the last epoch instead (the behaviour before generation 13's code)
 Reinforcing the result:
     --reinforce RHO    residual mode: the target leans RHO of the way from the teacher's score to the
                        game's result (+-400 cp); value mode uses --lam for the same thing
@@ -274,12 +278,14 @@ def losses_packed(model, P, idx, args):
 
 def evaluate_packed(model, P, args):
     model.eval()
-    se = agree = ok = cnt = 0.0
+    se = agree = ok = cnt = ce = 0.0
     with torch.no_grad():
         for i in range(0, P.n, 4096):
             idx = torch.arange(i, min(P.n, i + 4096), device=P.vt.device)
             v, lg = forward_packed(model, P, idx)
             se += float(((v - P.vt[idx]) ** 2).sum())
+            logp = F.log_softmax(lg, 1).masked_fill(~P.valid[idx], 0.0)
+            ce += float(-(P.tgt[idx] * logp).sum())
             agree += float((P.ids[idx].gather(1, lg.argmax(1, keepdim=True)).squeeze(1) == P.best[idx]).sum())
             if args.mode == "residual":  # does hand + correction land on the teacher's side of zero?
                 m = P.s[idx] != 0
@@ -289,16 +295,18 @@ def evaluate_packed(model, P, args):
                 ok += float(((v > 0) == (P.r[idx] > 0))[m].sum())
             cnt += float(m.sum())
     model.train()
-    return se / max(1, P.n), agree / max(1, P.n), ok / max(1.0, cnt)
+    return se / max(1, P.n), agree / max(1, P.n), ok / max(1.0, cnt), ce / max(1, P.n)
 
 
 def evaluate(model, recs, args, device):
     model.eval()
-    se = n = agree = sign_ok = sign_n = 0.0
+    se = n = agree = sign_ok = sign_n = ce = 0.0
     with torch.no_grad():
         for flat, offs, vt, mask, target, best, chunk, _w in batches(recs, 4096, device, args.lam, args.temp, False, args.mode):
             v, logits = model(flat, offs)
             se += float(((v - vt) ** 2).sum())
+            logp = F.log_softmax(logits + mask, 1)
+            ce += float(-(target * torch.where(torch.isfinite(logp), logp, torch.zeros_like(logp))).sum())
             n += len(chunk)
             agree += float((torch.argmax(logits + mask, 1) == best).sum())
             for k, r in enumerate(chunk):
@@ -311,7 +319,7 @@ def evaluate(model, recs, args, device):
                     sign_n += 1
                     sign_ok += (float(v[k]) > 0) == (r["r"] > 0)
     model.train()
-    return se / max(1, n), agree / max(1, n), sign_ok / max(1, sign_n)
+    return se / max(1, n), agree / max(1, n), sign_ok / max(1, sign_n), ce / max(1, n)
 
 
 def export(model, path, meta):
@@ -354,6 +362,9 @@ def main():
     ap.add_argument("--reinforce", type=float, default=0.0, help="residual mode: weight of the game result in the target")
     ap.add_argument("--unpacked", action="store_true", help="build every batch in Python, as before 20 November (slower)")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--patience", type=int, default=3,
+                    help="early stopping: stop after this many epochs without a better held-out loss (0: run every epoch)")
+    ap.add_argument("--last", action="store_true", help="export the last epoch, not the best one on held-out data")
     args = ap.parse_args()
     random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -425,6 +436,36 @@ def main():
         PT = Packed(train, device, args.lam, args.temp, args.mode, args)
         PV = Packed(val, device, args.lam, args.temp, args.mode)  # held out: the teacher's own targets
         print(f"packed {PT.n} + {PV.n} positions onto {device} in {time.time() - tp:.1f}s", flush=True)
+    def check(ep, vl=None, pl=None, tot=0, te=None):
+        """Held-out numbers after epoch ep (0: the starting net), and the early-stopping bookkeeping."""
+        if args.unpacked:
+            mse, top1, sign, ce = evaluate(model, val, args, device)
+        else:
+            mse, top1, sign, ce = evaluate_packed(model, PV, args)
+        loss = mse + args.beta * ce  # the training objective, on the held-out games' teacher targets
+        row = {"epoch": ep}
+        if tot:
+            row.update({"trainValueMSE": round(vl / tot, 5), "trainPolicyCE": round(pl / tot, 4)})
+        row.update({"valValueMSE": round(mse, 5), "valPolicyTop1": round(top1, 4), "valSignAcc": round(sign, 4),
+                    "valPolicyCE": round(ce, 4), "valLoss": round(loss, 5)})
+        if te is not None:
+            row["seconds"] = round(time.time() - te, 2)
+        history.append(row)
+        print(json.dumps(row), flush=True)
+        if loss < best["loss"] - 1e-6:
+            best.update(loss=loss, epoch=ep, bad=0,
+                                 state={k: v.detach().clone() for k, v in model.state_dict().items()})
+        else:
+            best["bad"] += 1
+
+    # Early stopping (from generation 13's code on): the held-out loss is read before training and
+    # after every epoch; the weights of the best reading are kept and exported, and training stops
+    # after --patience epochs in a row without a better one. g006-g011 exported their last epoch while
+    # their held-out value error drifted up (0.163 -> 0.182).
+    best = {"loss": float("inf"), "epoch": 0, "bad": 0, "state": None}
+    check(0)
+    best["bad"] = 0
+    stopped = None
     for ep in range(1, args.epochs + 1):
         te = time.time()
         tot = vl = pl = 0.0
@@ -441,37 +482,37 @@ def main():
                 tot += b
                 vl += loss_v.item() * b
                 pl += loss_p.item() * b
-            sched.step()
-            mse, top1, sign = evaluate_packed(model, PV, args)
-            row = {"epoch": ep, "trainValueMSE": round(vl / tot, 5), "trainPolicyCE": round(pl / tot, 4),
-                   "valValueMSE": round(mse, 5), "valPolicyTop1": round(top1, 4), "valSignAcc": round(sign, 4),
-                   "seconds": round(time.time() - te, 2)}
-            history.append(row)
-            print(json.dumps(row), flush=True)
-            continue
-        for flat, offs, vt, mask, target, best, chunk, w in batches(train, args.batch, device, args.lam, args.temp, True, args.mode, args):
-            v, logits = model(flat, offs)
-            wn = w / w.mean()
-            loss_v = (wn * (v - vt) ** 2).mean()
-            logp = F.log_softmax(logits + mask, 1)
-            loss_p = (wn * -(target * torch.where(torch.isfinite(logp), logp, torch.zeros_like(logp))).sum(1)).mean()
-            loss = loss_v + args.beta * loss_p
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
-            tot += len(chunk)
-            vl += loss_v.item() * len(chunk)
-            pl += loss_p.item() * len(chunk)
+        else:
+            for flat, offs, vt, mask, target, best_m, chunk, w in batches(train, args.batch, device, args.lam, args.temp, True, args.mode, args):
+                v, logits = model(flat, offs)
+                wn = w / w.mean()
+                loss_v = (wn * (v - vt) ** 2).mean()
+                logp = F.log_softmax(logits + mask, 1)
+                loss_p = (wn * -(target * torch.where(torch.isfinite(logp), logp, torch.zeros_like(logp))).sum(1)).mean()
+                loss = loss_v + args.beta * loss_p
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+                tot += len(chunk)
+                vl += loss_v.item() * len(chunk)
+                pl += loss_p.item() * len(chunk)
         sched.step()
-        mse, top1, sign = evaluate(model, val, args, device)
-        row = {"epoch": ep, "trainValueMSE": round(vl / tot, 5), "trainPolicyCE": round(pl / tot, 4),
-               "valValueMSE": round(mse, 5), "valPolicyTop1": round(top1, 4), "valSignAcc": round(sign, 4),
-               "seconds": round(time.time() - te, 2)}
-        history.append(row)
-        print(json.dumps(row), flush=True)
+        check(ep, vl, pl, tot, te)
+        if args.patience > 0 and best["bad"] >= args.patience:
+            stopped = ep
+            print(f"early stop after epoch {ep}: {args.patience} epochs without a better held-out loss "
+                  f"(best {best['loss']:.5f} at epoch {best['epoch']})", flush=True)
+            break
+    last = history[-1]["epoch"]
+    if not args.last and best["state"] is not None and best["epoch"] != last:
+        model.load_state_dict(best["state"])
+        print(f"exporting epoch {best['epoch']} (held-out loss {best['loss']:.5f}), not epoch {last}", flush=True)
     meta = {"trained": time.strftime("%Y-%m-%dT%H:%M:%S"), "device": gpu, "torch": torch.__version__,
             "positions": len(recs), "train": len(train), "held_out": len(val), "args": vars(args),
-            "baselineValueMSE": round(base, 5), "history": history, "seconds": round(time.time() - t0, 1)}
+            "baselineValueMSE": round(base, 5), "history": history, "seconds": round(time.time() - t0, 1),
+            "bestEpoch": history[-1]["epoch"] if args.last else best["epoch"], "epochsRun": history[-1]["epoch"],
+            "stoppedEarly": stopped is not None, "patience": args.patience,
+            "selection": "last epoch" if args.last else "best held-out valLoss (value MSE + beta x policy CE)"}
     export(model, args.out, meta)
     print("saved", args.out, f"in {time.time() - t0:.1f}s total", flush=True)
 

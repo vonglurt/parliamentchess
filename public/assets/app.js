@@ -48,7 +48,7 @@ function myName() {
   return n;
 }
 function setMyName(n) { n = (n || '').trim().slice(0, 40); if (n) store.set('pc-name', n); return myName(); }
-const LEVEL = (spec) => spec ? spec.replace('+net2', ' + net').replace('/', ' \u00b7 ') : '';
+const LEVEL = (spec) => spec ? spec.replace(/\+net2(policy)?(?::(\S+))?/, (m, pol, n) => ` + ${n === 'champion' ? 'the champion net' : n ? 'net ' + n : 'net'}`).replace('/', ' \u00b7 ') : '';
 const localTime = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); };
 const localDate = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }); };
 function download(name, text, type) {
@@ -113,6 +113,7 @@ class BoardView {
     this.targets = [];
     this.writSquares = [];
     this.preview = null;
+    this.arrows = [];
     this.queue = [];
     this.caption = '';
     this.status = '';
@@ -232,6 +233,8 @@ class BoardView {
       const [ax, ay] = this.xy(anim.from), [bx, by] = this.xy(anim.to);
       this.pieceAt(ax + (bx - ax) * k, ay + (by - ay) * k, board[anim.to] || anim.piece, 1);
     }
+    // The net's arrows: the move it played and the policy's other favourites
+    if (!anim) for (const a of this.arrows) { const k = ease((now - a.t0) / 450); if (k > 0) this.arrow(a, k); }
     // Targets
     for (const t of this.targets) {
       const [px, py] = this.xy(t);
@@ -244,6 +247,23 @@ class BoardView {
     if (this.preview && !anim) this.voters(this.preview.poll.voters, this.preview.sq, f.ksq[f.side === 1 ? 0 : 1], 1);
     if (counting) this.drawCount(anim, now);
     this.drawCaption(now, anim);
+  }
+
+  arrow(a, k) {
+    const x = this.x, S = this.S;
+    const [fx, fy] = this.xy(a.from), [tx, ty] = this.xy(a.to);
+    const ax = fx + S / 2, ay = fy + S / 2, bx = tx + S / 2, by = ty + S / 2;
+    x.save(); x.globalAlpha = a.alpha * k; x.strokeStyle = x.fillStyle = `rgb(${a.color})`; x.lineCap = 'round';
+    if (a.from === a.to) { // a Writ: a ring around the Candidate
+      x.lineWidth = a.width / 2; x.beginPath(); x.arc(ax, ay, S * 0.42, 0, Math.PI * 2); x.stroke(); x.restore(); return;
+    }
+    const ang = Math.atan2(by - ay, bx - ax), head = a.width * 2.3;
+    x.lineWidth = a.width; x.beginPath(); x.moveTo(ax, ay);
+    x.lineTo(bx - Math.cos(ang) * head * 0.8, by - Math.sin(ang) * head * 0.8); x.stroke();
+    x.beginPath(); x.moveTo(bx, by);
+    x.lineTo(bx - Math.cos(ang - 0.45) * head, by - Math.sin(ang - 0.45) * head);
+    x.lineTo(bx - Math.cos(ang + 0.45) * head, by - Math.sin(ang + 0.45) * head); x.closePath(); x.fill();
+    x.restore();
   }
 
   piece(sq, v, alpha, badges = 0, born = 0) {
@@ -485,7 +505,7 @@ async function lobby(app) {
   const sel = (id, items, val) => h('select', { id }, items.map(([v, t]) => h('option', { value: v, selected: v === val }, t)));
   const levels = [['easy', 'Easy (1 ply)'], ['medium', 'Medium (2 ply)'], ['hard', 'Hard (3 ply)']];
   const styles = [['whig', 'Whig'], ['populist', 'Populist'], ['monarchist', 'Monarchist']];
-  const ais = [['medium', 'Medium Whig'], ['medium/populist', 'Medium Populist'], ['medium/monarchist', 'Medium Monarchist'], ['hard', 'Hard Whig'], ['easy/populist', 'Easy Populist']];
+  const ais = [['medium+net2:champion', 'The champion net'], ['medium', 'Medium Whig'], ['medium/populist', 'Medium Populist'], ['medium/monarchist', 'Medium Monarchist'], ['hard', 'Hard Whig'], ['easy/populist', 'Easy Populist']];
   const go = async (body) => {
     try {
       const r = await api.post('new', { ...body, ...opts, name: myName() });
@@ -505,6 +525,11 @@ async function lobby(app) {
       h('div', { class: 'card' }, h('h3', {}, 'Play the machine'), h('p', {}, 'Book-Return Search: a shallow search that steers back to known positions.'),
         h('div', { class: 'row' }, sel('lv', levels, 'medium'), sel('st', styles, 'whig'), sel('col', [['white', 'as White'], ['black', 'as Black']], 'white')),
         h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => go({ mode: 'ai', level: $('#lv').value + '/' + $('#st').value, color: $('#col').value }) }, 'Play'))),
+      h('div', { class: 'card net' }, h('h3', {}, 'Play the neural net'), h('p', { id: 'netline' }, 'The champion of the training runs: a search that sees through a trained net. Its mind is drawn under the board on every move.'),
+        h('div', { class: 'row' }, sel('ncol', [['white', 'as White'], ['black', 'as Black']], 'white')),
+        h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => go({ mode: 'ai', level: 'medium+net2:champion', color: $('#ncol').value }) }, 'Play it'),
+          h('button', { class: 'btn ghost', onclick: () => go({ mode: 'aivai', white: 'medium+net2:champion', black: 'medium/populist' }) }, 'Watch it think'),
+          h('button', { class: 'btn ghost', title: 'The champion net on both sides (Populist against Whig), each side’s mind in its own panel', onclick: () => { store.set('pc-brain-view', 'both'); go({ mode: 'aivai', white: 'medium+net2:champion', black: 'medium/whig+net2:champion' }); } }, 'Net against net'))),
       h('div', { class: 'card' }, h('h3', {}, 'Watch the machines'), h('p', {}, 'Two styles of politics, one board. Record it to WebM from the game page.'),
         h('div', { class: 'row' }, sel('aw', ais, 'medium/populist'), h('span', {}, 'vs'), sel('ab', ais, 'medium/monarchist')),
         h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => go({ mode: 'aivai', white: $('#aw').value, black: $('#ab').value }) }, 'Watch'))),
@@ -515,6 +540,10 @@ async function lobby(app) {
     ),
     h('div', { class: 'section' }, h('h2', {}, 'In session'), h('div', { class: 'list', id: 'live' }, h('div', { class: 'empty' }, 'Loading…'))),
   );
+  api.get('nets').then(({ nets, champion }) => {
+    const c = nets.find((n) => n.name === champion);
+    if (c) $('#netline').textContent = `Generation ${c.name.slice(1).replace(/^0+/, '')}, the champion: trained by the Orrery fleet, it scored ${Math.round(c.score * 100)}% against plain Medium over 200 games. Its mind is drawn under the board on every move.`;
+  }).catch(() => {});
   try {
     const { games } = await api.get('games');
     const live = $('#live');
@@ -527,6 +556,416 @@ async function lobby(app) {
 }
 
 // ---------------------------------------------------------------------------
+// The net's mind: what a net player saw and computed for its move (Net2::trace)
+// ---------------------------------------------------------------------------
+const clamp01 = (t) => (t < 0 ? 0 : t > 1 ? 1 : t);
+const BRAIN_BOARDS = [
+  'Our pawns', 'Our knights', 'Our bishops', 'Our rooks', 'Our queens', 'Our king',
+  'Their pawns', 'Their knights', 'Their bishops', 'Their rooks', 'Their queens', 'Their king',
+  'Our ex-Kings', 'Their ex-Kings', 'We attack', 'They attack', 'Ours hanging', 'Theirs hanging',
+];
+// Sensors v2's 51 scalar inputs, grouped as src/AI/Sensors.php emits them ("our" = the side to move).
+const BRAIN_SCALARS = [
+  { at: 1152, n: 5, col: 0, row: 0, name: 'Our king zone', cells: ['0 attacks', '1', '2', '3–4', '5+'] },
+  { at: 1157, n: 5, col: 0, row: 1, name: 'Their king zone', cells: ['0 attacks', '1', '2', '3–4', '5+'] },
+  { at: 1163, n: 5, col: 0, row: 2, name: 'Our mobility', cells: ['0–9', '10–19', '20–29', '30–39', '40+'] },
+  { at: 1168, n: 5, col: 0, row: 3, name: 'Their mobility', cells: ['0–9', '10–19', '20–29', '30–39', '40+'] },
+  { at: 1193, n: 5, col: 0, row: 4, name: 'Our worst hang', cells: ['nothing', 'a pawn', 'a minor', 'a rook', 'a queen'] },
+  { at: 1198, n: 5, col: 0, row: 5, name: 'Their worst hang', cells: ['nothing', 'a pawn', 'a minor', 'a rook', 'a queen'] },
+  { at: 1173, n: 4, col: 1, row: 0, name: 'Our Writs', cells: ['0', '1', '2', '3'] },
+  { at: 1177, n: 4, col: 1, row: 1, name: 'Their Writs', cells: ['0', '1', '2', '3'] },
+  { at: 1181, n: 6, col: 1, row: 2, name: 'Election', cells: ['we may file', 'our count pending', 'their count pending', 'Peace is over', 'our Term is up', 'their Term is up'] },
+  { at: 1187, n: 4, col: 1, row: 3, name: 'Best poll', cells: ['a coronation', 'contested', 'a swap', 'no Candidate wins'] },
+  { at: 1191, n: 2, col: 1, row: 4, name: 'Pending wins', cells: ['theirs would win', 'ours would win'] },
+  { at: 1162, n: 1, col: 1, row: 5, name: 'In check', cells: ['we are in check'] },
+];
+
+class BrainView {
+  constructor(canvas) {
+    this.c = canvas;
+    this.W = 1240; this.H = 600;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = this.W * dpr; canvas.height = this.H * dpr;
+    this.x = canvas.getContext('2d');
+    this.x.scale(dpr, dpr);
+    this.b = null; this.t0 = 0; this.hover = null; this.dirty = true; this.DUR = 3600;
+    this.placeholder = 'The net’s mind appears here when a net player moves.';
+    canvas.addEventListener('mousemove', (e) => this.pointer(e));
+    canvas.addEventListener('mouseleave', () => { this.hover = null; this.dirty = true; });
+    const tick = (t) => { if (this.dirty || (this.b && t - this.t0 < this.DUR + 200)) this.draw(t); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  /** When the current animation ends (the watch pacing waits for it). */
+  get doneAt() { return this.b ? this.t0 + this.DUR : 0; }
+  set(b) {
+    if (!b) { if (this.b) { this.b = null; this.hover = null; this.dirty = true; } return; }
+    if (this.b && this.b.ply === b.ply && this.b.side === b.side) return;
+    this.b = b;
+    this.t0 = performance.now();
+    this.mir = b.side === 1 ? 0 : 56;
+    this.active = new Set(b.features);
+    this.rows = this.pickRows(b);
+    const mx = (a) => a.reduce((m, e) => Math.max(m, Math.abs(e[e.length - 1])), 1e-9);
+    this.max = { in: mx(b.edges.in), mid: mx(b.edges.mid), out: Math.max(mx(b.edges.value), ...this.rows.map((r) => mx(r.edges || []))) };
+    this.dirty = true;
+  }
+  /** Seven of the policy's favourites and the move actually played (if it is not among them). */
+  pickRows(b) {
+    const ranked = b.policy.map((r, i) => ({ ...r, rank: i + 1 }));
+    const chosen = ranked.find((r) => r.uci === b.chosen);
+    let rows = ranked.slice(0, 8);
+    if (chosen && chosen.rank > 8) rows = [...ranked.slice(0, 7), chosen];
+    return rows;
+  }
+
+  // Geometry ---------------------------------------------------------------
+  inPos(i) {
+    const CELL = 8, BX = 18, PX = 72, BY = [74, 160, 246];
+    let board = -1, rs = 0;
+    if (i < 768) { board = Math.floor(i / 64); rs = i % 64; }
+    else if (i < 1152) { board = 12 + Math.floor((i - 768) / 64); rs = (i - 768) % 64; }
+    if (board >= 0) {
+      const row = board < 6 ? 0 : board < 12 ? 1 : 2, col = board % 6;
+      const x0 = BX + col * PX + (rs & 7) * CELL, y0 = BY[row] + (7 - (rs >> 3)) * CELL;
+      return { x: x0 + CELL / 2, y: y0 + CELL / 2, x0, y0, w: CELL - 1, h: CELL - 1, board, rs };
+    }
+    const g = BRAIN_SCALARS.find((s) => i >= s.at && i < s.at + s.n);
+    const k = i - g.at;
+    const x0 = 18 + g.col * 222 + 104 + k * 15, y0 = 336 + g.row * 19;
+    return { x: x0 + 6, y: y0 + 6, x0, y0, w: 12, h: 12, g, k };
+  }
+  h1Pos(j) { return { x: 662, y: 70 + j * 3 + 1.5 }; }
+  h2Pos(k) { return { x: 880, y: 78 + k * 11.8 }; }
+  valPos() { return { x: 990, y: 100 }; }
+  rowPos(r) { return { x: 990, y: 192 + r * 46 }; }
+  inLabel(i) {
+    const p = this.inPos(i);
+    if (p.board !== undefined) return `${BRAIN_BOARDS[p.board]} · ${sqName(p.rs ^ this.mir)}`;
+    return `${p.g.name}: ${p.g.cells[p.k]}`;
+  }
+
+  pointer(e) {
+    if (!this.b) return;
+    const r = this.c.getBoundingClientRect();
+    const px = (e.clientX - r.left) * (this.W / r.width), py = (e.clientY - r.top) * (this.H / r.height);
+    let hv = null;
+    if (px < 470) {
+      for (const i of this.b.features) { const p = this.inPos(i); if (px >= p.x0 - 1 && px <= p.x0 + p.w + 1 && py >= p.y0 - 1 && py <= p.y0 + p.h + 1) { hv = { in: i }; break; } }
+    } else if (px > 640 && px < 720 && py >= 68 && py < 70 + 480) hv = { h1: Math.min(159, Math.max(0, Math.floor((py - 70) / 3))) };
+    else if (px > 860 && px < 900) { const k = Math.round((py - 78) / 11.8); if (k >= 0 && k < 40) hv = { h2: k }; }
+    else if (px > 975) {
+      if (py < 150) hv = { value: true };
+      else { const r2 = Math.round((py - 192) / 46); if (r2 >= 0 && r2 < this.rows.length) hv = { row: r2 }; }
+    }
+    if (JSON.stringify(hv) !== JSON.stringify(this.hover)) { this.hover = hv; this.dirty = true; }
+  }
+  lit(kind, a, b) {
+    const h = this.hover;
+    if (!h) return true;
+    if (kind === 'in') return h.in === a || h.h1 === b;
+    if (kind === 'mid') return h.h1 === a || h.h2 === b;
+    if (kind === 'val') return h.h2 === a || h.value;
+    if (kind === 'row') return h.h2 === a || h.row === b;
+    return false;
+  }
+
+  // Drawing ----------------------------------------------------------------
+  edge(a, b, w, max, prog, dim) {
+    if (prog <= 0) return;
+    const x = this.x, s = Math.min(1, Math.abs(w) / max);
+    x.strokeStyle = w >= 0 ? `rgba(240,207,106,${(0.08 + 0.62 * s) * dim})` : `rgba(122,170,240,${(0.08 + 0.62 * s) * dim})`;
+    x.lineWidth = 0.5 + 2.2 * s;
+    x.beginPath(); x.moveTo(a.x, a.y);
+    const mx = (a.x + b.x) / 2;
+    if (prog >= 1) x.bezierCurveTo(mx, a.y, mx, b.y, b.x, b.y);
+    else { // grow from the source: de Casteljau split of the same curve at prog
+      const t = prog, l = (p, q) => ({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t });
+      const p1 = { x: mx, y: a.y }, p2 = { x: mx, y: b.y };
+      const q0 = l(a, p1), q1 = l(p1, p2), q2 = l(p2, b), r0 = l(q0, q1), r1 = l(q1, q2), s0 = l(r0, r1);
+      x.bezierCurveTo(q0.x, q0.y, r0.x, r0.y, s0.x, s0.y);
+    }
+    x.stroke();
+  }
+  text(s, px, py, font, color, align = 'left') {
+    const x = this.x; x.font = font; x.fillStyle = color; x.textAlign = align; x.textBaseline = 'middle'; x.fillText(s, px, py);
+  }
+  draw(now) {
+    this.dirty = false;
+    const x = this.x, W = this.W, H = this.H, b = this.b;
+    const SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif';
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = '#0a201a'; x.beginPath(); x.roundRect(0, 0, W, H, 12); x.fill();
+    if (!b) {
+      this.text(this.placeholder, W / 2, H / 2, `italic 18px ${SERIF}`, COL.parch, 'center');
+      return;
+    }
+    const t = now - this.t0, ph = (a, d) => ease((t - a) / d);
+    const P = { inp: ph(0, 600), e1: ph(450, 900), h1: ph(1000, 500), e2: ph(1450, 800), h2: ph(2000, 400), e3: ph(2300, 700), out: ph(2650, 600), pick: ph(3200, 400) };
+    const dimOf = (on) => (this.hover ? (on ? 1 : 0.07) : 0.85);
+    const pre = this.mir ? 'Black' : 'White';
+
+    // Headings
+    const moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
+    const chosen = b.policy.find((r) => r.uci === b.chosen);
+    const reading = b.kind === 'reading';
+    this.text(`${reading ? 'The net reads' : 'The net’s mind'} · ${b.net} · ${b.player || pre} (${pre}) · ${moveNo} ${chosen ? chosen.san : b.chosen}`, 18, 22, `600 17px ${SERIF}`, reading ? COL.parch : COL.gold2);
+    const on1 = b.a1.filter((v) => v > 0).length, on2 = b.a2.filter((v) => v > 0).length;
+    this.text(`${b.features.length} of 1,203 inputs on · ${on1} of ${b.a1.length} units fire in layer 1 · ${on2} of ${b.a2.length} in layer 2 · ${b.traceMs} ms in PHP`, W - 18, 22, `12px ${SANS}`, 'rgba(243,234,214,0.7)', 'right');
+    const head = (s, px, py = 50) => this.text(s, px, py, `600 11px ${SANS}`, 'rgba(243,234,214,0.55)');
+    head(`INPUTS · WHAT IT SEES, FROM ${pre.toUpperCase()}’S SIDE OF THE BOARD`, 18); head('LAYER 1 · 160', 640); head('LAYER 2 · 40', 852);
+    head('VALUE · WHO IS WINNING', 975); head(`MOVES · POLICY OVER ${b.policy.length} LEGAL`, 975, 160);
+
+    // Edges, back to front: in -> h1, h1 -> h2, h2 -> outputs
+    for (const [i, j, w] of b.edges.in) this.edge(this.inPos(i), { x: 656, y: this.h1Pos(j).y }, w, this.max.in, P.e1, dimOf(this.lit('in', i, j)));
+    for (const [j, k, w] of b.edges.mid) this.edge({ x: 706, y: this.h1Pos(j).y }, { x: 874, y: this.h2Pos(k).y }, w, this.max.mid, P.e2, dimOf(this.lit('mid', j, k)));
+    for (const [k, w] of b.edges.value) this.edge({ x: 886, y: this.h2Pos(k).y }, this.valPos(), w, this.max.out, P.e3, dimOf(this.lit('val', k)));
+    this.rows.forEach((r, ri) => { for (const [k, w] of r.edges || []) this.edge({ x: 886, y: this.h2Pos(k).y }, this.rowPos(ri), w, this.max.out, P.e3, dimOf(this.lit('row', k, ri))); });
+
+    // A veil over the inputs: the lines leave the matrix faintly and brighten on their way to layer 1
+    x.fillStyle = 'rgba(10,32,26,0.62)'; x.fillRect(10, 58, 452, 392);
+    const hv = this.hover;
+    if (hv && hv.in !== undefined) {
+      for (const [i, j, w] of b.edges.in) if (i === hv.in) this.edge(this.inPos(i), { x: 656, y: this.h1Pos(j).y }, w, this.max.in, 1, 1);
+    }
+    if (hv && hv.h1 !== undefined) for (const [i, w] of b.edges.unitIn[hv.h1] || []) this.edge(this.inPos(i), { x: 656, y: this.h1Pos(hv.h1).y }, w, this.max.in, 1, 1);
+    if (hv && hv.h2 !== undefined) for (const [j, w] of b.edges.unitMid[hv.h2] || []) this.edge({ x: 706, y: this.h1Pos(j).y }, { x: 874, y: this.h2Pos(hv.h2).y }, w, this.max.mid, 1, 1);
+    // Input boards and scalars
+    x.font = `10px ${SANS}`;
+    BRAIN_BOARDS.forEach((name, bi) => {
+      const bx = 18 + (bi % 6) * 72, by = [74, 160, 246][bi < 6 ? 0 : bi < 12 ? 1 : 2];
+      this.text(name, bx, by - 8, `10px ${SANS}`, 'rgba(243,234,214,0.62)');
+      for (let s = 0; s < 64; s++) {
+        x.fillStyle = ((s & 7) + (s >> 3)) % 2 ? 'rgba(143,159,120,0.16)' : 'rgba(143,159,120,0.08)';
+        x.fillRect(bx + (s & 7) * 8, by + (7 - (s >> 3)) * 8, 7, 7);
+      }
+    });
+    for (const g of BRAIN_SCALARS) {
+      this.text(g.name, 18 + g.col * 222, 336 + g.row * 19 + 6, `10px ${SANS}`, 'rgba(243,234,214,0.62)');
+      for (let k = 0; k < g.n; k++) { x.fillStyle = 'rgba(143,159,120,0.12)'; x.fillRect(18 + g.col * 222 + 104 + k * 15, 336 + g.row * 19, 12, 12); }
+    }
+    b.features.forEach((i, n) => {
+      const p = this.inPos(i);
+      const k = clamp01(P.inp * 1.6 - (n / b.features.length) * 0.6);
+      if (k <= 0) return;
+      const ours = p.board !== undefined ? (p.board < 6 || p.board === 12 || p.board === 14 || p.board === 16) : p.g.name.startsWith('Our') || p.g.name === 'In check';
+      const hot = this.hover && this.hover.in === i;
+      x.fillStyle = hot ? '#ffffff' : ours ? `rgba(240,207,106,${k})` : `rgba(243,234,214,${0.85 * k})`;
+      x.fillRect(p.x0, p.y0, p.w, p.h);
+    });
+
+    // Layer 1: one bar per unit, its length the clipped activation
+    for (let j = 0; j < b.a1.length; j++) {
+      const p = this.h1Pos(j), a = b.a1[j] * P.h1;
+      x.fillStyle = 'rgba(243,234,214,0.08)'; x.fillRect(660, p.y - 1, 44, 2);
+      if (a > 0) { x.fillStyle = this.hover && this.hover.h1 === j ? '#fff' : `rgba(240,207,106,${0.35 + 0.65 * a})`; x.fillRect(660, p.y - 1.2, 44 * a, 2.4); }
+    }
+    // Layer 2: one disc per unit
+    for (let k = 0; k < b.a2.length; k++) {
+      const p = this.h2Pos(k), a = b.a2[k] * P.h2;
+      x.beginPath(); x.arc(p.x, p.y, 4.6, 0, Math.PI * 2);
+      x.fillStyle = this.hover && this.hover.h2 === k ? '#fff' : `rgba(240,207,106,${0.12 + 0.88 * a})`; x.fill();
+      x.strokeStyle = 'rgba(243,234,214,0.35)'; x.lineWidth = 0.8; x.stroke();
+    }
+
+    // Value: the net's own judgement, and what the search used
+    const vp = this.valPos(), v = b.value * P.out;
+    x.beginPath(); x.arc(vp.x, vp.y, 7, 0, Math.PI * 2); x.fillStyle = v >= 0 ? COL.gold2 : '#7aaaf0'; x.globalAlpha = 0.3 + 0.7 * P.out; x.fill(); x.globalAlpha = 1;
+    x.fillStyle = 'rgba(243,234,214,0.12)'; x.fillRect(1006, 74, 210, 10);
+    x.fillStyle = v >= 0 ? COL.gold2 : '#7aaaf0'; x.fillRect(1111, 74, 105 * v, 10);
+    x.fillStyle = COL.parch; x.fillRect(1110, 70, 2, 18);
+    this.text(Math.abs(v) < 0.005 ? '0.00' : `${v > 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}`, 1006, 100, `700 16px ${SANS}`, COL.parch);
+    if (b.mode === 'residual') {
+      const corr = Math.round(400 * Math.max(-2, Math.min(2, b.raw)));
+      this.text('for the side to move', 1058, 100, `italic 11px ${SERIF}`, 'rgba(243,234,214,0.55)');
+      this.text(`hand ${sgn(b.hand)} + net ${sgn(corr)} = ${sgn(b.total)} cp`, 1006, 121, `12px ${SANS}`, 'rgba(243,234,214,0.85)');
+      this.text('the net corrects the hand-written evaluation', 1006, 139, `italic 10.5px ${SERIF}`, 'rgba(243,234,214,0.5)');
+    } else this.text(`= ${sgn(b.total)} cp for the side to move`, 1006, 121, `12px ${SANS}`, 'rgba(243,234,214,0.85)');
+
+    // Moves: the policy's favourites, the search's verdict, the one played
+    const maxP = Math.max(...this.rows.map((r) => r.p), 1e-9);
+    this.rows.forEach((r, ri) => {
+      const p = this.rowPos(ri), played = r.uci === b.chosen, k = P.out;
+      if (played && P.pick > 0) {
+        x.strokeStyle = `rgba(240,207,106,${P.pick})`; x.lineWidth = 2;
+        x.beginPath(); x.roundRect(976, p.y - 19, 252, 38, 7); x.stroke();
+        x.fillStyle = `rgba(240,207,106,${0.12 * P.pick})`; x.fill();
+      }
+      x.beginPath(); x.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      x.fillStyle = this.hover && this.hover.row === ri ? '#fff' : played ? COL.gold2 : 'rgba(243,234,214,0.75)'; x.globalAlpha = 0.25 + 0.75 * k; x.fill(); x.globalAlpha = 1;
+      this.text(r.san, 1004, p.y - 6, `700 14px ${SANS}`, played ? COL.gold2 : COL.parch);
+      this.text(`#${r.rank}`, 1004, p.y + 10, `10px ${SANS}`, 'rgba(243,234,214,0.5)');
+      x.fillStyle = 'rgba(243,234,214,0.1)'; x.fillRect(1066, p.y - 11, 100, 8);
+      x.fillStyle = played ? COL.gold2 : 'rgba(243,234,214,0.7)'; x.fillRect(1066, p.y - 11, 100 * (r.p / maxP) * k, 8);
+      this.text(`${(100 * r.p).toFixed(1)}%`, 1172, p.y - 7, `11px ${SANS}`, 'rgba(243,234,214,0.8)');
+      if (r.search !== null && r.search !== undefined) this.text(`search ${sgn(r.search)}`, 1066, p.y + 9, `11px ${SANS}`, 'rgba(243,234,214,0.6)');
+      if (played && P.pick > 0) this.text('played', 1224, p.y + 9, `700 11px ${SANS}`, `rgba(240,207,106,${P.pick})`, 'right');
+    });
+
+    // The arithmetic, under the inputs
+    const fy = 480, f = (s, i) => this.text(s, 18, fy + i * 19, `12px ${'ui-monospace,"SF Mono",Menlo,monospace'}`, 'rgba(243,234,214,0.78)');
+    this.text('THE ARITHMETIC', 18, fy - 22, `600 11px ${SANS}`, 'rgba(243,234,214,0.55)');
+    f('layer 1   = clip( b1 + Σ rows of the lit inputs )', 0);
+    f('layer 2   = clip( b2 + W2 · layer 1 )', 1);
+    f('value     = tanh( bv + wv · layer 2 )', 2);
+    f('move      = softmax( bias + layer 2 · (from + to) )', 3);
+    if (!reading) f('the search: 2 plies, scoring leaves with hand + 400·value', 4);
+    else f(b.source === 'person' ? 'a person chose this move: the net only reads the position' : 'this bot has no net: its own search chose; the net reads along', 4);
+
+    // Legend and the hover line
+    x.fillStyle = COL.gold2; x.fillRect(470, 566, 18, 3); this.text('excites', 494, 568, `11px ${SANS}`, 'rgba(243,234,214,0.7)');
+    x.fillStyle = '#7aaaf0'; x.fillRect(546, 566, 18, 3); this.text('inhibits', 570, 568, `11px ${SANS}`, 'rgba(243,234,214,0.7)');
+    this.text('Lines: strongest weight × activation (moves: against the average legal move). Hover anything.', 630, 568, `11px ${SANS}`, 'rgba(243,234,214,0.55)');
+    const info = this.hoverText();
+    if (info) {
+      x.fillStyle = '#0a201a'; x.fillRect(460, 552, W - 470, 34);
+      this.text(info, 470, 569, `12px ${SANS}`, COL.gold2);
+    }
+    if (b.source === 'book') this.text('Played from the opening book; the net’s reading as it stood.', 975, H - 50, `italic 11px ${SERIF}`, 'rgba(243,234,214,0.6)');
+  }
+  hoverText() {
+    const h = this.hover, b = this.b;
+    if (!h) return '';
+    const top = (list, n) => list.sort((p, q) => Math.abs(q[1]) - Math.abs(p[1])).slice(0, n).map(([s, w]) => `${s} ${sgnF(w)}`).join(', ');
+    if (h.in !== undefined) {
+      const out = b.edges.in.filter((e) => e[0] === h.in).map((e) => [`unit ${e[1]}`, e[2]]);
+      return `${this.inLabel(h.in)} (input ${h.in})${out.length ? ' → ' + top(out, 4) : ''}`;
+    }
+    if (h.h1 !== undefined) {
+      const inn = (b.edges.unitIn[h.h1] || []).map(([i, w]) => [this.inLabel(i), w]);
+      return `Layer 1 unit ${h.h1}: sum ${b.pre1[h.h1].toFixed(2)} → ${b.a1[h.h1].toFixed(2)}${inn.length ? ' · from ' + top(inn, 3) : ''}`;
+    }
+    if (h.h2 !== undefined) {
+      const inn = (b.edges.unitMid[h.h2] || []).map(([j, w]) => [`unit ${j}`, w]);
+      const val = b.edges.value.find((e) => e[0] === h.h2);
+      return `Layer 2 unit ${h.h2}: sum ${b.pre2[h.h2].toFixed(2)} → ${b.a2[h.h2].toFixed(2)}${inn.length ? ' · from ' + top(inn, 3) : ''}${val ? ' · to the value ' + sgnF(val[1]) : ''}`;
+    }
+    if (h.value) return `Value = tanh(${b.raw.toFixed(3)}) = ${b.value.toFixed(3)} for the side to move${b.mode === 'residual' ? `; the search adds ${sgn(Math.round(400 * Math.max(-2, Math.min(2, b.raw))))} cp to the hand evaluation` : ''}`;
+    if (h.row !== undefined) {
+      const r = this.rows[h.row];
+      return `${r.san}: logit ${r.logit.toFixed(2)} → ${(100 * r.p).toFixed(1)}% (rank ${r.rank} of ${b.policy.length})${r.search != null ? ` · search ${sgn(r.search)} cp` : ''}${r.uci === b.chosen ? ' · played' : ''}`;
+    }
+    return '';
+  }
+  /** Board arrows: the move played (gold) and the policy's other favourites (blue, by probability). */
+  arrows(at) {
+    const b = this.b;
+    if (!b) return [];
+    const out = [];
+    b.policy.slice(0, 3).forEach((r) => { if (r.uci !== b.chosen) out.push({ from: r.from, to: r.to, color: '122,170,240', width: 12, alpha: 0.35 + 0.5 * r.p / b.policy[0].p, t0: at }); });
+    const c = b.policy.find((r) => r.uci === b.chosen);
+    if (c) out.push({ from: c.from, to: c.to, color: '240,207,106', width: 18, alpha: 0.9, t0: at + 500 });
+    return out;
+  }
+}
+const sgn = (n) => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
+const sgnF = (w) => (w >= 0 ? '+' : '−') + Math.abs(w).toFixed(2);
+
+/**
+ * The net's evaluation after every move of the game, from White's side of the board: above the line
+ * White stands better. Filled dots are a net player's own calculation, rings the net reading the other
+ * side's position. Hover a dot for its move.
+ */
+class EvalStrip {
+  constructor(canvas) {
+    this.c = canvas; this.W = 1240; this.H = 130;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = this.W * dpr; canvas.height = this.H * dpr;
+    this.x = canvas.getContext('2d'); this.x.scale(dpr, dpr);
+    this.evals = []; this.log = []; this.hot = -1;
+    canvas.addEventListener('mousemove', (e) => {
+      const r = this.c.getBoundingClientRect(), px = (e.clientX - r.left) * (this.W / r.width);
+      let best = -1, d = 1e9;
+      this.evals.forEach((ev, i) => { const dd = Math.abs(this.px(ev[0]) - px); if (dd < d) { d = dd; best = i; } });
+      const hot = d < 14 ? best : -1;
+      if (hot !== this.hot) { this.hot = hot; this.draw(); }
+    });
+    canvas.addEventListener('mouseleave', () => { this.hot = -1; this.draw(); });
+  }
+  set(evals, log) { this.evals = evals || []; this.log = log || []; this.draw(); }
+  px(ply) { return 60 + (ply - 1) * ((this.W - 90) / Math.max(39, this.span - 1)); }
+  py(v) { return 18 + (1 - v) / 2 * (this.H - 50); }
+  draw() {
+    const x = this.x, W = this.W, H = this.H, SANS = '-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif';
+    this.span = Math.max(40, ...this.evals.map((e) => e[0]));
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = '#0a201a'; x.beginPath(); x.roundRect(0, 0, W, H, 12); x.fill();
+    const label = (s, px, py, c = 'rgba(243,234,214,0.55)', a = 'left', f = `11px ${SANS}`) => { x.font = f; x.fillStyle = c; x.textAlign = a; x.textBaseline = 'middle'; x.fillText(s, px, py); };
+    x.fillStyle = 'rgba(243,234,214,0.05)'; x.fillRect(60, this.py(1), W - 90, this.py(0) - this.py(1));
+    x.strokeStyle = 'rgba(243,234,214,0.35)'; x.lineWidth = 1; x.beginPath(); x.moveTo(60, this.py(0)); x.lineTo(W - 30, this.py(0)); x.stroke();
+    label('White', 52, this.py(0.8), 'rgba(243,234,214,0.6)', 'right'); label('Black', 52, this.py(-0.8), 'rgba(243,234,214,0.6)', 'right');
+    label('THE NET’S EVALUATION, MOVE BY MOVE, FROM WHITE’S SIDE', 60, H - 14);
+    label('● the net’s own move   ○ the net reading the other side', W - 30, H - 14, 'rgba(243,234,214,0.55)', 'right');
+    if (!this.evals.length) { label('Nothing yet: the first move draws the first point.', W / 2, H / 2 - 8, 'rgba(243,234,214,0.6)', 'center', `italic 14px ${SERIF}`); return; }
+    x.strokeStyle = 'rgba(240,207,106,0.55)'; x.lineWidth = 1.6; x.beginPath();
+    this.evals.forEach((e, i) => { const p = [this.px(e[0]), this.py(e[2])]; i ? x.lineTo(...p) : x.moveTo(...p); }); x.stroke();
+    this.evals.forEach((e, i) => {
+      const cx = this.px(e[0]), cy = this.py(e[2]), hot = i === this.hot;
+      x.beginPath(); x.arc(cx, cy, hot ? 5.5 : 3.6, 0, Math.PI * 2);
+      if (e[3]) { x.fillStyle = hot ? '#fff' : COL.gold2; x.fill(); }
+      else { x.fillStyle = '#0a201a'; x.fill(); x.strokeStyle = hot ? '#fff' : 'rgba(243,234,214,0.85)'; x.lineWidth = 1.4; x.stroke(); }
+    });
+    if (this.hot >= 0) {
+      const e = this.evals[this.hot], m = this.log[e[0] - 1];
+      const s = `${Math.ceil(e[0] / 2)}${e[1] === 1 ? '.' : '…'} ${m ? m.san : ''} · ${e[1] === 1 ? 'White' : 'Black'} · ${e[3] ? 'its own net' : 'read by the net'} · ${sgnF(e[2])} for White`;
+      label(s, Math.min(W - 40, Math.max(70, this.px(e[0]))), 10, COL.gold2, this.px(e[0]) > W - 300 ? 'right' : 'left', `600 12px ${SANS}`);
+    }
+  }
+}
+
+/**
+ * One side's calculation in numbers, beside the other's: the move it played and how the net ranked
+ * it, what the net thought of its position (value, and hand + net = total), and its running tally
+ * over the game. Clicking a card pins the panel below to that side.
+ */
+function sideCard(st, side, pinned, onPick) {
+  const b = st.brains && st.brains[side], t = st.tally && st.tally[side];
+  const color = side === '1' ? 'White' : 'Black', name = st.players[side] || color;
+  const bot = st.bots && st.bots[side];
+  const who = bot && bot.includes('+net2') ? 'a net player · its own calculation' : bot ? 'a bot without a net · read by the net' : 'a person · read by the net';
+  const rows = [];
+  if (b) {
+    const ranked = b.policy.map((r) => r.uci), rank = ranked.indexOf(b.chosen) + 1, row = b.policy[rank - 1] || {};
+    const top = b.policy[0];
+    const moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
+    rows.push(h('div', { class: 'sc-move' }, h('b', {}, `${moveNo} ${row.san || b.chosen}`),
+      ` · the net’s #${rank} of ${b.policy.length} (${(100 * (row.p || 0)).toFixed(1)}%)`,
+      rank > 1 && top ? h('span', { class: 'sc-dim' }, ` · its favourite ${top.san}`) : h('span', { class: 'sc-dim' }, ' · its favourite')));
+    const pct = Math.round(50 * (1 + b.value));
+    rows.push(h('div', { class: 'sc-val' }, h('span', { class: 'sc-bar' }, h('i', { style: `width:${pct}%` })),
+      `value ${sgnF(b.value)} for ${color}: about ${pct}% expected`));
+    const corr = b.mode === 'residual' ? Math.round(400 * Math.max(-2, Math.min(2, b.raw))) : null;
+    rows.push(h('div', { class: 'sc-dim' }, corr !== null ? `hand ${sgn(b.hand)} + net ${sgn(corr)} = ${sgn(b.total)} cp` : `${sgn(b.total)} cp`,
+      b.source === 'book' ? ' · played from the opening book' : b.source === 'person' ? ' · chosen by a person'
+        : b.score != null ? ` · ${b.kind === 'own' ? 'its search' : 'its own search (no net)'} ${sgn(b.score)} cp` : ''));
+  } else rows.push(h('div', { class: 'sc-dim' }, `${color} has not moved yet.`));
+  if (t && t.moves) {
+    rows.push(h('div', { class: 'sc-tally' },
+      `${t.top1} of ${t.moves} moves were the net’s favourite · ${t.top3} in its top 3 · average rank ${(t.rankSum / t.moves).toFixed(1)} · average ${(100 * t.pSum / t.moves).toFixed(1)}% · net correction ${Math.round(t.corrSum / t.moves)} cp on average`));
+  }
+  return h('button', { class: 'side-card' + (pinned ? ' on' : '') + (side === '1' ? ' white' : ' black'), onclick: () => onPick(side), title: pinned ? 'Showing this side below: click to follow the game again' : `Show ${color}’s calculation below` },
+    h('div', { class: 'sc-head' }, h('span', { class: 'sc-dot' }), h('b', {}, `${color} · ${name}`), h('span', { class: 'sc-who' }, who)), ...rows);
+}
+
+/** How to read the panel, and how a net plays this game: under the canvas, folded. */
+function brainHelp() {
+  const p = (t) => h('p', {}, t);
+  return h('details', { class: 'brain-help' }, h('summary', {}, 'How a neural net plays Parliament Chess, and how to read this'),
+    h('div', { class: 'cols' },
+      h('div', {},
+        h('h4', {}, '1 · It sees 1,203 switches'),
+        p('The position becomes 1,203 inputs, each 0 or 1, always from the side to move (Black’s view is flipped, so “our” pawns march up). Eighteen 8×8 boards: where each of our and their pieces stands, our and their Pretenders, every square either side attacks, and every piece left hanging. Then 51 summaries: pressure on each King, mobility, the worst piece hanging, Writs in hand, whether a Writ may be filed, how the best Candidate would poll, whether a pending count would win, and check. A typical position lights about 90 of them (33 to 125 over eight measured games).'),
+        h('h4', {}, '2 · Two layers think'),
+        p('Each lit input adds its row of 160 learned weights into layer 1; a unit whose sum is above zero fires (clipped at 1). Layer 2 mixes the 160 into 40. The lines are the strongest contributions, weight times activation: gold pushes a unit up, blue pushes it down. Hover anything to see its numbers.')),
+      h('div', {},
+        h('h4', {}, '3 · Two heads answer'),
+        p('The value head says who is winning, from −1 to +1. This net is residual: it does not replace the hand-written evaluation, it corrects it, by 400 centipawns per unit. The policy head gives every legal move a score (its from-square plus its to-square, or its Writ) and a softmax turns them into the percentages you see.'),
+        h('h4', {}, '4 · A search decides'),
+        p('The net does not move on instinct. A two-ply search orders its moves by the policy and scores every leaf with the hand evaluation plus the net’s correction; the move with the best search score is played (the gold row and the gold arrow). Blue arrows are the policy’s other favourites. When the two disagree, the search has seen a tactic the instinct missed.'),
+        h('h4', {}, '5 · Playing against it'),
+        p('Pick “Play the neural net” in the lobby. It is Medium strength with a trained eye: it looks two moves ahead, so a quiet three-move plan or a well-timed Writ is your best weapon. Watch what lights up before it moves: when “Their worst hang” fires, it has seen your loose piece.'))));
+}
+
+// ---------------------------------------------------------------------------
 // A live game: play or watch
 // ---------------------------------------------------------------------------
 async function gameView(app, id, token) {
@@ -536,7 +975,66 @@ async function gameView(app, id, token) {
   app.replaceChildren(h('div', { class: 'game' }, wrap, panel));
   const board = new BoardView(canvas);
   const rec = makeRecorder(canvas, 'parliament-chess-' + id);
-  let st = null, writMode = false, preview = null, aiBusy = false, flipped = false;
+  let st = null, writMode = false, preview = null, aiBusy = false, flipped = false, brain = null, brainSec = null;
+  // Which calculation the panel shows: 'follow' (the last move's), '1' or '-1' (one side's), 'both'.
+  const VIEWS = ['follow', '1', '-1', 'both'], askedView = { white: '1', black: '-1' }[Q.get('view')] || Q.get('view');
+  let view = VIEWS.includes(askedView) ? askedView : VIEWS.includes(store.get('pc-brain-view')) ? store.get('pc-brain-view') : 'follow';
+  let bc = null, brain2 = null, bc2 = null, sidesEl = null, strip = null, viewBtns = null;
+  let aiSince = 0, lastChange = 0; // the watchdog's clocks: a bot's move is asked for again if nothing happens
+  const hasNet = (s) => Object.values(s.bots || {}).some((b) => b && b.includes('+net2'));
+  function showBrain() {
+    bc = h('canvas', { class: 'brain' });
+    brain = window.pcBrain = new BrainView(bc);
+    const hide = h('button', { class: 'btn ghost small', style: 'color:var(--parch);border-color:rgba(243,234,214,0.3)', onclick: () => {
+      bc.hidden = !bc.hidden; hide.textContent = bc.hidden ? 'Show' : 'Hide';
+      bc2.hidden = bc.hidden || view !== 'both';
+    } }, 'Hide');
+    // Side by side: the board and the mind in one view on a wide screen (remembered; ?theatre=1 forces it).
+    const setTheatre = (on) => { document.body.classList.toggle('theatre', on); side.textContent = on ? 'Stacked' : 'Side by side'; store.set('pc-theatre', on ? '1' : ''); };
+    const side = h('button', { class: 'btn ghost small', style: 'color:var(--parch);border-color:rgba(243,234,214,0.3)', onclick: () => setTheatre(!document.body.classList.contains('theatre')) }, 'Side by side');
+    bc2 = h('canvas', { class: 'brain second' });
+    brain2 = new BrainView(bc2);
+    const sc = h('canvas', { class: 'evalstrip' });
+    strip = new EvalStrip(sc);
+    sidesEl = h('div', { class: 'brain-sides' });
+    const views = [['follow', 'Follow the game'], ['1', 'White'], ['-1', 'Black'], ['both', 'Both']];
+    viewBtns = h('div', { class: 'seg', role: 'group', 'aria-label': 'Whose calculation' }, views.map(([v, label]) =>
+      h('button', { 'data-v': v, onclick: () => setView(v) }, label)));
+    brainSec = h('section', { class: 'brain-sec' },
+      h('div', { class: 'brain-head' }, h('h2', {}, 'The net’s mind'),
+        h('span', { class: 'hint' }, 'Each side’s calculation: a net player’s own, or the net reading the other side.'), viewBtns, side, hide),
+      sidesEl, sc, bc, bc2, h('div', { class: 'brain-note' }, 'Hovering a panel pauses a game between bots. White and Black: the panel holds that side’s last move. Both: one panel per side.'), brainHelp());
+    app.append(brainSec);
+    setTheatre(Q.get('theatre') === '1' || store.get('pc-theatre') === '1');
+  }
+
+  function setView(v) {
+    view = v;
+    store.set('pc-brain-view', v);
+    if (st) showMinds(false);
+  }
+  /** Put each side's calculation where the chosen view wants it, and the move's arrows on the board. */
+  function showMinds(moved) {
+    const of = (s) => (st.brains && st.brains[s]) || null;
+    const name = (s) => (s === '1' ? 'White' : 'Black');
+    let first = st.brain || null, second = null;
+    if (view === '1' || view === '-1') { first = of(view); brain.placeholder = `${name(view)} has not moved yet.`; }
+    else if (view === 'both') { first = of('1'); second = of('-1'); brain.placeholder = 'White has not moved yet.'; brain2.placeholder = 'Black has not moved yet.'; }
+    else brain.placeholder = 'The net’s mind appears here when a net player moves.';
+    const fresh = (v, b) => b && (!v.b || v.b.ply !== b.ply);
+    const f1 = fresh(brain, first), f2 = fresh(brain2, second);
+    brain.set(first);
+    brain2.set(second);
+    bc2.hidden = view !== 'both' || bc.hidden;
+    for (const bt of viewBtns.children) bt.classList.toggle('on', bt.dataset.v === view);
+    sidesEl.replaceChildren(sideCard(st, '1', view === '1', pick), sideCard(st, '-1', view === '-1', pick));
+    strip.set(st.evals, st.log);
+    // The arrows belong to the move just played; they arrive as the animation reaches the outputs.
+    const latest = [[brain, first, f1], [brain2, second, f2]].find(([, b]) => b && b.ply === st.log.length);
+    if (latest && latest[2] && moved) board.arrows = latest[0].arrows(performance.now() + 2700);
+    else if (!latest) board.arrows = [];
+  }
+  const pick = (s) => setView(view === s ? 'follow' : s);
 
   const legalFrom = (sq) => (st.actions ? st.actions.moves.filter((m) => m.from === sq) : []);
   board.onClick = (sq) => {
@@ -566,6 +1064,7 @@ async function gameView(app, id, token) {
   function apply(next) {
     const prev = st;
     st = next;
+    lastChange = performance.now();
     writMode = false; preview = null; board.preview = null; board.writSquares = [];
     board.sel = -1; board.targets = [];
     board.names = [st.players['1'], st.players['-1']];
@@ -574,6 +1073,8 @@ async function gameView(app, id, token) {
     board.caption = last ? `${Math.ceil(last.ply / 2)}${last.by === 1 ? '.' : '...'} ${last.san}`
       : (st.frame.peace > 0 ? 'The opening: Coronation Peace until move 10' : `Move ${st.frame.full}: the floor is open for Writs`);
     board.status = st.status !== 'playing' ? `${st.result}  ·  ${st.termination}` : (st.frame.check ? 'Check' : (st.frame.pending.some((s) => s >= 0) ? 'A count is pending' : ''));
+    if (!brain && hasNet(st)) showBrain();
+    if (brain) showMinds(true);
     render();
     maybeAI();
   }
@@ -581,16 +1082,25 @@ async function gameView(app, id, token) {
     if (!st.aiToMove || aiBusy || st.status !== 'playing') return;
     if (st.mode === 'ai' && !st.you) return; // only the player's own browser drives its opponent
     aiBusy = true;
+    aiSince = performance.now();
     setTimeout(async () => {
+      // A watcher reading the net's mind holds the game: it resumes when the pointer leaves the panel.
+      if (st.mode === 'aivai' && brain && (brain.hover || brain2.hover || strip.hot >= 0)) { aiBusy = false; setTimeout(maybeAI, 400); return; }
       try { await api.post('ai', { id, version: st.version }); } catch (e) { /* another watcher moved first */ }
       aiBusy = false;
       poll();
-    }, st.mode === 'aivai' ? 1100 : 400);
+    }, st.mode === 'aivai' ? Math.max(1100, brain && !bc.hidden ? Math.max(brain.doneAt, brain2.doneAt) - performance.now() + 900 : 0) : 400);
   }
   async function poll() {
     try {
       const r = await api.get('state', { id, token: token || '', since: st ? st.version : -1 });
       if (!r.unchanged) apply(r);
+      else if (st && st.aiToMove && st.status === 'playing') {
+        // A lost or stuck request must not stall a bot's game: ask again after 5 s of silence (30 s if in flight).
+        const now = performance.now();
+        if (aiBusy && now - aiSince > 30000) aiBusy = false;
+        if (!aiBusy && now - lastChange > 5000 && (!brain || now > Math.max(brain.doneAt, brain2.doneAt))) maybeAI();
+      }
     } catch (e) { /* keep polling */ }
   }
   function render() {

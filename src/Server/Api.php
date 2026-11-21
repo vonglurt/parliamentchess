@@ -5,6 +5,7 @@ namespace Parliament\Server;
 
 use Parliament\AI\Players;
 use Parliament\Engine\Game;
+use Parliament\Engine\Position;
 use Parliament\Engine\Recording;
 
 /**
@@ -24,6 +25,7 @@ use Parliament\Engine\Recording;
  *   GET  /api/replay     ?path                  every ply as a frame
  *   GET  /api/pcn        ?id                    the game as Parliament Chess Notation
  *   GET  /api/orrery     the Orrery Queue directories and their reports
+ *   GET  /api/nets       the published generations of the net (models/), the champion last
  */
 final class Api
 {
@@ -52,8 +54,28 @@ final class Api
             'name' => $this->rename($body),
             'names' => ['bots' => array_map(fn($b) => ['common' => $b[0], 'latin' => $b[1]], Names::BOTS), 'people' => Names::PEOPLE],
             'orrery' => $this->orrery(),
+            'nets' => $this->nets(),
             default => throw new ApiError('no such route', 404),
         };
+    }
+
+    /** The generations published in models/, newest (the champion) last, with their gauntlet records. */
+    private function nets(): array
+    {
+        $gens = [];
+        foreach (json_decode((string)@file_get_contents($this->root . '/docs/data/generations.json'), true) ?: [] as $g) {
+            $gens[$g['name'] ?? ''] = $g;
+        }
+        $files = glob($this->root . '/models/g[0-9][0-9][0-9].json') ?: [];
+        sort($files);
+        $out = [];
+        foreach ($files as $f) {
+            $n = basename($f, '.json');
+            $g = $gens[$n] ?? [];
+            $out[] = ['name' => $n, 'score' => $g['score'] ?? null, 'z' => $g['z'] ?? null, 'labels' => $g['labels'] ?? null,
+                'elections' => $g['politics']['elections'] ?? null, 'decided' => $g['decided'] ?? null];
+        }
+        return ['nets' => $out, 'champion' => $out ? end($out)['name'] : null];
     }
 
     private function load(string $id): array
@@ -77,7 +99,14 @@ final class Api
         }
         foreach ($ai as $spec) {
             if ($spec !== null) {
-                Players::make($spec); // validates the name
+                if (!Players::safeSpec((string)$spec)) {
+                    throw new ApiError("no such player: $spec");
+                }
+                try {
+                    Players::make($spec); // the named net must exist and load
+                } catch (\Throwable $e) {
+                    throw new ApiError("no such player: $spec");
+                }
             }
         }
         $opt = ['elections' => ($b['elections'] ?? true) !== false, 'queenEligible' => !empty($b['queenEligible'])];
@@ -156,6 +185,8 @@ final class Api
                 'player' => $rec['players'][(string)$e['by']] ?? '', 'at' => self::iso($g->startedAt + $e['t'] / 1000)], $g->log),
             'links' => $this->links($rec, $you),
             'careers' => $this->notable($g),
+            'brain' => $rec['brain'] ?? null,
+            'brains' => $rec['brains'] ?? null, 'tally' => $rec['tally'] ?? null, 'evals' => $rec['evals'] ?? [],
         ];
         if ($playing && $you === $mover && empty($rec['ai'][(string)$mover])) {
             $out['actions'] = View::actions($p);
@@ -249,10 +280,15 @@ final class Api
             if ($you === 0 || $you !== $g->pos->side || !empty($rec['ai'][(string)$you])) {
                 throw new ApiError('not your move', 409);
             }
-            try {
-                $g->play((string)($b['move'] ?? ''));
-            } catch (\InvalidArgumentException $e) {
-                throw new ApiError($e->getMessage(), 422);
+            $text = (string)($b['move'] ?? '');
+            $m = $g->parse($text);
+            if ($m === null) {
+                throw new ApiError("illegal move: $text", 422);
+            }
+            $read = $this->reading($rec, $g, $m, $rec['players'][(string)$g->pos->side] ?? '');
+            $g->playInt($m);
+            if ($read) {
+                $rec = $this->remember($rec, $read);
             }
             $rec = $this->commit($rec, $g);
             $res = $this->view($rec, $you);
@@ -278,6 +314,14 @@ final class Api
             $ai = Players::make($spec, Players::book(), random_int(1, PHP_INT_MAX));
             $info = $ai->choose($g);
             if ($info['move']) {
+                $player = $rec['players'][(string)$g->pos->side] ?? '';
+                $mind = $ai->ev->net2 !== null ? $this->brain($ai, $g, $spec, $player, $info)
+                    : $this->reading($rec, $g, (int)$info['move'], $player, $ai, $info);
+                if ($mind) {
+                    $rec = $this->remember($rec, $mind);
+                }
+            }
+            if ($info['move']) {
                 $g->playInt($info['move'], null, ['source' => $info['source'], 'score' => $info['score'] ?? 0,
                     'nodes' => $info['nodes'] ?? 0, 'ms' => $info['ms'] ?? 0]);
             }
@@ -286,6 +330,97 @@ final class Api
             return $rec;
         });
         return $res;
+    }
+
+    /**
+     * What a net player saw and computed for the move it is about to play (see Net2::trace): the
+     * brain panel draws it, from the active inputs through both hidden layers to the value and the
+     * move logits, next to the search's own score for every root move and the move it chose.
+     */
+    private function brain(\Parliament\AI\Search $ai, Game $g, string $spec, string $player, array $info): array
+    {
+        return ['kind' => 'own', 'player' => $player, 'spec' => $spec, 'source' => $info['source'] ?? 'search',
+            'score' => $info['score'] ?? 0, 'nodes' => $info['nodes'] ?? 0, 'searchMs' => $info['ms'] ?? 0]
+            + $this->trace($ai, $g, (int)$info['move'], $ai);
+    }
+
+    /**
+     * The other side's calculation, as the game's net reads it: a person's move, or a bot's that has
+     * no net, is traced through the net player's own weights at the position the mover faced, with the
+     * move actually played marked. The mover never saw these numbers; they show how the net would have
+     * judged that side's position and how high it ranked the move chosen. A bot's own search scores
+     * come along. Null when the game has no net player.
+     */
+    private function reading(array $rec, Game $g, int $move, string $player, ?\Parliament\AI\Search $own = null, array $info = []): ?array
+    {
+        $reader = null;
+        foreach (['1', '-1'] as $s) {
+            $spec = $rec['ai'][$s] ?? null;
+            if ($spec && str_contains($spec, '+net2')) {
+                $reader = $spec;
+                break;
+            }
+        }
+        if ($reader === null) {
+            return null;
+        }
+        try {
+            $net = Players::make($reader, null, 1);
+        } catch (\Throwable) {
+            return null;
+        }
+        if ($net->ev->net2 === null) {
+            return null;
+        }
+        return ['kind' => 'reading', 'reader' => $reader, 'player' => $player, 'spec' => $rec['ai'][(string)$g->pos->side] ?? null,
+            'source' => $own ? ($info['source'] ?? 'search') : 'person', 'score' => $own ? ($info['score'] ?? 0) : null,
+            'nodes' => $info['nodes'] ?? 0, 'searchMs' => $info['ms'] ?? 0]
+            + $this->trace($net, $g, $move, $own);
+    }
+
+    /** Net2::trace at the position before the move, with SAN, squares and search scores per move. */
+    private function trace(\Parliament\AI\Search $net, Game $g, int $move, ?\Parliament\AI\Search $scorer): array
+    {
+        $p = $g->pos;
+        $t0 = microtime(true);
+        $moves = $p->legalMoves();
+        $t = $net->ev->net2->trace($p, $moves, $move);
+        foreach ($t['policy'] as &$row) {
+            $m = $row['m'];
+            $row += ['uci' => Game::uci($m), 'san' => Game::san($p, $m), 'from' => $m & 63, 'to' => ($m >> 6) & 63,
+                'writ' => (($m >> 16) & Position::F_WRIT) !== 0, 'search' => $scorer ? ($scorer->rootScores[$m] ?? null) : null];
+            unset($row['m']);
+        }
+        unset($row);
+        $hand = (new \Parliament\AI\Evaluator($net->ev->style))->evaluate($p);
+        return ['ply' => count($g->log) + 1, 'side' => $p->side, 'chosen' => Game::uci($move),
+            'hand' => $hand, 'total' => $net->ev->evaluate($p), 'traceMs' => (int)round((microtime(true) - $t0) * 1000)] + $t;
+    }
+
+    /**
+     * Keep a calculation: the latest of each side (brains), the latest overall (brain), each side's
+     * running tally (how often it played the net's favourite, the rank and probability the net gave
+     * its moves, the size of the net's correction) and the net's evaluation after every move, from
+     * White's point of view (evals: ply, side, value, own 1 / reading 0).
+     */
+    private function remember(array $rec, array $b): array
+    {
+        $side = (string)$b['side'];
+        $rec['brain'] = $b;
+        $rec['brains'][$side] = $b;
+        $t = $rec['tally'][$side] ?? ['moves' => 0, 'top1' => 0, 'top3' => 0, 'rankSum' => 0, 'pSum' => 0.0, 'corrSum' => 0, 'kind' => $b['kind']];
+        $rank = array_search($b['chosen'], array_column($b['policy'], 'uci'), true);
+        $rank = $rank === false ? count($b['policy']) : $rank + 1;
+        $t['moves']++;
+        $t['top1'] += $rank === 1 ? 1 : 0;
+        $t['top3'] += $rank <= 3 ? 1 : 0;
+        $t['rankSum'] += $rank;
+        $t['pSum'] = round($t['pSum'] + ($b['policy'][$rank - 1]['p'] ?? 0), 4);
+        $t['corrSum'] += $b['mode'] === 'residual' ? (int)round(abs(400 * max(-2.0, min(2.0, $b['raw'])))) : 0;
+        $t['kind'] = $b['kind'];
+        $rec['tally'][$side] = $t;
+        $rec['evals'][] = [$b['ply'], (int)$b['side'], round($b['side'] * $b['value'], 3), $b['kind'] === 'own' ? 1 : 0];
+        return $rec;
     }
 
     private function resign(array $b): array

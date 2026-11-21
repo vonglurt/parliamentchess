@@ -165,6 +165,27 @@ check(count($st['log']) === 4, 'the spectator drives four bot moves');
 [, $r] = req('POST', $api('ai'), ['id' => $a['id'], 'version' => 1]);
 check(!empty($r['unchanged']), 'a stale request moves nothing (two spectators cannot double-move)');
 
+check(($st['brains'] ?? null) === null && ($st['evals'] ?? []) === [], 'a game without a net carries no calculations');
+
+echo "\nEach side's calculation\n";
+if (is_dir(__DIR__ . '/../models') && glob(__DIR__ . '/../models/g[0-9][0-9][0-9].json')) {
+    [, $a] = req('POST', $api('new'), ['mode' => 'ai', 'level' => 'medium+net2:champion', 'color' => 'white', 'name' => 'Jarrahdale']);
+    [$s, $st] = req('POST', $api('move'), ['id' => $a['id'], 'token' => $a['token'], 'move' => 'e4']);
+    $w = $st['brains']['1'] ?? [];
+    check($s === 200 && ($w['kind'] ?? '') === 'reading' && ($w['source'] ?? '') === 'person' && ($w['chosen'] ?? '') === 'e2e4',
+        'a person\'s move is read by the game\'s net, the move played marked');
+    [, $r] = req('POST', $api('ai'), ['id' => $a['id'], 'version' => $st['version']]);
+    [, $st] = req('GET', $api('state') . "?id={$a['id']}");
+    check(($st['brains']['-1']['kind'] ?? '') === 'own' && ($st['brains']['1']['kind'] ?? '') === 'reading' && ($st['brain']['side'] ?? 0) === -1,
+        'the net\'s reply is its own calculation; each side keeps its latest');
+    check(($st['tally']['1']['moves'] ?? 0) === 1 && ($st['tally']['-1']['moves'] ?? 0) === 1 && count($st['evals']) === 2
+        && $st['evals'][0][1] === 1 && $st['evals'][1][3] === 1, 'a tally per side, and the net\'s evaluation after every move');
+    [$s] = req('POST', $api('move'), ['id' => $a['id'], 'token' => $a['token'], 'move' => 'e2e5']);
+    check($s === 422, 'an illegal move is still refused');
+} else {
+    echo "  (skipped: no published net in models/)\n";
+}
+
 echo "\nUnknown games\n";
 [$s] = req('POST', $api('move'), ['id' => 'nosuchgame1', 'token' => 'x', 'move' => 'e4']);
 check($s === 404, 'a move for an unknown game is a 404');

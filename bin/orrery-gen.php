@@ -77,6 +77,21 @@ function state(array $have, string $id): string
 }
 
 /**
+ * The attempt of a label or gauntlet job that counts: the job itself, or after it failed its retry
+ * ID-r1, then ID-r2 (same command and seed, a fresh id, since an id the queue has seen is never
+ * planned again). One failed job used to hold its generation's verdict forever (g012's gauntlet-008:
+ * two lanes on one machine, one reading the champion's net while the other's send rewrote it).
+ */
+function attempt(array $have, string $id, int $retries = 2): string
+{
+    $cur = $id;
+    for ($r = 1; $r <= $retries && state($have, $cur) === 'failed'; $r++) {
+        $cur = "$id-r$r";
+    }
+    return $cur;
+}
+
+/**
  * Where a job runs: its generation's code version, unpacked by pc-prep into ~/parliament-chess/HASH/
  * (one folder a version, so a late setup job can never roll a lane back), sharing one venv.
  * Without a fleet (the one-machine keeper) it runs in this checkout.
@@ -105,10 +120,27 @@ function pinned(string $state, string $gen): array
     return ['hash' => $pins[$gen], 'tgz' => "$state/dist/parliament-chess-{$pins[$gen]}.tgz", 'pip' => $pip];
 }
 
-/** The code the lanes run: a tarball named by a hash of its contents, built once per version. */
+/**
+ * The code the lanes run: a tarball named by a hash of its contents, built once per version.
+ * In a git checkout it is the last commit (HEAD), not the working tree: a generation pinned while
+ * someone is half-way through an edit would otherwise carry that half-edit to every lane (g009,
+ * 2026-11-20). So only committed code trains; commit to ship. Same files, same hash as before.
+ */
 function dist(string $state): array
 {
     $root = (string)realpath(REPO);
+    $head = null;
+    if (is_dir("$root/.git")) {
+        $head = sys_get_temp_dir() . '/pc-head-' . getmypid() . '-' . bin2hex(random_bytes(4));
+        mkdir($head, 0700, true);
+        exec('git -C ' . escapeshellarg($root) . ' archive --format=tar HEAD -- src bin rust train RULES.md LICENSE | tar -xf - -C '
+            . escapeshellarg($head) . ' 2>&1', $o, $rc);
+        if ($rc !== 0 || !is_dir("$head/src")) {
+            fwrite(STDERR, "could not read the last commit: " . implode("\n", $o) . "\n");
+            exit(1);
+        }
+        $root = $head;
+    }
     $files = [];
     foreach (['src', 'bin', 'rust'] as $d) {
         if (!is_dir("$root/$d")) {
@@ -148,6 +180,9 @@ function dist(string $state): array
             exit(1);
         }
         rename("$tgz.tmp", $tgz);
+    }
+    if ($head !== null) {
+        exec('rm -rf ' . escapeshellarg($head));
     }
     $pip = glob("$state/dist/pip-*.whl")[0] ?? null;
     return ['hash' => $hash, 'tgz' => $tgz, 'pip' => $pip];
@@ -218,11 +253,11 @@ function generation(array $gen, int $gi, array $have): array
     $G = ($gen['gauntlet'] ?? []) + ['jobs' => 25, 'games' => 1, 'workers' => 0, 'challenger' => 'medium+net2', 'champion' => 'medium', 'needs' => 'php'];
     $labels = [];
     for ($k = 1; $k <= $L['jobs']; $k++) {
-        $labels[] = sprintf('pc-%s-label-%03d', $name, $k);
+        $labels[] = attempt($have, sprintf('pc-%s-label-%03d', $name, $k));
     }
     $gaunts = [];
     for ($k = 1; $k <= $G['jobs']; $k++) {
-        $gaunts[] = sprintf('pc-%s-gauntlet-%03d', $name, $k);
+        $gaunts[] = attempt($have, sprintf('pc-%s-gauntlet-%03d', $name, $k));
     }
     $done = fn(array $ids) => count(array_filter($ids, fn($i) => state($have, $i) === 'done')) === count($ids);
     return ['name' => $name, 'gi' => $gi, 'L' => $L, 'T' => $T, 'G' => $G, 'labels' => $labels,
@@ -321,6 +356,12 @@ function decide(string $dir, string $state): array
         $train = json_decode((string)@file_get_contents(rp($dir, $g['train'], 'net2.json')), true)['meta'] ?? [];
         $hist = $train['history'] ?? [];
         $lastEpoch = $hist ? $hist[count($hist) - 1] : [];
+        // With early stopping the exported net is the best epoch's, not the last one's: report that.
+        foreach (isset($train['bestEpoch']) ? $hist : [] as $row) {
+            if (($row['epoch'] ?? null) === $train['bestEpoch']) {
+                $lastEpoch = $row;
+            }
+        }
         $row = ['name' => $g['name'], 'gi' => $gi, 'games' => $n, 'score' => round($mean, 4), 'se' => round($se, 4), 'z' => round($z, 2),
             'bar' => $bar, 'elected' => $strong && $political, 'minElections' => $minElections, 'politics' => $politics,
             'why' => $strong && $political ? 'stronger, and it holds elections' : (!$strong ? 'not stronger by the bar' : 'stronger, but it held fewer than ' . $minElections . ' election(s)'),
