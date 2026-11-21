@@ -362,5 +362,45 @@
             "bosporus"
         ],
         "decided": "2026-11-21T16:44:41+00:00"
+    },
+    {
+        "name": "g011",
+        "gi": 9,
+        "games": 196,
+        "score": 0.5612,
+        "se": 0.034,
+        "z": 1.8,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 84,
+            "elections": 84,
+            "crownMoves": 30,
+            "coronations": 22,
+            "promotions": 98
+        },
+        "why": "not stronger by the bar",
+        "labels": 70601,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.17321,
+        "valPolicyTop1": 0.1524,
+        "laneSeconds": {
+            "label": 4605.9,
+            "train": 414.1,
+            "gauntlet": 875
+        },
+        "wallSeconds": 2815,
+        "hosts": [
+            "calber",
+            "boburner",
+            "saskatchewan-2",
+            "saskatchewan",
+            "jaguaribe",
+            "columbia",
+            "whitewolf",
+            "bosporus"
+        ],
+        "decided": "2026-11-21T17:36:58+00:00"
     }
 ]
