@@ -242,5 +242,46 @@
             "nasser"
         ],
         "decided": "2026-11-21T03:56:27+00:00"
+    },
+    {
+        "name": "g008",
+        "gi": 6,
+        "games": 200,
+        "score": 0.4875,
+        "se": 0.0337,
+        "z": -0.37,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 83,
+            "elections": 83,
+            "crownMoves": 36,
+            "coronations": 26,
+            "promotions": 75
+        },
+        "why": "not stronger by the bar",
+        "labels": 69834,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.18052,
+        "valPolicyTop1": 0.1539,
+        "laneSeconds": {
+            "label": 5719.6,
+            "train": 423.3,
+            "gauntlet": 1203.5
+        },
+        "wallSeconds": 3039,
+        "hosts": [
+            "xinanjiang",
+            "saskatchewan-2",
+            "whitewolf",
+            "bosporus",
+            "calber",
+            "saskatchewan",
+            "columbia",
+            "boburner",
+            "jaguaribe"
+        ],
+        "decided": "2026-11-21T04:49:25+00:00"
     }
 ]
