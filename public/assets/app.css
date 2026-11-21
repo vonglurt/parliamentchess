@@ -220,3 +220,8 @@ body.theatre .brain-sec { margin-top: 0; }
 .side-card .sc-tally { font-size: 12px; opacity: 0.75; border-top: 1px solid rgba(243, 234, 214, 0.12); padding-top: 5px; margin-top: 2px; }
 canvas.evalstrip { width: 100%; aspect-ratio: 1240 / 130; display: block; border-radius: 12px; margin-bottom: 12px; }
 canvas.brain.second { margin-top: 12px; }
+/* MIND: the end state as a matrix, Orrery's montage screen */
+canvas.mind { width: 100%; aspect-ratio: 1240 / 470; display: block; border-radius: 6px; box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45); }
+canvas.mind.second { margin-top: 12px; }
+.brain-head .seg + .seg { margin-left: -6px; }
+canvas.brain[hidden], canvas.mind[hidden], canvas.evalstrip[hidden] { display: none; }

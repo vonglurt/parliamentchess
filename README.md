@@ -166,6 +166,16 @@ net's evaluation after every move from White's side (dots for a net's own moves,
 Click a card, or **White** / **Black**, to hold the panel on that side; **Both** draws one panel per
 side. **Net against net** in the lobby puts the champion on both sides (Populist against Whig).
 
+**Matrix or Network.** *Matrix* (the default) draws the end state of the computation the way the
+Orrery console's MIND screen draws its tank nets: black glass and phosphor, every input, unit and
+output a square, green for positive, amber for negative, black for zero. Each unit is framed in its
+own colour and a wire wears its source's colour, dotted when it inhibits. Layer 1's 160 units
+are a 20 × 8 grid and layer 2's 40 an 8 × 5. The move squares are coloured by the search's score, and
+a white frame marks the move played. On the right, *decisions* shows the game so far, one column a
+move: the net's value, how it ranked the move played, its correction, who chose (net, person, bot,
+book) and what happened (count, Writ, capture, check). *Network* is the same numbers animated with
+curves. `?panel=matrix|network` and `?view=both` set them from a link.
+
 [![How a neural net plays: the champion against Medium Populist, with its mind beside the board](docs/media/still-net-mind.png)](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)
 
 ## Your game, on the record

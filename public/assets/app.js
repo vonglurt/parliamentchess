@@ -860,6 +860,250 @@ class BrainView {
 const sgn = (n) => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
 const sgnF = (w) => (w >= 0 ? '+' : '−') + Math.abs(w).toFixed(2);
 
+// ---------------------------------------------------------------------------
+// MIND: the end state of the net's computation as a matrix, in the Orrery montage's dress (orrery
+// src/montage.rs): black glass, phosphor; green +, amber −, black 0; every unit a square framed in its
+// own colour, and a wire wears its source unit's colour, dotted when it inhibits. The inputs on top,
+// the transform 1,203 > 160 > 40 > value and moves below, and the game's decisions on the right.
+// ---------------------------------------------------------------------------
+const MX = { scr: [7, 8, 7], phos: [51, 242, 77], dim: [29, 138, 44], amber: [255, 191, 77], red: [242, 51, 38], sky: [115, 199, 255], white: [240, 248, 240] };
+const rgbS = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+const mixC = (a, b, k) => [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * k));
+/** green +, amber −, black 0 (montage.rs shade). */
+const shadeM = (v) => { const a = Math.max(-1, Math.min(1, v || 0)); return mixC(MX.scr, a >= 0 ? MX.phos : MX.amber, Math.pow(Math.abs(a), 0.6)); };
+/** A unit's own colour: the golden angle round the wheel, so neighbours never share a hue (montage.rs node_hue). */
+const nodeHue = (i) => {
+  const h = ((i * 0.381966011250105) % 1) * 6, s = 0.62, v = 1, f = h % 1;
+  const p = v * (1 - s), q = v * (1 - s * f), t = v * (1 - s * (1 - f));
+  const [r, g, b] = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][Math.floor(h) % 6];
+  return [r, g, b].map((x) => Math.round(x * 255));
+};
+const MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,monospace';
+const BOARD_SHORT = ['our P', 'our N', 'our B', 'our R', 'our Q', 'our K', 'their P', 'their N', 'their B', 'their R', 'their Q', 'their K',
+  'our ex-K', 'their ex-K', 'we attack', 'they att.', 'ours hang', 'their hang'];
+
+class MindView {
+  constructor(canvas) {
+    this.c = canvas; this.W = 1240; this.H = 470;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = this.W * dpr; canvas.height = this.H * dpr;
+    this.x = canvas.getContext('2d'); this.x.scale(dpr, dpr);
+    this.b = null; this.st = null; this.t0 = 0; this.hover = null; this.dirty = true; this.DUR = 1100;
+    this.placeholder = 'MIND appears here when a net player moves.';
+    canvas.addEventListener('mousemove', (e) => this.pointer(e));
+    canvas.addEventListener('mouseleave', () => { this.hover = null; this.dirty = true; });
+    const tick = (t) => { if (this.dirty || (this.b && t - this.t0 < this.DUR + 100)) this.draw(t); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  get doneAt() { return this.b ? this.t0 + this.DUR : 0; }
+  set(b) {
+    if (!b) { if (this.b) { this.b = null; this.hover = null; this.dirty = true; } return; }
+    if (this.b && this.b.ply === b.ply && this.b.side === b.side) return;
+    this.b = b; this.t0 = performance.now(); this.mir = b.side === 1 ? 0 : 56;
+    this.ranked = b.policy.map((r, i) => ({ ...r, rank: i + 1 }));
+    const ch = this.ranked.find((r) => r.uci === b.chosen);
+    this.rows = this.ranked.slice(0, 8);
+    if (ch && ch.rank > 8) this.rows = [...this.ranked.slice(0, 7), ch];
+    this.dirty = true;
+  }
+  setGame(st) { this.st = st; this.dirty = true; }
+  arrows(at) { return BrainView.prototype.arrows.call(this, at); }
+
+  // Geometry ---------------------------------------------------------------
+  inCell(i) {
+    let board = -1, rs = 0;
+    if (i < 768) { board = Math.floor(i / 64); rs = i % 64; } else if (i < 1152) { board = 12 + Math.floor((i - 768) / 64); rs = (i - 768) % 64; }
+    if (board >= 0) {
+      const bx = 14 + (board % 9) * 58, by = 60 + Math.floor(board / 9) * 66;
+      const x0 = bx + (rs & 7) * 6, y0 = by + (7 - (rs >> 3)) * 6;
+      return { x0, y0, w: 5, h: 5, cx: x0 + 2.5, cy: y0 + 2.5, board, rs };
+    }
+    const gi = BRAIN_SCALARS.findIndex((g) => i >= g.at && i < g.at + g.n), g = BRAIN_SCALARS[gi], k = i - g.at;
+    const x0 = 548 + (gi < 6 ? 0 : 1) * 196 + 100 + k * 12, y0 = 60 + (gi % 6) * 16;
+    return { x0, y0, w: 10, h: 10, cx: x0 + 5, cy: y0 + 5, g, k };
+  }
+  h1Cell(j) { const x0 = 14 + (j % 20) * 12, y0 = 216 + Math.floor(j / 20) * 12; return { x0, y0, cx: x0 + 5, cy: y0 + 5 }; }
+  h2Cell(k) { const x0 = 300 + (k % 8) * 14, y0 = 226 + Math.floor(k / 8) * 14; return { x0, y0, cx: x0 + 6, cy: y0 + 6 }; }
+  outCell(r) { return r < 0 ? { x0: 470, y0: 214, s: 20, cx: 480, cy: 224 } : { x0: 472, y0: 246 + r * 24, s: 16, cx: 480, cy: 254 + r * 24 }; }
+  decX0() { return 800; }
+  inLabel(i) {
+    const p = this.inCell(i);
+    return p.board !== undefined ? `${BRAIN_BOARDS[p.board]} · ${sqName(p.rs ^ this.mir)}` : `${p.g.name}: ${p.g.cells[p.k]}`;
+  }
+
+  pointer(e) {
+    const r = this.c.getBoundingClientRect();
+    const px = (e.clientX - r.left) * (this.W / r.width), py = (e.clientY - r.top) * (this.H / r.height);
+    let hv = null;
+    const b = this.b;
+    if (b && py < 190) {
+      for (const i of b.features) { const p = this.inCell(i); if (px >= p.x0 - 1 && px <= p.x0 + p.w + 1 && py >= p.y0 - 1 && py <= p.y0 + p.h + 1) { hv = { in: i }; break; } }
+    } else if (b && py >= 214 && py < 312 && px >= 14 && px < 254) {
+      const j = Math.floor((py - 216) / 12) * 20 + Math.floor((px - 14) / 12); if (j >= 0 && j < b.a1.length) hv = { h1: j };
+    } else if (b && py >= 224 && py < 296 && px >= 298 && px < 414) {
+      const k = Math.floor((py - 226) / 14) * 8 + Math.floor((px - 300) / 14); if (k >= 0 && k < b.a2.length) hv = { h2: k };
+    } else if (b && px >= 466 && px < 640 && py >= 210) {
+      if (py < 238) hv = { value: true };
+      else { const r2 = Math.floor((py - 242) / 24); if (r2 >= 0 && r2 < this.rows.length) hv = { row: r2 }; }
+    } else if (this.st && px >= this.decX0() && py >= 214 && py < 300) {
+      const col = Math.floor((px - this.decX0()) / 6), ev = this.cols ? this.cols[col] : null;
+      if (ev) hv = { dec: ev };
+    }
+    if (JSON.stringify(hv) !== JSON.stringify(this.hover)) { this.hover = hv; this.dirty = true; }
+  }
+
+  // Drawing ----------------------------------------------------------------
+  wire(a, b, col, k, dots) {
+    const x = this.x;
+    x.strokeStyle = rgbS(mixC(MX.scr, col, k)); x.lineWidth = 1;
+    x.setLineDash(dots ? [2, 2] : []);
+    x.beginPath(); x.moveTo(a.cx, a.cy); x.lineTo(b.cx, b.cy); x.stroke();
+    x.setLineDash([]);
+  }
+  t(s, px, py, c = MX.dim, size = 11, align = 'left', weight = '') {
+    const x = this.x; x.font = `${weight} ${size}px ${MONO}`; x.fillStyle = rgbS(c); x.textAlign = align; x.textBaseline = 'middle'; x.fillText(s, px, py);
+  }
+  draw(now) {
+    this.dirty = false;
+    const x = this.x, W = this.W, H = this.H, b = this.b;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = rgbS(MX.dim); x.fillRect(0, 0, W, H);
+    x.fillStyle = rgbS(MX.scr); x.fillRect(1, 1, W - 2, H - 2);
+    x.fillStyle = 'rgb(11,14,11)'; for (let y = 2; y < H - 1; y += 3) x.fillRect(1, y, W - 2, 1);
+    if (!b) { this.t(this.placeholder, W / 2, H / 2, MX.phos, 15, 'center'); this.decisions(); return; }
+    const T = (now - this.t0) / this.DUR, ph = (a, d) => clamp01((T - a) / d);
+    const P = { inp: ph(0, 0.3), h1: ph(0.22, 0.3), h2: ph(0.45, 0.25), out: ph(0.65, 0.3), w: ph(0.3, 0.6) };
+    const side = b.side === 1 ? 'White' : 'Black', moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
+    const played = this.ranked.find((r) => r.uci === b.chosen);
+    const how = b.kind === 'own' ? 'its own net' : b.source === 'person' ? 'a person, read by the net' : 'a bot without a net, read by the net';
+    this.t(`MIND  ply ${b.ply}  ${side}  ${b.player || ''}  ${how}  ${moveNo} ${played ? played.san : b.chosen}${b.source === 'book' ? '  (book)' : ''}`, 14, 18, MX.phos, 13, 'left', '600');
+    // The generation, the fourth corner.
+    const gen = String(b.net || '').replace(/^g0*/, '');
+    this.t('GENERATION', W - 236, 44, MX.dim, 12);
+    this.t(gen || '?', W - 236, 66, MX.phos, 22, 'left', '600');
+    this.t(`${b.net} · the champion`, W - 236, 90, MX.amber, 12);
+    this.t(`value ${sgnF(b.value)}  ≈ ${Math.round(50 * (1 + b.value))}% for ${side}`, W - 236, 112, MX.phos, 12);
+    const corr = b.mode === 'residual' ? Math.round(400 * Math.max(-2, Math.min(2, b.raw))) : 0;
+    this.t(`hand ${sgn(b.hand)} + net ${sgn(corr)} = ${sgn(b.total)} cp`, W - 236, 130, MX.dim, 12);
+    if (played) this.t(`played #${played.rank} of ${b.policy.length} · ${(100 * played.p).toFixed(1)}%`, W - 236, 148, MX.dim, 12);
+
+    const hv = this.hover;
+    // The transform: wires first, then the units over them.
+    const focus = (kind, a, c) => !hv || (kind === 'in' ? hv.in === a || hv.h1 === c : kind === 'mid' ? hv.h1 === a || hv.h2 === c
+      : kind === 'val' ? hv.h2 === a || hv.value : hv.h2 === a || hv.row === c);
+    const top = (list) => list.reduce((m, e) => Math.max(m, Math.abs(e[e.length - 1])), 1e-9);
+    const wk = (v, mx, on) => (Math.pow(Math.abs(v) / mx, 0.8) * 0.78 + 0.22) * P.w * (on ? 1 : 0.12);
+    const ins = b.edges.in.slice(0, 48), mi = top(ins);
+    for (let n = ins.length - 1; n >= 0; n--) { const [i, j, w] = ins[n]; this.wire(this.inCell(i), this.h1Cell(j), nodeHue(i), wk(w, mi, focus('in', i, j)) * (hv && hv.in !== undefined ? 1 : 0.45), w < 0); }
+    const mids = b.edges.mid.slice(0, 150), mm = top(mids);
+    for (let n = mids.length - 1; n >= 0; n--) { const [j, k, w] = mids[n]; this.wire(this.h1Cell(j), this.h2Cell(k), nodeHue(j), wk(w, mm, focus('mid', j, k)), w < 0); }
+    const outs = [...b.edges.value.map(([k, w]) => [k, -1, w]), ...this.rows.flatMap((r, ri) => (r.edges || []).map(([k, w]) => [k, ri, w]))], mo = top(outs);
+    for (const [k, r, w] of outs) this.wire(this.h2Cell(k), this.outCell(r), nodeHue(160 + k), wk(w, mo, r < 0 ? focus('val', k) : focus('row', k, r)), w < 0);
+    // The inputs: eighteen boards from the side to move, and the summaries.
+    this.t(`inputs  ${b.features.length} of 1,203 on  (from ${side}'s side)`, 14, 40);
+    for (let bi = 0; bi < 18; bi++) {
+      const bx = 14 + (bi % 9) * 58, by = 60 + Math.floor(bi / 9) * 66;
+      this.t(BOARD_SHORT[bi], bx, by - 7, MX.dim, 9);
+      x.fillStyle = 'rgb(14,24,15)';
+      for (let q = 0; q < 64; q++) x.fillRect(bx + (q & 7) * 6, by + (7 - (q >> 3)) * 6, 5, 5);
+    }
+    BRAIN_SCALARS.forEach((g, gi) => {
+      const x0 = 548 + (gi < 6 ? 0 : 1) * 196, y0 = 60 + (gi % 6) * 16;
+      this.t(g.name.toLowerCase(), x0, y0 + 5, MX.dim, 9);
+      x.fillStyle = 'rgb(14,24,15)';
+      for (let k = 0; k < g.n; k++) x.fillRect(x0 + 100 + k * 12, y0, 10, 10);
+    });
+    b.features.forEach((i, n) => {
+      const p = this.inCell(i), k = clamp01(P.inp * 1.5 - (n / b.features.length) * 0.5);
+      if (k <= 0) return;
+      x.fillStyle = hv && hv.in === i ? '#fff' : rgbS(mixC(MX.scr, MX.phos, k));
+      x.fillRect(p.x0, p.y0, p.w, p.h);
+    });
+
+    this.t(`transform  1203 > ${b.a1.length} > ${b.a2.length} > value + ${b.policy.length} moves`, 14, 196);
+    for (let j = 0; j < b.a1.length; j++) {
+      const p = this.h1Cell(j), on = j < b.a1.length * P.h1 * 1.2;
+      x.fillStyle = rgbS(hv && hv.h1 === j ? MX.white : nodeHue(j)); x.fillRect(p.x0, p.y0, 10, 10);
+      x.fillStyle = rgbS(on ? shadeM(b.pre1[j]) : MX.scr); x.fillRect(p.x0 + 1, p.y0 + 1, 8, 8);
+    }
+    for (let k = 0; k < b.a2.length; k++) {
+      const p = this.h2Cell(k), on = k < b.a2.length * P.h2 * 1.2;
+      x.fillStyle = rgbS(hv && hv.h2 === k ? MX.white : nodeHue(160 + k)); x.fillRect(p.x0, p.y0, 12, 12);
+      x.fillStyle = rgbS(on ? shadeM(b.pre2[k]) : MX.scr); x.fillRect(p.x0 + 1, p.y0 + 1, 10, 10);
+    }
+    // The outputs: the value, and the policy's favourites with the move played framed.
+    const v = this.outCell(-1);
+    x.fillStyle = rgbS(shadeM(b.value * P.out)); x.fillRect(v.x0, v.y0, v.s, v.s);
+    this.t(`value ${sgnF(b.value * P.out)}`, 500, 224, MX.phos, 12);
+    const maxP = Math.max(...this.rows.map((r) => r.p), 1e-9);
+    this.rows.forEach((r, ri) => {
+      const c = this.outCell(ri), isPlayed = r.uci === b.chosen;
+      if (isPlayed && P.out >= 1) { x.fillStyle = rgbS(MX.white); x.fillRect(c.x0 - 3, c.y0 - 3, c.s + 6, c.s + 6); x.fillStyle = rgbS(MX.scr); x.fillRect(c.x0 - 1, c.y0 - 1, c.s + 2, c.s + 2); }
+      // The policy proposes, the search disposes: a square is green or amber by the search's score for
+      // the move (a person's move has none: then by the net's own probability).
+      const sv = r.search != null ? r.search / 150 : r.p / maxP;
+      x.fillStyle = rgbS(hv && hv.row === ri ? MX.white : shadeM(sv * P.out)); x.fillRect(c.x0, c.y0, c.s, c.s);
+      this.t(`${r.san}`, 500, c.cy, isPlayed ? MX.white : MX.phos, 12, 'left', isPlayed ? '600' : '');
+      this.t(`#${r.rank} ${(100 * r.p).toFixed(1)}%${r.search != null ? `  ${sgn(r.search)}` : ''}${isPlayed ? '  played' : ''}`, 560, c.cy, isPlayed ? MX.white : MX.dim, 11);
+    });
+
+    this.decisions();
+    // The hover line and the legend.
+    const info = this.hoverText();
+    if (info) this.t(info, 14, H - 36, MX.amber, 12);
+    this.t('green +, amber −, black 0 (a move: its search score); a wire wears its source unit’s colour, dotted when it inhibits; the white frame is the move played', 14, H - 14, MX.dim, 11);
+  }
+  /** The game's decisions, one column a move, newest at the right (the montage's "the last 8 s"). */
+  decisions() {
+    const x = this.x, st = this.st, b = this.b, x0 = this.decX0();
+    const evals = (st && st.evals) || [], log = (st && st.log) || [];
+    const n = Math.floor((this.W - 14 - x0) / 6);
+    const shown = evals.slice(-n);
+    this.cols = shown;
+    this.t(`decisions, the last ${shown.length || n} moves`, 724, 196);
+    const rows = ['value', 'net rank', "net's say", 'who', 'events'];
+    rows.forEach((w, r) => this.t(w, 724, 222 + r * 16));
+    shown.forEach((e, k) => {
+      const cx = x0 + k * 6, m = log[e[0] - 1] || {};
+      const rank = e[4], p = e[5], corr = e[6], who = e[7];
+      const cells = [shadeM(e[2]),
+        rank ? shadeM(rank === 1 ? 1 : Math.max(0.08, 1 - (rank - 1) / 12)) : MX.scr,
+        corr !== undefined ? shadeM(corr / 200) : MX.scr,
+        who === 'net' ? MX.phos : who === 'person' ? MX.white : who === 'book' ? MX.amber : who === 'bot' ? MX.sky : MX.scr,
+        m.count ? MX.white : m.writ ? MX.amber : /x/.test(m.san || '') ? MX.red : /[+#]/.test(m.san || '') ? MX.sky : null];
+      cells.forEach((c, r) => { if (c) { x.fillStyle = rgbS(this.hover && this.hover.dec === e ? MX.white : c); x.fillRect(cx, 216 + r * 16, 5, 12); } });
+      if (b && e[0] === b.ply) { x.fillStyle = rgbS(MX.white); x.fillRect(cx, 208, 5, 3); }
+    });
+    x.fillStyle = rgbS(MX.phos); x.fillRect(x0 + shown.length * 6, 212, 1, 5 * 16);
+    const L = 724, key = (c, px, word) => { x.fillStyle = rgbS(c); x.fillRect(px, 358, 8, 8); this.t(word, px + 13, 362, MX.dim, 10); };
+    this.t('value: the net’s, White +      net rank: bright = its favourite', L, 312, MX.dim, 10);
+    this.t('net’s say: its correction in cp, White +', L, 328, MX.dim, 10);
+    this.t('who chose: net, person, bot (no net), book      events: count, Writ, capture, check', L, 344, MX.dim, 10);
+    key(MX.phos, L, 'net'); key(MX.white, L + 46, 'person / count'); key(MX.sky, L + 160, 'bot / check'); key(MX.amber, L + 256, 'book / Writ'); key(MX.red, L + 352, 'capture');
+  }
+  hoverText() {
+    const h = this.hover, b = this.b;
+    if (!h) return '';
+    if (h.dec) {
+      const e = h.dec, m = (this.st.log || [])[e[0] - 1] || {};
+      return `${Math.ceil(e[0] / 2)}${e[1] === 1 ? '.' : '…'} ${m.san || ''} by ${e[1] === 1 ? 'White' : 'Black'} (${e[7] || (e[3] ? 'net' : 'read')}): value ${sgnF(e[2])} for White${e[4] ? ` · the net's #${e[4]}, ${(100 * e[5]).toFixed(1)}%` : ''}${e[6] !== undefined ? ` · net ${sgn(e[6])} cp for White` : ''}`;
+    }
+    if (!b) return '';
+    if (h.in !== undefined) return `${this.inLabel(h.in)} (input ${h.in}) is on`;
+    if (h.h1 !== undefined) {
+      const inn = (b.edges.unitIn[h.h1] || []).map(([i, w]) => `${this.inLabel(i)} ${sgnF(w)}`).slice(0, 3).join(', ');
+      return `layer 1 unit ${h.h1}: sum ${b.pre1[h.h1].toFixed(2)} → ${b.a1[h.h1].toFixed(2)}${inn ? ' · from ' + inn : ''}`;
+    }
+    if (h.h2 !== undefined) {
+      const val = b.edges.value.find((e) => e[0] === h.h2);
+      return `layer 2 unit ${h.h2}: sum ${b.pre2[h.h2].toFixed(2)} → ${b.a2[h.h2].toFixed(2)}${val ? ' · to the value ' + sgnF(val[1]) : ''}`;
+    }
+    if (h.value) return `value = tanh(${b.raw.toFixed(3)}) = ${b.value.toFixed(3)} for the side to move`;
+    if (h.row !== undefined) { const r = this.rows[h.row]; return `${r.san}: logit ${r.logit.toFixed(2)} → ${(100 * r.p).toFixed(1)}%, rank ${r.rank} of ${b.policy.length}${r.uci === b.chosen ? ' · played' : ''}`; }
+    return '';
+  }
+}
+
 /**
  * The net's evaluation after every move of the game, from White's side of the board: above the line
  * White stands better. Filled dots are a net player's own calculation, rings the net reading the other
@@ -982,28 +1226,43 @@ async function gameView(app, id, token) {
   let bc = null, brain2 = null, bc2 = null, sidesEl = null, strip = null, viewBtns = null;
   let aiSince = 0, lastChange = 0; // the watchdog's clocks: a bot's move is asked for again if nothing happens
   const hasNet = (s) => Object.values(s.bots || {}).some((b) => b && b.includes('+net2'));
+  // Two styles for the same numbers: 'matrix', the end state as Orrery's MIND screen draws a net
+  // (MindView), or 'network', the animated network with its curves (BrainView). Remembered; ?panel=.
+  const STYLES = ['matrix', 'network'];
+  let style = STYLES.includes(Q.get('panel')) ? Q.get('panel') : STYLES.includes(store.get('pc-brain-style')) ? store.get('pc-brain-style') : 'matrix';
+  let mind = null, mind2 = null, mc = null, mc2 = null, sc = null, styleBtns = null, hidden = false;
+  /** The views on screen now (one, or two in Both), whichever style. */
+  const onScreen = () => (hidden || !brain ? [] : (style === 'matrix' ? [mind, mind2] : [brain, brain2]).slice(0, view === 'both' ? 2 : 1));
+  const mindsDoneAt = () => Math.max(0, ...onScreen().map((v) => v.doneAt));
+  const mindsHover = () => onScreen().some((v) => v.hover) || (strip && strip.hot >= 0 && style === 'network');
   function showBrain() {
     bc = h('canvas', { class: 'brain' });
     brain = window.pcBrain = new BrainView(bc);
+    bc2 = h('canvas', { class: 'brain second' });
+    brain2 = new BrainView(bc2);
+    mc = h('canvas', { class: 'mind' });
+    mind = window.pcMind = new MindView(mc);
+    mc2 = h('canvas', { class: 'mind second' });
+    mind2 = new MindView(mc2);
     const hide = h('button', { class: 'btn ghost small', style: 'color:var(--parch);border-color:rgba(243,234,214,0.3)', onclick: () => {
-      bc.hidden = !bc.hidden; hide.textContent = bc.hidden ? 'Show' : 'Hide';
-      bc2.hidden = bc.hidden || view !== 'both';
+      hidden = !hidden; hide.textContent = hidden ? 'Show' : 'Hide'; if (st) showMinds(false);
     } }, 'Hide');
     // Side by side: the board and the mind in one view on a wide screen (remembered; ?theatre=1 forces it).
     const setTheatre = (on) => { document.body.classList.toggle('theatre', on); side.textContent = on ? 'Stacked' : 'Side by side'; store.set('pc-theatre', on ? '1' : ''); };
     const side = h('button', { class: 'btn ghost small', style: 'color:var(--parch);border-color:rgba(243,234,214,0.3)', onclick: () => setTheatre(!document.body.classList.contains('theatre')) }, 'Side by side');
-    bc2 = h('canvas', { class: 'brain second' });
-    brain2 = new BrainView(bc2);
-    const sc = h('canvas', { class: 'evalstrip' });
+    sc = h('canvas', { class: 'evalstrip' });
     strip = new EvalStrip(sc);
     sidesEl = h('div', { class: 'brain-sides' });
     const views = [['follow', 'Follow the game'], ['1', 'White'], ['-1', 'Black'], ['both', 'Both']];
     viewBtns = h('div', { class: 'seg', role: 'group', 'aria-label': 'Whose calculation' }, views.map(([v, label]) =>
       h('button', { 'data-v': v, onclick: () => setView(v) }, label)));
+    styleBtns = h('div', { class: 'seg', role: 'group', 'aria-label': 'How it is drawn' }, [['matrix', 'Matrix'], ['network', 'Network']].map(([v, label]) =>
+      h('button', { 'data-v': v, title: v === 'matrix' ? 'The end state of the computation, every unit a square (Orrery’s MIND screen)' : 'The network animated, inputs to outputs, with its curves',
+        onclick: () => { style = v; store.set('pc-brain-style', v); if (st) showMinds(false); } }, label)));
     brainSec = h('section', { class: 'brain-sec' },
       h('div', { class: 'brain-head' }, h('h2', {}, 'The net’s mind'),
-        h('span', { class: 'hint' }, 'Each side’s calculation: a net player’s own, or the net reading the other side.'), viewBtns, side, hide),
-      sidesEl, sc, bc, bc2, h('div', { class: 'brain-note' }, 'Hovering a panel pauses a game between bots. White and Black: the panel holds that side’s last move. Both: one panel per side.'), brainHelp());
+        h('span', { class: 'hint' }, 'Each side’s calculation: a net player’s own, or the net reading the other side.'), viewBtns, styleBtns, side, hide),
+      sidesEl, sc, mc, mc2, bc, bc2, h('div', { class: 'brain-note' }, 'Hovering a panel pauses a game between bots. White and Black: the panel holds that side’s last move. Both: one panel per side. Matrix: the end state of the computation; Network: the same numbers animated as a network.'), brainHelp());
     app.append(brainSec);
     setTheatre(Q.get('theatre') === '1' || store.get('pc-theatre') === '1');
   }
@@ -1018,20 +1277,30 @@ async function gameView(app, id, token) {
     const of = (s) => (st.brains && st.brains[s]) || null;
     const name = (s) => (s === '1' ? 'White' : 'Black');
     let first = st.brain || null, second = null;
-    if (view === '1' || view === '-1') { first = of(view); brain.placeholder = `${name(view)} has not moved yet.`; }
-    else if (view === 'both') { first = of('1'); second = of('-1'); brain.placeholder = 'White has not moved yet.'; brain2.placeholder = 'Black has not moved yet.'; }
-    else brain.placeholder = 'The net’s mind appears here when a net player moves.';
+    let ph1 = 'The net’s mind appears here when a net player moves.', ph2 = '';
+    if (view === '1' || view === '-1') { first = of(view); ph1 = `${name(view)} has not moved yet.`; }
+    else if (view === 'both') { first = of('1'); second = of('-1'); ph1 = 'White has not moved yet.'; ph2 = 'Black has not moved yet.'; }
+    brain.placeholder = ph1; brain2.placeholder = ph2;
+    mind.placeholder = ph1.replace('The net’s mind appears', 'MIND appears'); mind2.placeholder = ph2;
+    const live = onScreen();
     const fresh = (v, b) => b && (!v.b || v.b.ply !== b.ply);
-    const f1 = fresh(brain, first), f2 = fresh(brain2, second);
-    brain.set(first);
-    brain2.set(second);
-    bc2.hidden = view !== 'both' || bc.hidden;
+    const f = [fresh(live[0] || brain, first), fresh(live[1] || brain2, second)];
+    // Every view gets its numbers (a hidden one just waits); only the views on screen animate where seen.
+    brain.set(first); brain2.set(second); mind.set(first); mind2.set(second);
+    mind.setGame(st); mind2.setGame(st);
+    const both = view === 'both';
+    bc.hidden = hidden || style !== 'network'; bc2.hidden = hidden || style !== 'network' || !both;
+    mc.hidden = hidden || style !== 'matrix'; mc2.hidden = hidden || style !== 'matrix' || !both;
+    sc.hidden = hidden || style !== 'network'; // the matrix draws its own decisions strip
     for (const bt of viewBtns.children) bt.classList.toggle('on', bt.dataset.v === view);
+    for (const bt of styleBtns.children) bt.classList.toggle('on', bt.dataset.v === style);
     sidesEl.replaceChildren(sideCard(st, '1', view === '1', pick), sideCard(st, '-1', view === '-1', pick));
     strip.set(st.evals, st.log);
-    // The arrows belong to the move just played; they arrive as the animation reaches the outputs.
-    const latest = [[brain, first, f1], [brain2, second, f2]].find(([, b]) => b && b.ply === st.log.length);
-    if (latest && latest[2] && moved) board.arrows = latest[0].arrows(performance.now() + 2700);
+    // The arrows belong to the move just played; they arrive as the panel reaches the outputs.
+    const shown = [[live[0] || brain, first, f[0]], [live[1] || brain2, second, f[1]]];
+    const latest = shown.find(([, b]) => b && b.ply === st.log.length);
+    const lag = style === 'matrix' ? 800 : 2700;
+    if (latest && latest[2] && moved) board.arrows = latest[0].arrows(performance.now() + lag);
     else if (!latest) board.arrows = [];
   }
   const pick = (s) => setView(view === s ? 'follow' : s);
@@ -1085,11 +1354,11 @@ async function gameView(app, id, token) {
     aiSince = performance.now();
     setTimeout(async () => {
       // A watcher reading the net's mind holds the game: it resumes when the pointer leaves the panel.
-      if (st.mode === 'aivai' && brain && (brain.hover || brain2.hover || strip.hot >= 0)) { aiBusy = false; setTimeout(maybeAI, 400); return; }
+      if (st.mode === 'aivai' && brain && mindsHover()) { aiBusy = false; setTimeout(maybeAI, 400); return; }
       try { await api.post('ai', { id, version: st.version }); } catch (e) { /* another watcher moved first */ }
       aiBusy = false;
       poll();
-    }, st.mode === 'aivai' ? Math.max(1100, brain && !bc.hidden ? Math.max(brain.doneAt, brain2.doneAt) - performance.now() + 900 : 0) : 400);
+    }, st.mode === 'aivai' ? Math.max(1100, brain ? mindsDoneAt() - performance.now() + 900 : 0) : 400);
   }
   async function poll() {
     try {
@@ -1099,7 +1368,7 @@ async function gameView(app, id, token) {
         // A lost or stuck request must not stall a bot's game: ask again after 5 s of silence (30 s if in flight).
         const now = performance.now();
         if (aiBusy && now - aiSince > 30000) aiBusy = false;
-        if (!aiBusy && now - lastChange > 5000 && (!brain || now > Math.max(brain.doneAt, brain2.doneAt))) maybeAI();
+        if (!aiBusy && now - lastChange > 5000 && (!brain || now > mindsDoneAt())) maybeAI();
       }
     } catch (e) { /* keep polling */ }
   }

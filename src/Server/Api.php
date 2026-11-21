@@ -401,7 +401,8 @@ final class Api
      * Keep a calculation: the latest of each side (brains), the latest overall (brain), each side's
      * running tally (how often it played the net's favourite, the rank and probability the net gave
      * its moves, the size of the net's correction) and the net's evaluation after every move, from
-     * White's point of view (evals: ply, side, value, own 1 / reading 0).
+     * White's point of view (evals: ply, side, value, own 1 / reading 0, the rank and probability the
+     * net gave the move played, the net's correction from White's side, who chose: net, person, bot, book).
      */
     private function remember(array $rec, array $b): array
     {
@@ -419,7 +420,11 @@ final class Api
         $t['corrSum'] += $b['mode'] === 'residual' ? (int)round(abs(400 * max(-2.0, min(2.0, $b['raw'])))) : 0;
         $t['kind'] = $b['kind'];
         $rec['tally'][$side] = $t;
-        $rec['evals'][] = [$b['ply'], (int)$b['side'], round($b['side'] * $b['value'], 3), $b['kind'] === 'own' ? 1 : 0];
+        // From White's side: the value, and the net's correction in centipawns; then who chose the move.
+        $corr = $b['mode'] === 'residual' ? (int)round($b['side'] * 400 * max(-2.0, min(2.0, $b['raw']))) : 0;
+        $who = $b['source'] === 'book' ? 'book' : ($b['kind'] === 'own' ? 'net' : ($b['source'] === 'person' ? 'person' : 'bot'));
+        $rec['evals'][] = [$b['ply'], (int)$b['side'], round($b['side'] * $b['value'], 3), $b['kind'] === 'own' ? 1 : 0,
+            $rank, round((float)($b['policy'][$rank - 1]['p'] ?? 0), 4), $corr, $who];
         return $rec;
     }
 
