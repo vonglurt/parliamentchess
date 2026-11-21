@@ -624,6 +624,83 @@ From 15:22 the fleet runs at full tilt for this training. The hearth regulator's
 - [ ] Pre-pack the training data on the GPU once a generation passes a million positions.
 - [ ] PHP on whitewolf, boburner, calber and macmini would add four more lanes; it needs root, which the fleet's recipes leave to a person typing the password in a Sessions tile.
 
+## Lab Report XI — Faster generations: a packed trainer, shared GPUs and a Rust labeller
+
+Labelling, a generation's slowest stage, now runs in Rust and gives exactly PHP's labels: 0 differences on 1,218 positions, at 6.6 times PHP's speed on a busy fleet lane and 13 times on a Mac core. Training no longer waits for a free GPU, and it packs its data onto the device once. Generation 3 scored 0.410 against plain Medium, up from generation 2's 0.266, but is not yet elected.
+
+### A. Where a generation's time went
+
+Generation 3 took 69 minutes from its first label job to its verdict, and less than half of that was work on its own critical path.
+
+| Stage | Where | Wall time | Lane-minutes |
+| --- | --- | --- | --- |
+| Label 72,791 positions | 7 PHP lanes, then 10 | 24.7 min | 98.7 |
+| Wait for a GPU | all three cards busy with crucible's half-hour segments | 24 min | — |
+| Train, 16 epochs | GTX 1080 Ti (calber-cuda) | 3.5 min | 3.5 |
+| Gauntlet, 200 games | 10 PHP lanes | 11.7 min | 13.1 |
+
+The GPU stage was 5% of the work but waited as long as labelling ran. Within training, Python built every batch, so the 1080 Ti spent most of each 12-second epoch idle.
+
+### B. Training: a packed trainer and a shared GPU
+
+The trainer now puts the whole dataset on the device once, padded per position, so an epoch is index arithmetic rather than a Python loop.
+
+| Generation 3's 78,083 positions | Before | Packed |
+| --- | --- | --- |
+| A Mac's CPU, per epoch | 10.3 s | 2.96 s |
+| GTX 1080 Ti, per epoch | 12 s (card to itself) | 9 s (card shared with crucible at 100%) |
+
+Where no promotion is possible, the losses equal the old path's to six decimals and the held-out results are unchanged (value error 0.308, sign accuracy 0.878). Two details surfaced:
+
+- **Promotions share a policy slot.** A pawn's four promotions are one from-to pair. The old path kept only the last one's probability; the packed path sums them into the slot.
+- **No batched product in the backward pass.** PyTorch 2.14 sends a batched matrix product's backward to Triton even in eager mode, and Triton cannot build on the Pascal lanes, so the legal-move logits use a multiply and a sum.
+
+The wait is gone too. From generation 4, training asks for the `gpu` capability, which whitewolf's and calber's CPU lanes carry. It then runs beside crucible on the same card instead of queueing for a CUDA lane. Generation 4 trained on calber that way, in 5.2 minutes, with nothing of crucible's stopped.
+
+### C. The labeller in Rust
+
+`rust/` ports the PHP engine operation for operation: the rules (moves, Writs, the count, the Ledger), the hand evaluation, Book-Return Search without its book, the Sensors v2 features and the second-generation net. Its `pc-label` writes `label.php`'s shards. It has no dependencies, so every lane builds it offline: 11 s on boburner's 2024 Rust, 58 s on nasser's four cores. The Zobrist keys come from PHP's own tables (`tools/export_zobrist.php`), so every position hashes to the same key and the transposition table and repetition counts behave alike.
+
+Parity is checked, not assumed. `tools/rust_parity.php` samples positions from real self-play games, with their whole Parliament state and the game's repetition counts, and records PHP's answers; `pc-parity` compares.
+
+| Check | Positions | Differences |
+| --- | --- | --- |
+| Hash, and the move list in PHP's order | 1,218 | 0 |
+| Perft at depth 2 (depth 3) | 1,218 (205) | 0 |
+| Sensors v2 features, in order | 1,218 | 0 |
+| Hand evaluation, Whig and Populist styles | 1,218 | 0 |
+| Teacher score for every root move, depth 2 (depth 3) | 1,218 (305) | 0 |
+| Generation 3's net: value input and policy logits | 127 | 0 (largest difference exactly 0) |
+
+The rare rules are covered; in the largest set alone (855 positions) there are 32 with an election pending, 255 with a Pretender pawn, 284 with a crowned piece, 35 with an en passant square and 21 with a promotion. Two speed-ups were kept only after parity held: attack maps built once per evaluation for the King-danger term, and fixed move tables.
+
+### D. Speed
+
+Rust labels 6.6 times as fast as PHP on a fleet lane, and 13 times on a Mac core, where PHP's JIT helps less.
+
+| Machine, teacher depth 3 | PHP | Rust | Ratio |
+| --- | --- | --- | --- |
+| Mac, one worker | 4.7 labels/s | 61.3 labels/s | 13.0 |
+| saskatchewan, 8 workers, under fleet load | 7.6 labels/s | 50 labels/s | 6.6 |
+
+The fleet figure was measured before the last two speed-ups, so it is a floor. A depth-4 teacher in Rust labels 9.9 positions a second on the Mac, twice PHP's depth-3 rate, so a deeper teacher is now affordable. What is left is the evaluation itself (half the time) and the attack tests of move legality.
+
+### E. The generations so far
+
+No generation has been elected yet; each verdict commits and pushes itself to the repository (`docs/data/generations.json`).
+
+| Generation | Labels | Labeller | Gauntlet score vs plain Medium | z | Elections held | Verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| g002 (smoke run, old code) | 5,292 | PHP | 0.266 ± 0.074, 32 games | −3.15 | 12 | not elected |
+| g003 (zero start, cookies, 160/40) | 72,791 | PHP | 0.410 ± 0.033, 200 games | −2.71 | 97 | not elected |
+| g004 (no book in label games) | about 70,000 | PHP | under way |  |  |  |
+
+Generation 5 is the first to label in Rust: 30 jobs of 8 games, the same 1,920 games as before. Its setup job builds `pc-label` on each PHP lane; the command it will run was rehearsed by hand on nasser and passed. With labelling about 6.6 times faster and no wait for a GPU, a generation should take about 25 minutes instead of 69, and the PHP gauntlet becomes its largest stage.
+
+- [ ] Generation 5: the first Rust labels, and the first measured generation time with all three speed-ups.
+- [ ] Gauntlets in Rust: they are now the slowest stage, but they need the game record (moves, counts, results) that the verdict reads.
+- [ ] A depth-4 teacher, now affordable: a decision for the next generation, since it changes what the net learns.
+
 ## References
 
 Game and history sources are linked in Report II; every link there was opened on 20 November 2026.

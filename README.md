@@ -144,7 +144,7 @@ name: you might lose to *Ceratonia siliqua* (the carob) or a Black-eyed Pea.
 # For developers
 
 - **Lab reports:** [docs/parliament-chess-lab-report.md](docs/parliament-chess-lab-report.md)
-  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–X, from the rules to the fleet.
+  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–XI, from the rules to the Rust labeller.
   The data behind them is in [docs/data](docs/data) and the figures in [docs/media](docs/media)
 - **Films:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim;
   `docs/media/players_guide.mp4`, the player's guide (`sh film/render.sh guide`)
