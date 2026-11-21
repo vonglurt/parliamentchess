@@ -78,5 +78,46 @@
             "calber-cuda"
         ],
         "decided": "2026-11-21T00:33:39+00:00"
+    },
+    {
+        "name": "g004",
+        "gi": 2,
+        "games": 200,
+        "score": 0.525,
+        "se": 0.0326,
+        "z": 0.77,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 78,
+            "elections": 78,
+            "crownMoves": 35,
+            "coronations": 28,
+            "promotions": 69
+        },
+        "why": "not stronger by the bar",
+        "labels": 74815,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.16774,
+        "valPolicyTop1": 0.1636,
+        "laneSeconds": {
+            "label": 5231.8,
+            "train": 311.6,
+            "gauntlet": 774.7
+        },
+        "wallSeconds": 3294,
+        "hosts": [
+            "boburner",
+            "columbia",
+            "saskatchewan-2",
+            "calber",
+            "jaguaribe",
+            "whitewolf",
+            "bosporus",
+            "saskatchewan",
+            "xinanjiang"
+        ],
+        "decided": "2026-11-21T01:37:34+00:00"
     }
 ]
