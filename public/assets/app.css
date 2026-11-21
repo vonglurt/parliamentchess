@@ -225,3 +225,5 @@ canvas.mind { width: 100%; aspect-ratio: 1240 / 470; display: block; border-radi
 canvas.mind.second { margin-top: 12px; }
 .brain-head .seg + .seg { margin-left: -6px; }
 canvas.brain[hidden], canvas.mind[hidden], canvas.evalstrip[hidden] { display: none; }
+/* MIND in the sidebar: the last decision beside the board */
+canvas.mindside { width: 100%; aspect-ratio: 360 / 486; display: block; border-radius: 6px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }

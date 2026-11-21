@@ -174,7 +174,9 @@ are a 20 × 8 grid and layer 2's 40 an 8 × 5. The move squares are coloured by 
 a white frame marks the move played. On the right, *decisions* shows the game so far, one column a
 move: the net's value, how it ranked the move played, its correction, who chose (net, person, bot,
 book) and what happened (count, Writ, capture, check). *Network* is the same numbers animated with
-curves. `?panel=matrix|network` and `?view=both` set them from a link.
+curves. `?panel=matrix|network` and `?view=both` set them from a link. The same end state sits in the sidebar beside
+the board (**MIND**, under the status line) for whichever move was played last: the inputs, both
+layers, the moves' activations as squares with their probabilities, and the decisions strip.
 
 [![How a neural net plays: the champion against Medium Populist, with its mind beside the board](docs/media/still-net-mind.png)](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)
 

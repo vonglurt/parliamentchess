@@ -1108,6 +1108,134 @@ class MindView {
 }
 
 /**
+ * MIND in the sidebar: the last decision's end state, small enough to sit beside the board (360 px):
+ * the inputs, the two layers as framed squares (green +, amber −, black 0), the wires in their source
+ * unit's colour, the move outputs as squares with their probabilities, the move played framed in white,
+ * and the game's decisions, newest at the right. The same numbers as the big panel's Matrix view.
+ */
+class MindSide {
+  constructor(canvas) {
+    this.c = canvas; this.W = 360; this.H = 486;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = this.W * dpr; canvas.height = this.H * dpr;
+    this.x = canvas.getContext('2d'); this.x.scale(dpr, dpr);
+    this.b = null; this.st = null; this.t0 = 0; this.dirty = true; this.DUR = 700;
+    const tick = (t) => { if (this.dirty || (this.b && t - this.t0 < this.DUR + 100)) this.draw(t); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  set(b) {
+    if (!b) { if (this.b) { this.b = null; this.dirty = true; } return; }
+    if (this.b && this.b.ply === b.ply && this.b.side === b.side) return;
+    this.b = b; this.t0 = performance.now();
+    const ranked = b.policy.map((r, i) => ({ ...r, rank: i + 1 })), ch = ranked.find((r) => r.uci === b.chosen);
+    this.rows = ranked.slice(0, 8);
+    if (ch && ch.rank > 8) this.rows = [...ranked.slice(0, 7), ch];
+    this.played = ch;
+    this.dirty = true;
+  }
+  setGame(st) { this.st = st; this.dirty = true; }
+  inCell(i) {
+    let board = -1, rs = 0;
+    if (i < 768) { board = Math.floor(i / 64); rs = i % 64; } else if (i < 1152) { board = 12 + Math.floor((i - 768) / 64); rs = (i - 768) % 64; }
+    if (board >= 0) {
+      const x0 = 10 + (board % 6) * 38 + (rs & 7) * 4, y0 = 52 + Math.floor(board / 6) * 38 + (7 - (rs >> 3)) * 4;
+      return { x0, y0, w: 3, cx: x0 + 1.5, cy: y0 + 1.5 };
+    }
+    const gi = BRAIN_SCALARS.findIndex((g) => i >= g.at && i < g.at + g.n), k = i - BRAIN_SCALARS[gi].at;
+    const x0 = 246 + (gi < 6 ? 0 : 1) * 54 + k * 7, y0 = 52 + (gi % 6) * 18;
+    return { x0, y0, w: 6, cx: x0 + 3, cy: y0 + 3 };
+  }
+  h1Cell(j) { const x0 = 10 + (j % 16) * 9, y0 = 190 + Math.floor(j / 16) * 9; return { x0, y0, cx: x0 + 4, cy: y0 + 4 }; }
+  h2Cell(k) { const x0 = 178 + (k % 5) * 11, y0 = 190 + Math.floor(k / 5) * 11; return { x0, y0, cx: x0 + 5, cy: y0 + 5 }; }
+  outCell(r) { return r < 0 ? { x0: 256, y0: 188, s: 14, cx: 263, cy: 195 } : { x0: 257, y0: 214 + r * 19, s: 12, cx: 263, cy: 220 + r * 19 }; }
+  t(s, px, py, c = MX.dim, size = 10, align = 'left', weight = '') {
+    const x = this.x; x.font = `${weight} ${size}px ${MONO}`; x.fillStyle = rgbS(c); x.textAlign = align; x.textBaseline = 'middle'; x.fillText(s, px, py);
+  }
+  wire(a, b, col, k, dots) {
+    const x = this.x; x.strokeStyle = rgbS(mixC(MX.scr, col, k)); x.lineWidth = 1; x.setLineDash(dots ? [2, 2] : []);
+    x.beginPath(); x.moveTo(a.cx, a.cy); x.lineTo(b.cx, b.cy); x.stroke(); x.setLineDash([]);
+  }
+  draw(now) {
+    this.dirty = false;
+    const x = this.x, W = this.W, H = this.H, b = this.b;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = rgbS(MX.dim); x.fillRect(0, 0, W, H);
+    x.fillStyle = rgbS(MX.scr); x.fillRect(1, 1, W - 2, H - 2);
+    x.fillStyle = 'rgb(11,14,11)'; for (let y = 2; y < H - 1; y += 3) x.fillRect(1, y, W - 2, 1);
+    if (!b) { this.t('MIND: the last decision appears here', W / 2, 120, MX.phos, 12, 'center'); this.decisions(); return; }
+    const T = (now - this.t0) / this.DUR, ph = (a, d) => clamp01((T - a) / d);
+    const P = { inp: ph(0, 0.35), h1: ph(0.2, 0.35), h2: ph(0.45, 0.25), out: ph(0.6, 0.35), w: ph(0.3, 0.6) };
+    const side = b.side === 1 ? 'White' : 'Black', moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
+    const how = b.kind === 'own' ? 'its own net' : b.source === 'person' ? 'read: a person' : 'read: a bot, no net';
+    this.t(`MIND  ply ${b.ply}  ${side}`, 10, 14, MX.phos, 12, 'left', '600');
+    this.t(`GEN ${String(b.net || '').replace(/^g0*/, '')}`, W - 10, 14, MX.amber, 12, 'right', '600');
+    this.t(`${moveNo} ${this.played ? this.played.san : b.chosen}  ${how}${b.source === 'book' ? '  (book)' : ''}`, 10, 31, MX.phos, 10);
+    // Wires under everything.
+    const top = (list) => list.reduce((m, e) => Math.max(m, Math.abs(e[e.length - 1])), 1e-9);
+    const wk = (v, mx) => (Math.pow(Math.abs(v) / mx, 0.8) * 0.75 + 0.2) * P.w;
+    const ins = b.edges.in.slice(0, 30), mi = top(ins);
+    for (let n = ins.length - 1; n >= 0; n--) { const [i, j, w] = ins[n]; this.wire(this.inCell(i), this.h1Cell(j), nodeHue(i), wk(w, mi) * 0.4, w < 0); }
+    const mids = b.edges.mid.slice(0, 100), mm = top(mids);
+    for (let n = mids.length - 1; n >= 0; n--) { const [j, k, w] = mids[n]; this.wire(this.h1Cell(j), this.h2Cell(k), nodeHue(j), wk(w, mm), w < 0); }
+    const outs = [...b.edges.value.map(([k, w]) => [k, -1, w]), ...this.rows.flatMap((r, ri) => (r.edges || []).slice(0, 4).map(([k, w]) => [k, ri, w]))], mo = top(outs);
+    for (const [k, r, w] of outs) this.wire(this.h2Cell(k), this.outCell(r), nodeHue(160 + k), wk(w, mo), w < 0);
+    // Inputs.
+    this.t(`inputs  ${b.features.length} of 1,203`, 10, 44);
+    x.fillStyle = 'rgb(14,24,15)';
+    for (let bi = 0; bi < 18; bi++) for (let q = 0; q < 64; q++) x.fillRect(10 + (bi % 6) * 38 + (q & 7) * 4, 52 + Math.floor(bi / 6) * 38 + (7 - (q >> 3)) * 4, 3, 3);
+    BRAIN_SCALARS.forEach((g, gi) => { for (let k = 0; k < g.n; k++) x.fillRect(246 + (gi < 6 ? 0 : 1) * 54 + k * 7, 52 + (gi % 6) * 18, 6, 6); });
+    b.features.forEach((i, n) => {
+      const p = this.inCell(i), k = clamp01(P.inp * 1.5 - (n / b.features.length) * 0.5);
+      if (k > 0) { x.fillStyle = rgbS(mixC(MX.scr, MX.phos, k)); x.fillRect(p.x0, p.y0, p.w, p.w); }
+    });
+    // The transform.
+    this.t(`transform  1203 > ${b.a1.length} > ${b.a2.length} > moves`, 10, 177);
+    for (let j = 0; j < b.a1.length; j++) {
+      const p = this.h1Cell(j), on = j < b.a1.length * P.h1 * 1.2;
+      x.fillStyle = rgbS(nodeHue(j)); x.fillRect(p.x0, p.y0, 8, 8);
+      x.fillStyle = rgbS(on ? shadeM(b.pre1[j]) : MX.scr); x.fillRect(p.x0 + 1, p.y0 + 1, 6, 6);
+    }
+    for (let k = 0; k < b.a2.length; k++) {
+      const p = this.h2Cell(k), on = k < b.a2.length * P.h2 * 1.2;
+      x.fillStyle = rgbS(nodeHue(160 + k)); x.fillRect(p.x0, p.y0, 10, 10);
+      x.fillStyle = rgbS(on ? shadeM(b.pre2[k]) : MX.scr); x.fillRect(p.x0 + 1, p.y0 + 1, 8, 8);
+    }
+    // The outputs: the value, and the moves' activations (the search's score colours a square).
+    const v = this.outCell(-1);
+    x.fillStyle = rgbS(shadeM(b.value * P.out)); x.fillRect(v.x0, v.y0, v.s, v.s);
+    this.t(`value ${sgnF(b.value * P.out)}`, 276, 195, MX.phos, 10);
+    const maxP = Math.max(...this.rows.map((r) => r.p), 1e-9);
+    this.rows.forEach((r, ri) => {
+      const c = this.outCell(ri), isPlayed = r.uci === b.chosen;
+      if (isPlayed && P.out >= 1) { x.fillStyle = rgbS(MX.white); x.fillRect(c.x0 - 2, c.y0 - 2, c.s + 4, c.s + 4); x.fillStyle = rgbS(MX.scr); x.fillRect(c.x0 - 1, c.y0 - 1, c.s + 2, c.s + 2); }
+      const sv = r.search != null ? r.search / 150 : r.p / maxP;
+      x.fillStyle = rgbS(shadeM(sv * P.out)); x.fillRect(c.x0, c.y0, c.s, c.s);
+      this.t(r.san, 276, c.cy, isPlayed ? MX.white : MX.phos, 10, 'left', isPlayed ? '600' : '');
+      this.t(`${(100 * r.p).toFixed(1)}%`, W - 10, c.cy, isPlayed ? MX.white : MX.dim, 10, 'right');
+    });
+    this.decisions();
+    this.t('green +, amber −, black 0; white frame: the move played', 10, H - 12, MX.dim, 9);
+  }
+  decisions() {
+    const x = this.x, st = this.st, b = this.b;
+    const evals = (st && st.evals) || [], log = (st && st.log) || [];
+    const x0 = 74, n = Math.floor((this.W - 10 - x0) / 4), shown = evals.slice(-n);
+    this.t(`decisions, the last ${shown.length || n} moves`, 10, 378);
+    ['value', 'net rank', "net's say", 'who', 'events'].forEach((w, r) => this.t(w, 10, 396 + r * 14, MX.dim, 9));
+    shown.forEach((e, k) => {
+      const cx = x0 + k * 4, m = log[e[0] - 1] || {}, rank = e[4], who = e[7];
+      const cells = [shadeM(e[2]), rank ? shadeM(rank === 1 ? 1 : Math.max(0.08, 1 - (rank - 1) / 12)) : MX.scr,
+        e[6] !== undefined ? shadeM(e[6] / 200) : MX.scr,
+        who === 'net' ? MX.phos : who === 'person' ? MX.white : who === 'book' ? MX.amber : who === 'bot' ? MX.sky : MX.scr,
+        m.count ? MX.white : m.writ ? MX.amber : /x/.test(m.san || '') ? MX.red : /[+#]/.test(m.san || '') ? MX.sky : null];
+      cells.forEach((c, r) => { if (c) { x.fillStyle = rgbS(c); x.fillRect(cx, 391 + r * 14, 3, 10); } });
+      if (b && e[0] === b.ply) { x.fillStyle = rgbS(MX.white); x.fillRect(cx, 386, 3, 2); }
+    });
+    x.fillStyle = rgbS(MX.phos); x.fillRect(x0 + shown.length * 4, 389, 1, 5 * 14);
+  }
+}
+
+/**
  * The net's evaluation after every move of the game, from White's side of the board: above the line
  * White stands better. Filled dots are a net player's own calculation, rings the net reading the other
  * side's position. Hover a dot for its move.
@@ -1227,6 +1355,7 @@ async function gameView(app, id, token) {
   const VIEWS = ['follow', '1', '-1', 'both'], askedView = { white: '1', black: '-1' }[Q.get('view')] || Q.get('view');
   let view = VIEWS.includes(askedView) ? askedView : VIEWS.includes(store.get('pc-brain-view')) ? store.get('pc-brain-view') : 'follow';
   let bc = null, brain2 = null, bc2 = null, sidesEl = null, strip = null, viewBtns = null;
+  let sideMind = null, sideCanvas = null; // MIND in the sidebar: the last decision, beside the board
   let aiSince = 0, lastChange = 0; // the watchdog's clocks: a bot's move is asked for again if nothing happens
   const hasNet = (s) => Object.values(s.bots || {}).some((b) => b && b.includes('+net2'));
   // Two styles for the same numbers: 'matrix', the end state as Orrery's MIND screen draws a net
@@ -1404,7 +1533,12 @@ async function gameView(app, id, token) {
       controls.append(rb);
     }
 
-    const parts = [status, controls];
+    if (hasNet(st) && !sideCanvas) {
+      sideCanvas = h('canvas', { class: 'mindside', title: 'The net’s last decision: inputs, both layers, the moves’ activations (green +, amber −, black 0), and the game’s decisions' });
+      sideMind = window.pcMindSide = new MindSide(sideCanvas);
+    }
+    if (sideMind) { sideMind.set(st.brain); sideMind.setGame(st); }
+    const parts = [status, sideCanvas, controls];
     if (writMode) {
       const box = h('div', { class: 'box' }, h('h4', {}, 'File a Writ'));
       if (!preview) box.append(h('div', { class: 'forecast' }, 'Pick a Candidate on the board (gold squares): not your King, not a Queen, never crowned, not under attack. Filing costs your turn; the count comes after your opponent’s reply.'));
