@@ -992,5 +992,44 @@
             "columbia"
         ],
         "decided": "2026-11-22T05:08:36+00:00"
+    },
+    {
+        "name": "g027",
+        "gi": 25,
+        "games": 200,
+        "score": 0.505,
+        "se": 0.0338,
+        "z": 0.15,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 82,
+            "elections": 82,
+            "crownMoves": 39,
+            "coronations": 27,
+            "promotions": 81
+        },
+        "why": "not stronger by the bar",
+        "labels": 70543,
+        "device": "NVIDIA GeForce GTX 1080",
+        "valValueMSE": 0.16507,
+        "valPolicyTop1": 0.1621,
+        "laneSeconds": {
+            "label": 3680.3,
+            "train": 282.6,
+            "gauntlet": 1099.5
+        },
+        "wallSeconds": 2608,
+        "hosts": [
+            "saskatchewan-2",
+            "saskatchewan",
+            "boburner",
+            "whitewolf",
+            "calber",
+            "bosporus",
+            "jaguaribe"
+        ],
+        "decided": "2026-11-22T05:53:52+00:00"
     }
 ]
