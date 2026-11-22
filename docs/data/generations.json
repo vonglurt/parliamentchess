@@ -1031,5 +1031,44 @@
             "jaguaribe"
         ],
         "decided": "2026-11-22T05:53:52+00:00"
+    },
+    {
+        "name": "g028",
+        "gi": 26,
+        "games": 200,
+        "score": 0.54,
+        "se": 0.0335,
+        "z": 1.19,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 92,
+            "elections": 92,
+            "crownMoves": 53,
+            "coronations": 34,
+            "promotions": 77
+        },
+        "why": "not stronger by the bar",
+        "labels": 69669,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.16013,
+        "valPolicyTop1": 0.1584,
+        "laneSeconds": {
+            "label": 3773.5,
+            "train": 230,
+            "gauntlet": 1116.9
+        },
+        "wallSeconds": 2502,
+        "hosts": [
+            "whitewolf",
+            "jaguaribe",
+            "boburner",
+            "saskatchewan",
+            "calber",
+            "saskatchewan-2",
+            "columbia"
+        ],
+        "decided": "2026-11-22T06:38:37+00:00"
     }
 ]
