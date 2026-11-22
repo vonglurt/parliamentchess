@@ -1109,5 +1109,45 @@
             "whitewolf"
         ],
         "decided": "2026-11-22T07:15:19+00:00"
+    },
+    {
+        "name": "g030",
+        "gi": 28,
+        "games": 200,
+        "score": 0.4575,
+        "se": 0.0336,
+        "z": -1.27,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 113,
+            "elections": 113,
+            "crownMoves": 60,
+            "coronations": 34,
+            "promotions": 91
+        },
+        "why": "not stronger by the bar",
+        "labels": 69761,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.16371,
+        "valPolicyTop1": 0.1574,
+        "laneSeconds": {
+            "label": 4428.6,
+            "train": 111.2,
+            "gauntlet": 1146.6
+        },
+        "wallSeconds": 2360,
+        "hosts": [
+            "jaguaribe",
+            "saskatchewan",
+            "saskatchewan-2",
+            "boburner",
+            "calber",
+            "bosporus",
+            "whitewolf",
+            "columbia"
+        ],
+        "decided": "2026-11-22T07:57:14+00:00"
     }
 ]
