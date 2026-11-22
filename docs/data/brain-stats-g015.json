@@ -1,0 +1,162 @@
+{
+    "net": "g015",
+    "games": 8,
+    "netMoves": 419,
+    "results": [
+        {
+            "net": "White",
+            "result": "0-1",
+            "plies": 138
+        },
+        {
+            "net": "Black",
+            "result": "1-0",
+            "plies": 123
+        },
+        {
+            "net": "White",
+            "result": "1/2-1/2",
+            "plies": 128
+        },
+        {
+            "net": "Black",
+            "result": "0-1",
+            "plies": 148
+        },
+        {
+            "net": "White",
+            "result": "1-0",
+            "plies": 47
+        },
+        {
+            "net": "Black",
+            "result": "1-0",
+            "plies": 69
+        },
+        {
+            "net": "White",
+            "result": "1-0",
+            "plies": 41
+        },
+        {
+            "net": "Black",
+            "result": "*",
+            "plies": 160
+        }
+    ],
+    "activeInputs": {
+        "mean": 84.002,
+        "median": 87,
+        "min": 30,
+        "max": 125,
+        "p90": 114
+    },
+    "layer1Fired": {
+        "mean": 97.317,
+        "median": 98,
+        "min": 77,
+        "max": 107,
+        "p90": 103
+    },
+    "layer1Saturated": {
+        "mean": 54.179,
+        "median": 57,
+        "min": 15,
+        "max": 79,
+        "p90": 71
+    },
+    "layer2Fired": {
+        "mean": 37.852,
+        "median": 38,
+        "min": 34,
+        "max": 39,
+        "p90": 39
+    },
+    "legalMoves": {
+        "mean": 26.193,
+        "median": 26,
+        "min": 1,
+        "max": 62,
+        "p90": 48
+    },
+    "policyTop1P": {
+        "mean": 0.136,
+        "median": 0.089,
+        "min": 0.026,
+        "max": 1,
+        "p90": 0.271
+    },
+    "playedRank": {
+        "mean": 9.382,
+        "median": 6,
+        "min": 1,
+        "max": 53,
+        "p90": 23
+    },
+    "playedIsPolicyTop1": 0.196,
+    "playedInPolicyTop3": 0.379,
+    "policyTop1IsSearchBest": 0.2,
+    "absCorrectionCp": {
+        "mean": 127.532,
+        "median": 73.08,
+        "min": 0.6,
+        "max": 739.72,
+        "p90": 329.2
+    },
+    "traceMs": {
+        "mean": 23.946,
+        "median": 23.094,
+        "min": 7.984,
+        "max": 92.377,
+        "p90": 35.504
+    },
+    "searchMs": {
+        "mean": 157.916,
+        "median": 79,
+        "min": 1,
+        "max": 1703,
+        "p90": 413
+    },
+    "traceBytes": {
+        "mean": 20127.072,
+        "median": 20226,
+        "min": 17353,
+        "max": 22042,
+        "p90": 21261
+    },
+    "writsFiled": 5,
+    "movesWhereAWritWasLegal": 300,
+    "readings": {
+        "moves": 419,
+        "playedRank": {
+            "mean": 10.556,
+            "median": 6,
+            "min": 1,
+            "max": 49,
+            "p90": 26
+        },
+        "playedIsPolicyTop1": 0.146,
+        "playedInPolicyTop3": 0.317,
+        "playedP": {
+            "mean": 0.09,
+            "median": 0.046,
+            "min": 0.001,
+            "max": 1,
+            "p90": 0.168
+        },
+        "absCorrectionCp": {
+            "mean": 92.918,
+            "median": 55.08,
+            "min": 0.12,
+            "max": 764.92,
+            "p90": 218.2
+        }
+    },
+    "ownPlayedP": {
+        "mean": 0.101,
+        "median": 0.05,
+        "min": 0.003,
+        "max": 1,
+        "p90": 0.232
+    }
+}

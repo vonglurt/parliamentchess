@@ -530,6 +530,9 @@ async function lobby(app) {
         h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => go({ mode: 'ai', level: 'medium+net2:champion', color: $('#ncol').value }) }, 'Play it'),
           h('button', { class: 'btn ghost', onclick: () => go({ mode: 'aivai', white: 'medium+net2:champion', black: 'medium/populist' }) }, 'Watch it think'),
           h('button', { class: 'btn ghost', title: 'The champion net on both sides (Populist against Whig), each side’s mind in its own panel', onclick: () => { store.set('pc-brain-view', 'both'); go({ mode: 'aivai', white: 'medium+net2:champion', black: 'medium/whig+net2:champion' }); } }, 'Net against net'))),
+      h('div', { class: 'card net' }, h('h3', {}, 'The classics'), h('p', {}, 'Famous short games, move for move: the champion net reads every move, ranks it, and says what it would have played.'),
+        h('div', { class: 'row' }, h('select', { id: 'classic' }, h('option', { value: 'opera' }, 'The Opera Game, 1858'))),
+        h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => { store.set('pc-brain-view', 'follow'); go({ mode: 'classic', classic: $('#classic').value }); } }, 'Watch the net read it'))),
       h('div', { class: 'card' }, h('h3', {}, 'Watch the machines'), h('p', {}, 'Two styles of politics, one board. Record it to WebM from the game page.'),
         h('div', { class: 'row' }, sel('aw', ais, 'medium/populist'), h('span', {}, 'vs'), sel('ab', ais, 'medium/monarchist')),
         h('div', { class: 'row' }, h('button', { class: 'btn gold', onclick: () => go({ mode: 'aivai', white: $('#aw').value, black: $('#ab').value }) }, 'Watch'))),
@@ -540,6 +543,10 @@ async function lobby(app) {
     ),
     h('div', { class: 'section' }, h('h2', {}, 'In session'), h('div', { class: 'list', id: 'live' }, h('div', { class: 'empty' }, 'Loading…'))),
   );
+  api.get('classics').then(({ games }) => {
+    const pick = $('#classic'), was = pick.value;
+    pick.replaceChildren(...games.map((g) => h('option', { value: g.key, selected: g.key === was }, `${g.title}${g.year ? ', ' + g.year : ''} (${g.plies} plies)`)));
+  }).catch(() => {});
   api.get('nets').then(({ nets, champion }) => {
     const i = nets.findIndex((n) => n.name === champion), c = nets[i];
     const gen = (n) => n.name.slice(1).replace(/^0+/, '');
@@ -978,8 +985,9 @@ class MindView {
     const P = { inp: ph(0, 0.3), h1: ph(0.22, 0.3), h2: ph(0.45, 0.25), out: ph(0.65, 0.3), w: ph(0.3, 0.6) };
     const side = b.side === 1 ? 'White' : 'Black', moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
     const played = this.ranked.find((r) => r.uci === b.chosen);
-    const how = b.kind === 'own' ? 'its own net' : b.source === 'person' ? 'a person, read by the net' : 'a bot without a net, read by the net';
+    const how = b.kind === 'own' ? 'its own net' : b.source === 'history' ? 'history, read by the net' : b.source === 'person' ? 'a person, read by the net' : 'a bot without a net, read by the net';
     this.t(`MIND  ply ${b.ply}  ${side}  ${b.player || ''}  ${how}  ${moveNo} ${played ? played.san : b.chosen}${b.source === 'book' ? '  (book)' : ''}`, 14, 18, MX.phos, 13, 'left', '600');
+    if (b.would) this.t(b.wouldUci === b.chosen ? `the net would play it too: ${b.would}` : `the net would play ${b.would}`, W - 236, 166, b.wouldUci === b.chosen ? MX.phos : MX.amber, 12, 'left', '600');
     // The generation, the fourth corner.
     const gen = String(b.net || '').replace(/^g0*/, '');
     this.t('GENERATION', W - 236, 44, MX.dim, 12);
@@ -1166,7 +1174,7 @@ class MindSide {
     const T = (now - this.t0) / this.DUR, ph = (a, d) => clamp01((T - a) / d);
     const P = { inp: ph(0, 0.35), h1: ph(0.2, 0.35), h2: ph(0.45, 0.25), out: ph(0.6, 0.35), w: ph(0.3, 0.6) };
     const side = b.side === 1 ? 'White' : 'Black', moveNo = Math.ceil(b.ply / 2) + (b.side === 1 ? '.' : '…');
-    const how = b.kind === 'own' ? 'its own net' : b.source === 'person' ? 'read: a person' : 'read: a bot, no net';
+    const how = b.kind === 'own' ? 'its own net' : b.source === 'history' ? (b.would ? (b.wouldUci === b.chosen ? `history · net agrees` : `history · net: ${b.would}`) : 'read: history') : b.source === 'person' ? 'read: a person' : 'read: a bot, no net';
     this.t(`MIND  ply ${b.ply}  ${side}`, 10, 14, MX.phos, 12, 'left', '600');
     this.t(`GEN ${String(b.net || '').replace(/^g0*/, '')}`, W - 10, 14, MX.amber, 12, 'right', '600');
     this.t(`${moveNo} ${this.played ? this.played.san : b.chosen}  ${how}${b.source === 'book' ? '  (book)' : ''}`, 10, 31, MX.phos, 10);
@@ -1296,7 +1304,7 @@ function sideCard(st, side, pinned, onPick) {
   const b = st.brains && st.brains[side], t = st.tally && st.tally[side];
   const color = side === '1' ? 'White' : 'Black', name = st.players[side] || color;
   const bot = st.bots && st.bots[side];
-  const who = bot && bot.includes('+net2') ? 'a net player · its own calculation' : bot ? 'a bot without a net · read by the net' : 'a person · read by the net';
+  const who = bot && bot.includes('+net2') ? 'a net player · its own calculation' : bot ? 'a bot without a net · read by the net' : st.classic ? 'history · read by the net' : 'a person · read by the net';
   const rows = [];
   if (b) {
     const ranked = b.policy.map((r) => r.uci), rank = ranked.indexOf(b.chosen) + 1, row = b.policy[rank - 1] || {};
@@ -1310,7 +1318,8 @@ function sideCard(st, side, pinned, onPick) {
       `value ${sgnF(b.value)} for ${color}: about ${pct}% expected`));
     const corr = b.mode === 'residual' ? Math.round(400 * Math.max(-2, Math.min(2, b.raw))) : null;
     rows.push(h('div', { class: 'sc-dim' }, corr !== null ? `hand ${sgn(b.hand)} + net ${sgn(corr)} = ${sgn(b.total)} cp` : `${sgn(b.total)} cp`,
-      b.source === 'book' ? ' · played from the opening book' : b.source === 'person' ? ' · chosen by a person'
+      b.source === 'history' && b.would ? (b.wouldUci === b.chosen ? ` · the net would play it too` : ` · the net would play ${b.would}`)
+        : b.source === 'book' ? ' · played from the opening book' : b.source === 'person' ? ' · chosen by a person'
         : b.score != null ? ` · ${b.kind === 'own' ? 'its search' : 'its own search (no net)'} ${sgn(b.score)} cp` : ''));
   } else rows.push(h('div', { class: 'sc-dim' }, `${color} has not moved yet.`));
   if (t && t.moves) {
@@ -1357,7 +1366,7 @@ async function gameView(app, id, token) {
   let bc = null, brain2 = null, bc2 = null, sidesEl = null, strip = null, viewBtns = null;
   let sideMind = null, sideCanvas = null; // MIND in the sidebar: the last decision, beside the board
   let aiSince = 0, lastChange = 0; // the watchdog's clocks: a bot's move is asked for again if nothing happens
-  const hasNet = (s) => Object.values(s.bots || {}).some((b) => b && b.includes('+net2'));
+  const hasNet = (s) => !!s.reader || Object.values(s.bots || {}).some((b) => b && b.includes('+net2'));
   // Two styles for the same numbers: 'matrix', the end state as Orrery's MIND screen draws a net
   // (MindView), or 'network', the animated network with its curves (BrainView). Remembered; ?panel=.
   const STYLES = ['matrix', 'network'];
@@ -1482,15 +1491,16 @@ async function gameView(app, id, token) {
   function maybeAI() {
     if (!st.aiToMove || aiBusy || st.status !== 'playing') return;
     if (st.mode === 'ai' && !st.you) return; // only the player's own browser drives its opponent
+    const watched = st.mode === 'aivai' || st.mode === 'classic'; // nobody's own move: the watchers drive it
     aiBusy = true;
     aiSince = performance.now();
     setTimeout(async () => {
       // A watcher reading the net's mind holds the game: it resumes when the pointer leaves the panel.
-      if (st.mode === 'aivai' && brain && mindsHover()) { aiBusy = false; setTimeout(maybeAI, 400); return; }
+      if (watched && brain && mindsHover()) { aiBusy = false; setTimeout(maybeAI, 400); return; }
       try { await api.post('ai', { id, version: st.version }); } catch (e) { /* another watcher moved first */ }
       aiBusy = false;
       poll();
-    }, st.mode === 'aivai' ? Math.max(1100, brain ? mindsDoneAt() - performance.now() + 900 : 0) : 400);
+    }, watched ? Math.max(st.mode === 'classic' ? 2400 : 1100, brain ? mindsDoneAt() - performance.now() + (st.mode === 'classic' ? 1600 : 900) : 0) : 400);
   }
   async function poll() {
     try {
@@ -1539,6 +1549,12 @@ async function gameView(app, id, token) {
     }
     if (sideMind) { sideMind.set(st.brain); sideMind.setGame(st); }
     const parts = [status, sideCanvas, controls];
+    if (st.classic) {
+      const c = st.classic;
+      parts.push(h('div', { class: 'box classic' }, h('h4', {}, `${c.title}${c.year ? ', ' + c.year : ''}`),
+        h('div', {}, `${c.white} – ${c.black} · ${c.event}`), h('div', { class: 'sc-dim' }, c.note),
+        h('div', { class: 'sc-dim' }, 'Every move is history’s; the champion net reads each one, and says what it would have played.')));
+    }
     if (writMode) {
       const box = h('div', { class: 'box' }, h('h4', {}, 'File a Writ'));
       if (!preview) box.append(h('div', { class: 'forecast' }, 'Pick a Candidate on the board (gold squares): not your King, not a Queen, never crowned, not under attack. Filing costs your turn; the count comes after your opponent’s reply.'));

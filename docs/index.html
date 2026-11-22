@@ -4,115 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Parliament Chess</title>
-<meta name="description" content="Every move FIDE, every crown elected: a chess variant where the King is voted in.">
+<meta name="description" content="Every move FIDE, every crown elected: a chess variant where the King is voted in, and a neural net trained to play it.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
 <style>
-:root { --bench:#0f2c24; --bench-2:#163a30; --parch:#f3ead6; --parch-2:#e8dcc0; --ink:#1e1a14; --ink-2:#5b5244; --gold:#d4a62a; --gold-2:#f0cf6a; --lords:#9b2a3a; --commons:#2f7a57;
-  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace; }
-* { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(1200px 600px at 20% -10%, #1f4a3d, var(--bench) 60%) fixed; color: var(--parch); font: 16px/1.6 var(--sans); }
-a { color: var(--gold-2); }
-main { max-width: 1040px; margin: 0 auto; padding: 0 16px 56px; }
-header { padding: 56px 0 28px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 36px; align-items: center; }
-@media (max-width: 820px) { header { grid-template-columns: 1fr; padding-top: 32px; } }
-.crest { font-size: 40px; color: var(--gold); line-height: 1; }
-h1 { font: 600 52px/1.05 var(--serif); margin: 8px 0 6px; letter-spacing: .01em; }
-.sub { font: italic 22px var(--serif); color: var(--gold-2); margin: 0 0 18px; }
-.lede { font: 19px/1.55 var(--serif); color: var(--parch-2); margin: 0 0 24px; }
-.buttons { display: flex; flex-wrap: wrap; gap: 10px; }
-.btn { display: inline-block; text-decoration: none; padding: 11px 18px; border-radius: 9px; font-weight: 600; background: var(--bench-2); color: var(--parch); border: 1px solid rgba(240,207,106,.3); }
-.btn.gold { background: var(--gold); color: var(--ink); border-color: var(--gold); }
-.btn:hover { filter: brightness(1.08); }
-figure { margin: 0; }
-figure img, figure video { width: 100%; border-radius: 12px; box-shadow: 0 16px 50px rgba(0,0,0,.45); display: block; background: #000; }
-figcaption { font-size: 13px; opacity: .75; margin-top: 8px; }
-h2 { font: 600 28px var(--serif); margin: 48px 0 16px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
-.card { background: var(--parch); color: var(--ink); border-radius: 12px; padding: 18px; }
-.card h3 { font: 600 20px var(--serif); margin: 0 0 6px; }
-.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
-.tally { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; font-size: 14px; }
-.tally div { background: #fffaf0; border-radius: 8px; padding: 8px 10px; }
-.tally b { display: block; font: 600 15px var(--serif); }
-pre { background: #081a15; border: 1px solid rgba(240,207,106,.2); border-radius: 10px; padding: 16px; overflow-x: auto; font: 14px/1.6 var(--mono); color: var(--parch); }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-.fact { border-top: 2px solid var(--gold); padding-top: 10px; }
-.fact b { display: block; font: 600 26px var(--serif); color: var(--gold-2); }
-.fact span { font-size: 14px; opacity: .85; }
-footer { border-top: 1px solid rgba(240,207,106,.18); margin-top: 56px; padding-top: 18px; font-size: 13px; opacity: .7; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.hero { padding: 64px 0 34px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+@media (max-width: 820px) { .hero { grid-template-columns: 1fr; padding-top: 36px; } }
+.crest { font-size: 44px; color: var(--gold); line-height: 1; }
+.hero h1 { font-size: 64px; }
+.quote { margin: 22px 0 0; font: italic 18px/1.5 var(--serif); color: var(--parch); border-left: 3px solid var(--phos); padding: 2px 0 2px 14px; }
+.quote span { display: block; font: 13px var(--sans); color: var(--parch-2); font-style: normal; margin-top: 4px; }
+.doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
+@media (max-width: 860px) { .doors { grid-template-columns: 1fr; } }
+.door { display: flex; flex-direction: column; text-decoration: none; background: var(--bench-2); border: 1px solid rgba(240, 207, 106, .22); border-radius: 16px; overflow: hidden; color: var(--parch);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.door:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 18px 50px rgba(0, 0, 0, .45); }
+.door .pic { aspect-ratio: 16 / 9; background: #000 center / cover no-repeat; border-bottom: 1px solid rgba(240, 207, 106, .18); }
+.door .body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.door .n { font: 600 12px var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.door h2 { margin: 0; font-size: 27px; }
+.door p { margin: 0; font-size: 15px; }
+.door .go { margin-top: auto; padding-top: 10px; font-weight: 600; color: var(--gold-2); }
+.door.net { background: var(--scr); border-color: rgba(51, 242, 77, .35); }
+.door.net .n, .door.net .go { color: var(--phos); }
+.door.net:hover { border-color: var(--phos); }
+.more { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 30px; font-size: 14px; }
+.more a { color: var(--parch-2); }
 </style>
 </head>
 <body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav" href="guide.html">Play</a>
+  <a class="nav" href="about.html">The project</a>
+  <a class="nav" href="net.html">The net</a>
+  <a class="nav" href="technical.html">Technical</a>
+  <a class="nav" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
 <main>
-<header>
+<section class="hero">
   <div>
     <div class="crest">&#9818;&#xFE0E;</div>
     <h1>Parliament Chess</h1>
-    <p class="sub">Vote King</p>
-    <p class="lede">Every move is FIDE chess. Every crown is elected. File a Writ and your own pieces vote by proximity: pawns in the Commons; Knights, Bishops and Rooks in the College. A dethroned King becomes a pawn.</p>
-    <div class="buttons">
-      <a class="btn gold" href="#run">Play it</a>
-      <a class="btn" href="https://github.com/vonglurt/parliamentchess/blob/main/RULES.md">The rules</a>
-      <a class="btn" href="parliament-chess-lab-report.html">Lab report</a>
-      <a class="btn" href="#film">The film</a>
-      <a class="btn" href="#guide">Player's guide</a>
-      <a class="btn" href="#net">The net's mind</a>
-    </div>
+    <p class="sub">Every move FIDE. Every crown elected.</p>
+    <p class="lede">Chess with one new office: the crown. File a Writ and your own pieces vote on whether it leaves your King. And a neural net, trained generation by generation on a fleet of old GPUs, that plays it.</p>
+    <p class="quote">&ldquo;It consistently beats me as a human.&rdquo;<span>The person who built it, on generation 15 of the net</span></p>
   </div>
   <figure>
     <img src="media/parliament_chess_writ_and_count.gif" alt="A Writ is filed for the d3 pawn; the opponent checks; the count crowns the pawn and the old King becomes a Pretender pawn">
     <figcaption>A Writ for d3, a check during the campaign, and the count that carries the crown out of the net.</figcaption>
   </figure>
-</header>
+</section>
 
-<h2>How a crown changes hands</h2>
-<div class="cards">
-  <div class="card"><h3>1. The Writ</h3><p>From move 10, instead of moving, name a Candidate: any of your pieces except the King and the Queen, never crowned, not under attack. It costs your whole turn.</p></div>
-  <div class="card"><h3>2. The campaign</h3><p>Your opponent gets one move to answer: attack the Candidate's square, capture your voters, or attack them so they abstain.</p></div>
-  <div class="card"><h3>3. The count</h3><p>Each voter backs whichever is nearer, Candidate or King. Two chambers decide:</p>
-    <div class="tally"><div><b>Coronation</b>both back the Candidate</div><div><b>Contested</b>only the College does</div><div><b>Royal Swap</b>only the Commons do</div><div><b>Defeat</b>neither does</div></div></div>
-  <div class="card"><h3>4. The Ledger</h3><p>A dethroned King becomes a Pretender pawn that can promote only to Rook, Bishop or Knight. No piece reigns twice.</p></div>
+<div class="doors">
+  <a class="door" href="guide.html">
+    <div class="pic" style="background-image:url(media/guide/lobby.jpg)"></div>
+    <div class="body"><span class="n">1 · Play it</span><h2>The player&rsquo;s guide</h2>
+      <p>Running in a minute, your first game, filing a Writ, the campaign and the count, and when to move the crown.</p>
+      <span class="go">Read the guide &rarr;</span></div>
+  </a>
+  <a class="door" href="about.html">
+    <div class="pic" style="background-image:url(media/still-districts.png)"></div>
+    <div class="body"><span class="n">2 · The project</span><h2>What is this?</h2>
+      <p>Why elect a King, what 1,400 self-play games showed about the balance, and how the whole thing is built.</p>
+      <span class="go">About the project &rarr;</span></div>
+  </a>
+  <a class="door net" href="net.html">
+    <div class="pic" style="background-image:url(media/still-net-classics.png)"></div>
+    <div class="body"><span class="n">3 · The trained net</span><h2>Parliament Chess&rsquo;s own net</h2>
+      <p>How it sees the board, how a fleet trained twenty generations of it, and the famous short games of chess history through its eyes.</p>
+      <span class="go">Meet the net &rarr;</span></div>
+  </a>
 </div>
 
-<h2>What 1,400 self-play games showed</h2>
-<div class="facts">
-  <div class="fact"><b>87&ndash;89%</b><span>of games decisive, against 89% in plain chess</span></div>
-  <div class="fact"><b>0.7&ndash;2.3</b><span>elections a game, nearly always crowning a pawn</span></div>
-  <div class="fact"><b>13&ndash;17%</b><span>of counts failed on an attacked Candidate square</span></div>
-  <div class="fact"><b>0.57</b><span>generation 5's score against plain Medium over 200 games: the first net elected</span></div>
+<div class="more">
+  <a href="contents.html">Contents of the whole project</a>
+  <a href="technical.html">How it works, technically</a>
+  <a href="parliament-chess-lab-report.html">The lab reports</a>
+  <a href="https://github.com/vonglurt/parliamentchess/blob/main/RULES.md">The rules</a>
+  <a href="https://github.com/vonglurt/parliamentchess">Source on GitHub</a>
 </div>
-
-<h2 id="film">The film</h2>
-<figure>
-  <video controls preload="metadata" poster="media/still-board.png" src="media/parliament_chess.mp4"></video>
-  <figcaption>91 seconds, made with Manim: the Writ, the districts, the count, the Ledger and the evidence.</figcaption>
-</figure>
-
-<h2 id="guide">The player's guide</h2>
-<figure>
-  <video controls preload="metadata" poster="media/still-guide.png" src="media/players_guide.mp4"></video>
-  <figcaption>Your first game in 106 seconds, on the real client: the lobby, inviting a player, filing a Writ, the campaign, the count, when to move the crown, and the game record.</figcaption>
-</figure>
-
-<h2 id="net">How a neural net plays</h2>
-<figure>
-  <video controls preload="metadata" poster="media/still-net-mind.png" src="media/net_mind.mp4"></video>
-  <figcaption>192 seconds from the live game: the champion net against Medium Populist, with everything it computes drawn beside the board. 1,203 switches seen from the side to move, two layers of 160 and 40 units, a value and a score for every move, then a two-ply search that decides. In the lobby, <b>Play the neural net</b> or <b>Watch it think</b>; hover the panel to read any input, unit or move.</figcaption>
-</figure>
-
-<h2 id="votes">Who votes</h2>
-<figure>
-  <img src="media/fig-election.png" alt="A real count: each of White's pieces backs the nearer of the Candidate on d2 and the King on e1; two attacked pieces abstain; the College crowns the Candidate">
-  <figcaption>A real count from the census, every line a vote the engine counted.</figcaption>
-</figure>
-
-<h2 id="run">Play it on your machine</h2>
-<pre>git clone https://github.com/vonglurt/parliamentchess.git
-cd parliamentchess
-make up          # the server in the background: http://localhost:8080
-make test        # 45 rule tests, and two browsers playing through the server
-make down        # stop it</pre>
-<p>The game is a PHP 8.2+ server, so it runs locally rather than on these pages: two browsers play each other, the machine plays you as a nut, a legume or a squash, and anyone with a watch link follows along. Then open http://localhost:8080 in Chrome.</p>
 
 <footer>
   <span>MIT License &middot; every move FIDE, every crown elected</span>

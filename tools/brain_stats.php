@@ -5,7 +5,10 @@ declare(strict_types=1);
  * (Medium search, net evaluation and policy ordering) plays Medium Populist, colours alternating, no
  * book; at every one of the net's moves the trace is taken exactly as the server takes it.
  *
- *   sh bin/php tools/brain_stats.php [--games 8] [--net champion] [--seed 1] [--json out.json]
+ *   sh bin/php tools/brain_stats.php [--games 8] [--net champion] [--seed 1] [--json out.json] [--both]
+ *
+ * --both (Report XIII): the opponent's moves are read too, as the server reads them (the net's trace
+ * at the position the opponent faced, the move it played marked), and summarised separately.
  */
 require __DIR__ . '/../src/autoload.php';
 
@@ -13,7 +16,9 @@ use Parliament\AI\Players;
 use Parliament\Engine\Game;
 use Parliament\Engine\Position;
 
-$o = getopt('', ['games:', 'net:', 'seed:', 'json:']);
+$o = getopt('', ['games:', 'net:', 'seed:', 'json:', 'both']);
+$both = isset($o['both']);
+$reads = [];
 $games = (int)($o['games'] ?? 8);
 $net = $o['net'] ?? 'champion';
 $seed = (int)($o['seed'] ?? 1);
@@ -38,6 +43,12 @@ for ($i = 0; $i < $games; $i++) {
         if (!$info['move']) {
             break;
         }
+        if ($both && $p->side !== $netSide) {
+            $t = $players[$netSide]->ev->net2->trace($p, $p->legalMoves(), $info['move']);
+            $ranks = array_column($t['policy'], 'm');
+            $reads[] = ['rank' => array_search($info['move'], $ranks, true) + 1, 'p' => $t['policy'][array_search($info['move'], $ranks, true)]['p'],
+                'corr' => 400 * max(-2.0, min(2.0, $t['raw'])), 'bytes' => strlen(json_encode($t))];
+        }
         if ($p->side === $netSide) {
             $t0 = microtime(true);
             $t = $ai->ev->net2->trace($p, $p->legalMoves(), $info['move']);
@@ -51,6 +62,7 @@ for ($i = 0; $i < $games; $i++) {
                 'h2' => count(array_filter($t['a2'], fn($v) => $v > 0)),
                 'moves' => count($ranks),
                 'top1p' => $t['policy'][0]['p'],
+                'playedP' => $t['policy'][array_search($info['move'], $ranks, true)]['p'],
                 'rank' => array_search($info['move'], $ranks, true) + 1,
                 'policyIsSearchBest' => $ranks[0] === $best,
                 'corr' => 400 * max(-2.0, min(2.0, $t['raw'])),
@@ -87,6 +99,15 @@ $out = [
     'writsFiled' => count(array_filter($rows, fn($r) => $r['writ'])),
     'movesWhereAWritWasLegal' => count(array_filter($rows, fn($r) => $r['canFile'])),
 ];
+if ($reads) {
+    $rr = array_map(fn($r) => (float)$r['rank'], $reads);
+    $out['readings'] = ['moves' => count($reads), 'playedRank' => $stat($rr),
+        'playedIsPolicyTop1' => round(count(array_filter($rr, fn($r) => $r == 1)) / count($rr), 3),
+        'playedInPolicyTop3' => round(count(array_filter($rr, fn($r) => $r <= 3)) / count($rr), 3),
+        'playedP' => $stat(array_map(fn($r) => (float)$r['p'], $reads)),
+        'absCorrectionCp' => $stat(array_map(fn($r) => abs($r['corr']), $reads))];
+    $out['ownPlayedP'] = $stat(array_map(fn($r) => (float)$r['playedP'], $rows));
+}
 $json = json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 if (isset($o['json'])) {
     file_put_contents($o['json'], $json . "\n");

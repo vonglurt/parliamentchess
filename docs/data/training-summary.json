@@ -1,0 +1,13 @@
+{
+ "generations": 25,
+ "elected": [
+  "g005",
+  "g015"
+ ],
+ "champion": "g015",
+ "labels": 1695028,
+ "laneHours": 38.4,
+ "medianWallMinutes": 42.1,
+ "first": "2026-11-20T23:21:13+00:00",
+ "last": "2026-11-22T05:08:36+00:00"
+}

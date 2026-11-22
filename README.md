@@ -13,7 +13,14 @@ politics are the joke, and the joke is balanced.
 **[Website](https://vonglurt.github.io/parliamentchess/)** ·
 **[Player's guide video](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)** (106 s) ·
 **[How a neural net plays](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)** (192 s) ·
+**[The net reads the classics](https://vonglurt.github.io/parliamentchess/media/net_classics.mp4)** (film) ·
 **[Rules](RULES.md)** · **[Lab reports](docs/parliament-chess-lab-report.md)** · MIT License
+
+**Documentation:** **[Contents](docs/INDEX.md)**, a table of contents for the whole project ·
+**[How it works](docs/TECHNICAL.md)**, the technical tour: the engine, the bots, the net, its training and the fleet ·
+the website's three doors: **[play it](https://vonglurt.github.io/parliamentchess/guide.html)**,
+**[what is this](https://vonglurt.github.io/parliamentchess/about.html)**,
+**[the trained net](https://vonglurt.github.io/parliamentchess/net.html)**
 
 ## Play in a minute
 
@@ -35,6 +42,7 @@ name if you like. Then pick a way to play:
 | **Two browsers** | Create a game and send the second link to a friend. Anyone with the watch link can follow live. |
 | **Play the machine** | Easy, Medium or Hard, as a Whig, a Populist or a Monarchist, with either colour. |
 | **Play the neural net** | The champion of the training runs, with its mind drawn beside the board on every move. Or press **Watch it think**. |
+| **The classics** | Famous short games, move for move; the net reads every move and says what it would have played. |
 | **Watch the machines** | Two bots argue it out while you watch. |
 
 [![The player's guide: your first game, in 106 seconds](docs/media/still-guide.png)](https://vonglurt.github.io/parliamentchess/media/players_guide.mp4)
@@ -180,6 +188,38 @@ layers, the moves' activations as squares with their probabilities, and the deci
 
 [![How a neural net plays: the champion against Medium Populist, with its mind beside the board](docs/media/still-net-mind.png)](https://vonglurt.github.io/parliamentchess/media/net_mind.mp4)
 
+## The classics through its eyes
+
+Every move of six famous short games is legal Parliament Chess (no Writ before move 10, and none is
+ever forced), so the champion can read them: Fool's and Scholar's Mate, Légal 1750, the Opera Game 1858,
+Réti–Tartakower 1910 and Lasker–Thomas 1912. In the lobby, **The classics** replays any of them with the
+net reading every move and saying what it would have played; `sh bin/php tools/classics.php` measures all
+113 positions (`docs/data/classics.json`).
+
+| Over the winners' 59 moves | Played history's move |
+| --- | --- |
+| The policy's first hunch (its favourite move) | 6 (10%) |
+| Medium, the hand-written player, 2 plies | 25 (42%) |
+| **The net, as the lobby plays it, 2 plies** | **31 (53%)** |
+| The same net, 3 plies | 34 (58%) |
+
+It finds every final mate and Morphy's 16.Qb8+!! (a check, so the search sees one ply further), rejects
+Scholar's 3...Nf6?? even though its own policy ranks it first, and misses the quiet, deep sacrifices:
+Lasker's 11.Qxh7+!! is mate in eight. The film walks through all six:
+[The Net Reads the Classics](https://vonglurt.github.io/parliamentchess/net.html#film).
+
+## How the net was trained
+
+![Each generation's verdict against the champion of the day](docs/media/training/fig-gen-timeline.png)
+
+A generation is a chain of Orrery jobs on the fleet: 30 label jobs (a teacher one ply deeper scores
+every position), one training job on a GPU, a 200-game gauntlet against the champion, and a verdict.
+A challenger is elected only if it wins by more than two standard errors; generation 5 beat plain
+Medium, and generation 15 beat generation 5, 61.8%. The queue, the timeline, where the time goes and
+how training stops are on [the net's page](https://vonglurt.github.io/parliamentchess/net.html#queue) and in
+[How it works](docs/TECHNICAL.md#5-training); `python3 tools/fig_training.py` redraws the figures from
+`docs/data/generations.json` after each verdict.
+
 ## Your game, on the record
 
 <p><img src="docs/media/guide/record.jpg" width="40%" alt="The game record: every move with its player and its time, the Writ in red, and the Ledger of careers">
@@ -195,9 +235,12 @@ name: you might lose to *Ceratonia siliqua* (the carob) or a Black-eyed Pea.
 # For developers
 
 - **Lab reports:** [docs/parliament-chess-lab-report.md](docs/parliament-chess-lab-report.md)
-  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–XII, from the rules to reading the net's mind.
+  (also as [HTML](docs/parliament-chess-lab-report.html)): Reports I–XIII, from the rules to reading the net's mind.
   The data behind them is in [docs/data](docs/data) and the figures in [docs/media](docs/media)
-- **Films:** `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim;
+- **Docs:** [docs/INDEX.md](docs/INDEX.md), the contents; [docs/TECHNICAL.md](docs/TECHNICAL.md), how it works
+  (`python3 tools/md2page.py` makes their website pages, `technical.html` and `contents.html`)
+- **Films:** `docs/media/net_classics.mp4`, the classics through the net's mind (`sh film/classics.sh`);
+  `docs/media/parliament_chess.mp4`, a 3Blue1Brown-style explainer made with Manim;
   `docs/media/players_guide.mp4`, the player's guide (`sh film/render.sh guide`);
   `docs/media/net_mind.mp4`, how a neural net plays, recorded from the live game (`node film/brain_demo.mjs`)
 - **Training:** generations of nets train on an Orrery fleet and commit each verdict here

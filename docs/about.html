@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Project · Parliament Chess</title>
+<meta name="description" content="What Parliament Chess is: chess with an elected crown, the evidence that it is balanced, and how it is built.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav" href="guide.html">Play</a>
+  <a class="nav on" href="about.html">The project</a>
+  <a class="nav" href="net.html">The net</a>
+  <a class="nav" href="technical.html">Technical</a>
+  <a class="nav" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
+<main>
+<p class="kicker" style="margin-top:44px">2 · The project</p>
+<h1>What is this?</h1>
+<p class="lede">Parliament Chess is chess with one new office: the crown. Halfway through a game you can call an election, and your own pieces vote on whether the crown should leave your King for another piece. It is a parody in the spirit of Rock Paper Scissors Lizard Spock: the chess is untouched, the politics are the joke, and the joke is balanced.</p>
+
+<nav class="toc"><b>On this page</b><ol>
+  <li><a href="#idea">The idea</a></li>
+  <li><a href="#film">The film</a></li>
+  <li><a href="#evidence">Is it balanced?</a></li>
+  <li><a href="#built">How it is built</a></li>
+  <li><a href="#reports">The lab reports</a></li>
+  <li><a href="#films">Every film</a></li>
+</ol></nav>
+
+<h2 id="idea">The idea</h2>
+<p>What if the King were an office rather than a piece? Every move stays FIDE chess, and after every election the board is still an ordinary chess position: one King a side, ordinary piece types. What changes is who wears the crown.</p>
+<div class="cards">
+  <div class="card"><h3>1. The Writ</h3><p>From move 10, instead of moving, name a Candidate: any of your pieces except the King and the Queen, never crowned, not under attack. It costs your whole turn.</p></div>
+  <div class="card"><h3>2. The campaign</h3><p>Your opponent gets one move to answer: attack the Candidate&rsquo;s square, capture your voters, or attack them so they abstain.</p></div>
+  <div class="card"><h3>3. The count</h3><p>Each voter backs whichever is nearer, Candidate or King. Pawns sit in the Commons; Knights, Bishops and Rooks in the College.</p></div>
+  <div class="card"><h3>4. The Ledger</h3><p>A dethroned King becomes a Pretender pawn that can promote only to Rook, Bishop or Knight. No piece reigns twice.</p></div>
+</div>
+<p>The College takes its shape from the Golden Bull of 1356, which fixed seven Prince-Electors, clergy and secular princes: Bishops are the clergy here, Knights and Rooks the lords. And because a voter backs whoever is nearer, gerrymandering is part of the game: your districts are where your pieces stand, and the enemy redraws them with every capture and every attack. <a href="parliament-chess-lab-report.html">Lab Report II</a> compares the system with the other ways an election could have worked.</p>
+
+<h2 id="film">The film</h2>
+<figure>
+  <video controls preload="metadata" poster="media/still-board.png" src="media/parliament_chess.mp4"></video>
+  <figcaption>91 seconds, made with Manim: the Writ, the districts, the count, the Ledger and the evidence.</figcaption>
+</figure>
+
+<h2 id="evidence">Is it balanced?</h2>
+<p>Bots with three political styles (Whig, Populist, Monarchist) played each other in a census of 1,400 self-play games, through the same Orrery queue that later trained the net:</p>
+<div class="facts">
+  <div class="fact"><b>87&ndash;89%</b><span>of games decisive, against 89% in plain chess</span></div>
+  <div class="fact"><b>0.7&ndash;2.3</b><span>elections a game, nearly always crowning a pawn</span></div>
+  <div class="fact"><b>13&ndash;17%</b><span>of counts failed on an attacked Candidate square</span></div>
+  <div class="fact"><b>1,712</b><span>Writs studied for when to move the crown</span></div>
+</div>
+<figure><img src="media/still-evidence.png" alt="The census, in the film"><figcaption>The census, as the film shows it. The numbers, with their 95% intervals, are in Lab Reports III and VI.</figcaption></figure>
+
+<h2 id="built">How it is built</h2>
+<div class="table-wrap"><table>
+  <tr><th>Part</th><th>What it is</th></tr>
+  <tr><td>The engine</td><td>PHP 8.2+, no dependencies: every rule of chess and of the election layer, the Ledger, notation (PCN), recordings.</td></tr>
+  <tr><td>The client</td><td>One canvas page: the board, the lobby, replays, the record, and the net&rsquo;s mind drawn beside the board.</td></tr>
+  <tr><td>The bots</td><td>Book-Return Search: a shallow alpha-beta that leans on a SQLite book of every game it has seen. Three levels, three political styles.</td></tr>
+  <tr><td>The net</td><td>1,203 binary sensors, 160 and 40 units, a value and a policy; trained on GPUs, generation by generation, by a fleet of machines. <a href="net.html">Its own page.</a></td></tr>
+  <tr><td>The fleet</td><td>An Orrery queue shared with other projects: labelling, training and gauntlet jobs, each verdict committed back to this repository.</td></tr>
+  <tr><td>A Rust labeller</td><td>The engine ported to Rust for the slowest job, checked against PHP on 1,218 positions with zero differences.</td></tr>
+</table></div>
+<p>The technical write-up walks through every part: <a href="technical.html">How it works</a>. A map of every file is in <a href="contents.html">the contents</a>.</p>
+
+<h2 id="reports">The lab reports</h2>
+<p>Each step of the project has an IEEE-style lab report with its measurements, including the negative results: <a href="parliament-chess-lab-report.html">the series</a> runs from the rules and their prior art, through balance, the AI and the fleet, to reading the net&rsquo;s mind. The data behind them is in <a href="https://github.com/vonglurt/parliamentchess/tree/main/docs/data">docs/data</a>.</p>
+
+<h2 id="films">Every film</h2>
+<div class="table-wrap"><table>
+  <tr><th>Film</th><th>Length</th><th>What it shows</th></tr>
+  <tr><td><a href="media/parliament_chess.mp4">Parliament Chess</a></td><td class="num">91 s</td><td>The idea and the evidence, in Manim.</td></tr>
+  <tr><td><a href="media/players_guide.mp4">The player&rsquo;s guide</a></td><td class="num">106 s</td><td>Your first game, on the real client.</td></tr>
+  <tr><td><a href="media/net_mind.mp4">How a neural net plays</a></td><td class="num">192 s</td><td>The champion net against Medium, with everything it computes.</td></tr>
+  <tr><td><a href="net.html#film">The Net Reads the Classics</a></td><td class="num">~6 min</td><td>Six famous short games through the net&rsquo;s eyes: what it would have played, measured.</td></tr>
+</table></div>
+
+<footer>
+  <span><a href="./">Parliament Chess</a> &middot; next: <a href="net.html">the trained net</a></span>
+  <span>MIT License</span>
+</footer>
+</main>
+</body>
+</html>

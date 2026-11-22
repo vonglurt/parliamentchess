@@ -26,6 +26,8 @@ use Parliament\Engine\Recording;
  *   GET  /api/pcn        ?id                    the game as Parliament Chess Notation
  *   GET  /api/orrery     the Orrery Queue directories and their reports
  *   GET  /api/nets       the published generations of the net (models/), the champion last
+ *   GET  /api/classics   famous short games; POST /api/new {mode: classic, classic: key} replays one,
+ *                        each move read by the champion net, stepped by /api/ai like a bot's
  */
 final class Api
 {
@@ -55,6 +57,7 @@ final class Api
             'names' => ['bots' => array_map(fn($b) => ['common' => $b[0], 'latin' => $b[1]], Names::BOTS), 'people' => Names::PEOPLE],
             'orrery' => $this->orrery(),
             'nets' => $this->nets(),
+            'classics' => ['games' => Classics::all()],
             default => throw new ApiError('no such route', 404),
         };
     }
@@ -89,7 +92,11 @@ final class Api
         $level = $b['level'] ?? 'medium';
         $color = ($b['color'] ?? 'white') === 'black' ? -1 : 1;
         $ai = [1 => null, -1 => null];
-        if ($mode === 'ai') {
+        $classic = null;
+        if ($mode === 'classic') {
+            // A famous game, replayed move for move; the champion net reads every move as it is played.
+            $classic = Classics::get((string)($b['classic'] ?? '')) ?? throw new ApiError('no such classic');
+        } elseif ($mode === 'ai') {
             $ai[-$color] = $level;
         } elseif ($mode === 'aivai') {
             $ai[1] = $b['white'] ?? 'medium';
@@ -117,7 +124,9 @@ final class Api
         // and a nut, a legume or a squash for every bot.
         $names = [];
         foreach ([1, -1] as $c) {
-            if ($ai[$c] !== null) {
+            if ($classic) {
+                $names[(string)$c] = $classic[$c === 1 ? 'white' : 'black'];
+            } elseif ($ai[$c] !== null) {
                 $names[(string)$c] = Names::bot(array_values($names));
             } elseif ($mode !== 'aivai' && $c === $color) {
                 $names[(string)$c] = Names::clean($b['name'] ?? null) ?? Names::person();
@@ -131,8 +140,13 @@ final class Api
         $rec = ['id' => $id, 'created' => date('c'), 'mode' => $mode, 'version' => 1,
             'players' => $names,
             'ai' => ['1' => $ai[1], '-1' => $ai[-1]], 'tokens' => $tokens, 'game' => $g->toArray()];
+        if ($classic) {
+            $rec['reader'] = 'medium+net2:champion';
+            $rec['script'] = $classic['moves'];
+            $rec['classic'] = array_intersect_key($classic, array_flip(['key', 'title', 'white', 'black', 'event', 'year', 'note']));
+        }
         $this->store->update($id, fn() => $rec, true);
-        $you = $mode === 'aivai' ? 0 : $color;
+        $you = $mode === 'aivai' || $classic ? 0 : $color;
         return ['id' => $id, 'you' => $you, 'token' => $you ? $tokens[(string)$you] : '',
             'links' => $this->links($rec, $you)];
     }
@@ -178,7 +192,8 @@ final class Api
             'status' => $g->status, 'result' => $g->result(),
             'termination' => $g->termination, 'winner' => $g->winner, 'started' => self::iso($g->startedAt),
             'frame' => View::frame($p),
-            'aiToMove' => $playing && !empty($rec['ai'][(string)$mover]),
+            'aiToMove' => $playing && (!empty($rec['ai'][(string)$mover]) || count($g->log) < count($rec['script'] ?? [])),
+            'reader' => $rec['reader'] ?? null, 'classic' => $rec['classic'] ?? null,
             'log' => array_map(fn($e) => ['ply' => $e['ply'], 'by' => $e['by'], 'san' => $e['san'], 'writ' => $e['writ'],
                 'count' => $e['count'] ? array_diff_key($e['count'], ['voters' => 1]) + ['text' => Game::describeCount($e['count'])] : null,
                 'source' => $e['source'] ?? null, 'score' => $e['score'] ?? null,
@@ -307,6 +322,12 @@ final class Api
             }
             $g = Game::fromSnapshot($rec['game']);
             $spec = $rec['ai'][(string)$g->pos->side] ?? null;
+            $next = $rec['script'][count($g->log)] ?? null;
+            if ($g->status === 'playing' && $next !== null && (!isset($b['version']) || (int)$b['version'] === $rec['version'])) {
+                $rec = $this->historicMove($rec, $g, $next);
+                $res = ['moved' => $next, 'version' => $rec['version']];
+                return $rec;
+            }
             if ($g->status !== 'playing' || !$spec || (isset($b['version']) && (int)$b['version'] !== $rec['version'])) {
                 $res = ['unchanged' => true, 'version' => $rec['version']];
                 return null;
@@ -333,6 +354,36 @@ final class Api
     }
 
     /**
+     * A classic's next move. The reader (the champion net, as the lobby plays it, without the book) is
+     * asked what it would play, then the historic move is read through its weights, the way a person's
+     * move is read, with the reader's own choice beside it: did history play what the net would?
+     */
+    private function historicMove(array $rec, Game $g, string $san): array
+    {
+        $m = $g->parse($san) ?? throw new ApiError("the classic's move $san is not legal here", 500);
+        $p = $g->pos;
+        $player = $rec['players'][(string)$p->side] ?? '';
+        $mind = null;
+        try {
+            $reader = Players::make($rec['reader'], null, random_int(1, PHP_INT_MAX));
+            $info = $reader->choose($g);
+            $mind = $this->reading($rec, $g, $m, $player, $reader, $info, 'history');
+            if ($mind && $info['move']) {
+                $after = $p->after((int)$info['move']);
+                $mark = $after->inCheck() ? ($after->legalMoves() ? '+' : '#') : '';
+                $mind += ['would' => Game::san($p, (int)$info['move']) . $mark, 'wouldUci' => Game::uci((int)$info['move']), 'wouldScore' => $info['score'] ?? null];
+            }
+        } catch (\Throwable $e) {
+            error_log('classic reading: ' . $e->getMessage()); // the game goes on without a reading
+        }
+        if ($mind) {
+            $rec = $this->remember($rec, $mind);
+        }
+        $g->playInt($m, null, ['source' => 'history']);
+        return $this->commit($rec, $g);
+    }
+
+    /**
      * What a net player saw and computed for the move it is about to play (see Net2::trace): the
      * brain panel draws it, from the active inputs through both hidden layers to the value and the
      * move logits, next to the search's own score for every root move and the move it chose.
@@ -351,12 +402,12 @@ final class Api
      * judged that side's position and how high it ranked the move chosen. A bot's own search scores
      * come along. Null when the game has no net player.
      */
-    private function reading(array $rec, Game $g, int $move, string $player, ?\Parliament\AI\Search $own = null, array $info = []): ?array
+    private function reading(array $rec, Game $g, int $move, string $player, ?\Parliament\AI\Search $own = null, array $info = [], ?string $source = null): ?array
     {
-        $reader = null;
+        $reader = $rec['reader'] ?? null;
         foreach (['1', '-1'] as $s) {
             $spec = $rec['ai'][$s] ?? null;
-            if ($spec && str_contains($spec, '+net2')) {
+            if (!$reader && $spec && str_contains($spec, '+net2')) {
                 $reader = $spec;
                 break;
             }
@@ -373,7 +424,7 @@ final class Api
             return null;
         }
         return ['kind' => 'reading', 'reader' => $reader, 'player' => $player, 'spec' => $rec['ai'][(string)$g->pos->side] ?? null,
-            'source' => $own ? ($info['source'] ?? 'search') : 'person', 'score' => $own ? ($info['score'] ?? 0) : null,
+            'source' => $source ?? ($own ? ($info['source'] ?? 'search') : 'person'), 'score' => $own ? ($info['score'] ?? 0) : null,
             'nodes' => $info['nodes'] ?? 0, 'searchMs' => $info['ms'] ?? 0]
             + $this->trace($net, $g, $move, $own);
     }
@@ -422,7 +473,7 @@ final class Api
         $rec['tally'][$side] = $t;
         // From White's side: the value, and the net's correction in centipawns; then who chose the move.
         $corr = $b['mode'] === 'residual' ? (int)round($b['side'] * 400 * max(-2.0, min(2.0, $b['raw']))) : 0;
-        $who = $b['source'] === 'book' ? 'book' : ($b['kind'] === 'own' ? 'net' : ($b['source'] === 'person' ? 'person' : 'bot'));
+        $who = $b['source'] === 'book' ? 'book' : ($b['kind'] === 'own' ? 'net' : (in_array($b['source'], ['person', 'history'], true) ? 'person' : 'bot'));
         $rec['evals'][] = [$b['ply'], (int)$b['side'], round($b['side'] * $b['value'], 3), $b['kind'] === 'own' ? 1 : 0,
             $rank, round((float)($b['policy'][$rank - 1]['p'] ?? 0), 4), $corr, $who];
         return $rec;
@@ -458,7 +509,7 @@ final class Api
                 'white' => $rec['players']['1'], 'black' => $rec['players']['-1'], 'mode' => $rec['mode'],
                 'bots' => $rec['ai'], 'started' => self::iso($g->startedAt), 'record' => $this->record($rec)]);
             Recording::save(pc_data() . '/recordings/live', $r);
-            if (count($g->log) >= 6) {
+            if (count($g->log) >= 6 && $rec['mode'] !== 'classic') { // a replayed classic teaches the book nothing
                 Players::book()->learn($g);
             }
         }

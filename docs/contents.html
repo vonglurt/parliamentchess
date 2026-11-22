@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contents · Parliament Chess</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<style>main h1 { margin-top: 44px; } main h2 { margin-top: 44px; }</style>
+</head>
+<body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav" href="guide.html">Play</a>
+  <a class="nav" href="about.html">The project</a>
+  <a class="nav" href="net.html">The net</a>
+  <a class="nav" href="technical.html">Technical</a>
+  <a class="nav on" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
+<main>
+<!-- Made from docs/INDEX.md by tools/md2page.py: edit the Markdown, then run the script. -->
+<h1 id="parliament-chess-contents">Parliament Chess: contents</h1>
+<p>Everything in the project, and where to find it. Start with the website's three doors, then go as deep as you like.</p>
+<h2 id="start-here">Start here</h2>
+<div class="table-wrap"><table>
+<tr><th></th><th></th></tr>
+<tr><td><a href="https://vonglurt.github.io/parliamentchess/">The website</a></td><td>The splash page: play it, what it is, the trained net</td></tr>
+<tr><td><a href="guide.html">The player's guide</a></td><td>Run it in a minute, your first game, Writs, the count, when to move the crown</td></tr>
+<tr><td><a href="about.html">What is this project?</a></td><td>The idea, whether it is balanced, how it is built, every film</td></tr>
+<tr><td><a href="net.html">Parliament Chess's own net</a></td><td>How it sees, six classics through its eyes, how the fleet trained it</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/blob/main/README.md">README</a></td><td>The same story on GitHub, with every command</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/blob/main/RULES.md">RULES.md</a></td><td>The rules of the realm, in full</td></tr></table></div>
+<h2 id="documentation">Documentation</h2>
+<div class="table-wrap"><table>
+<tr><th>Document</th><th>What it covers</th></tr>
+<tr><td><a href="technical.html">How it works (TECHNICAL.md)</a></td><td>The engine, the bots, the net, training, the Orrery queue, server and client, measuring, films, tests</td></tr>
+<tr><td><a href="parliament-chess-lab-report.html">The lab reports</a> (<a href="parliament-chess-lab-report.html">HTML</a>)</td><td>Reports I–XIII, IEEE style, with every measurement and the negative results</td></tr>
+<tr><td>This page (INDEX.md)</td><td>The contents</td></tr></table></div>
+<h3 id="the-lab-reports-one-line-each">The lab reports, one line each</h3>
+<div class="table-wrap"><table>
+<tr><th>Report</th><th>Subject</th></tr>
+<tr><td>I</td><td>The concept: the Ledger, the electorate, the election turn by turn</td></tr>
+<tr><td>II</td><td>Prior art and the chosen system (the Golden Bull model)</td></tr>
+<tr><td>III</td><td>Balance analysis: timing, exploits closed, the Queen question</td></tr>
+<tr><td>IV</td><td>Implementation plan and architecture</td></tr>
+<tr><td>V</td><td>The AI: Book-Return Search and the first value net</td></tr>
+<tr><td>VI</td><td>The Orrery queue: the demo reel and the balance census</td></tr>
+<tr><td>VII</td><td>The film, conclusions and future work</td></tr>
+<tr><td>VIII</td><td>GPU training and generation timing</td></tr>
+<tr><td>IX</td><td>Parliament Chess in the shared Orrery queue</td></tr>
+<tr><td>X</td><td>Teaching the net to govern</td></tr>
+<tr><td>XI</td><td>Faster generations: a packed trainer, shared GPUs, a Rust labeller</td></tr>
+<tr><td>XII</td><td>The net's mind: a live trace from inputs to move</td></tr>
+<tr><td>XIII</td><td>Early stopping, the first election since generation 5, and each side's calculation as a matrix</td></tr></table></div>
+<h2 id="films">Films</h2>
+<div class="table-wrap"><table>
+<tr><th>Film</th><th>Length</th><th></th></tr>
+<tr><td><a href="media/parliament_chess.mp4">Parliament Chess</a></td><td>91 s</td><td>The idea and the evidence, 3Blue1Brown style (Manim)</td></tr>
+<tr><td><a href="media/players_guide.mp4">The player's guide</a></td><td>106 s</td><td>Your first game on the real client</td></tr>
+<tr><td><a href="media/net_mind.mp4">How a neural net plays</a></td><td>192 s</td><td>The champion against Medium, everything it computes</td></tr>
+<tr><td><a href="media/net_classics.mp4">The Net Reads the Classics</a></td><td>about 6 min</td><td>Six famous short games through the net's mind: Manim chapters and a live recording</td></tr></table></div>
+<h2 id="data">Data</h2>
+<div class="table-wrap"><table>
+<tr><th>File</th><th>What it holds</th><th>Made by</th></tr>
+<tr><td><a href="data/generations.json">data/generations.json</a></td><td>Every generation's verdict: score, z, elections, labels, lane time, hosts</td><td>the fleet, after each verdict</td></tr>
+<tr><td><a href="data/lineage.tsv">data/lineage.tsv</a></td><td>The same, one line a generation</td><td>the fleet</td></tr>
+<tr><td><a href="data/training-summary.json">data/training-summary.json</a></td><td>Totals: generations, elected, labels, lane-hours</td><td><code>tools/fig_training.py</code></td></tr>
+<tr><td><a href="data/classics.json">data/classics.json</a></td><td>Six classics: every position's trace, the net's rank of history's move, three players' picks</td><td><code>tools/classics.php</code></td></tr>
+<tr><td><a href="data/net-classics-chapters.json">data/net-classics-chapters.json</a></td><td>The classics film's chapter times</td><td><code>film/classics_cut.py</code></td></tr>
+<tr><td><a href="data/brain-stats.json">data/brain-stats.json</a></td><td>What the net's mind shows across real games</td><td><code>tools/brain_stats.php</code></td></tr>
+<tr><td><a href="data/crown-theory.json">data/crown-theory.json</a></td><td>When a Writ moves the crown</td><td><code>bin/crown-theory.php</code></td></tr>
+<tr><td><a href="data/census-analysis.json">data/census-analysis.json</a>, <a href="data/netcheck-analysis.json">data/netcheck-analysis.json</a></td><td>Balance census and net check statistics</td><td><code>bin/analyze.php</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/models">../models/</a></td><td>The elected nets (<code>g005.json</code>, <code>g015.json</code>): weights and training history</td><td>the fleet</td></tr></table></div>
+<h2 id="figures">Figures</h2>
+<div class="table-wrap"><table>
+<tr><th>Figure</th><th>Shows</th></tr>
+<tr><td><a href="media/training/fig-gen-timeline.png">media/training/fig-gen-timeline.png</a></td><td>Each generation's verdict against the champion of the day</td></tr>
+<tr><td><a href="media/training/fig-gen-queue.png">media/training/fig-gen-queue.png</a></td><td>One generation through the Orrery queue</td></tr>
+<tr><td><a href="media/training/fig-gen-cost.png">media/training/fig-gen-cost.png</a></td><td>Lane time per stage, per generation</td></tr>
+<tr><td><a href="media/training/fig-gen-earlystop.png">media/training/fig-gen-earlystop.png</a></td><td>The champion's held-out loss by epoch</td></tr>
+<tr><td><a href="media/fig-election.png">media/fig-election.png</a></td><td>Who votes in a real count</td></tr>
+<tr><td><a href="media/fig-crown-theory.png">media/fig-crown-theory.png</a></td><td>How often the crown moved after a Writ</td></tr>
+<tr><td><a href="media/net-mind-sidebar.png">media/net-mind-sidebar.png</a>, <a href="media/net-mind-matrix.png">media/net-mind-matrix.png</a></td><td>MIND, beside and under the board</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/docs/media/guide">media/guide/</a></td><td>Screens of the real client used by the guide</td></tr></table></div>
+<h2 id="source-code">Source code</h2>
+<div class="table-wrap"><table>
+<tr><th>Folder</th><th>What is in it</th></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/src/Engine">src/Engine</a></td><td><code>Position</code> (every rule, Writs, the count, the Ledger), <code>Game</code> (log, SAN, PCN), <code>Recording</code>, <code>Workers</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/src/AI">src/AI</a></td><td><code>Search</code> (Book-Return Search), <code>Evaluator</code>, <code>KnownSpace</code> (SQLite book), <code>Sensors</code>, <code>Net</code>, <code>Net2</code>, <code>Players</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/src/Server">src/Server</a></td><td><code>Api</code> (JSON routes), <code>Store</code> (one file per game), <code>View</code>, <code>Names</code> (nuts, legumes, squash), <code>Classics</code> (famous games)</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/public">public/</a></td><td><code>index.php</code> (router), <code>index.html</code> (landing), <code>play.html</code> and <code>assets/app.js</code> (the game, MIND), <code>assets/app.css</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/bin">bin/</a></td><td><code>serve</code>, <code>php</code>, <code>test</code>, <code>test-browsers</code>, <code>selfplay</code>, <code>label</code>, <code>train</code>, <code>analyze</code>, <code>crown-theory</code>, <code>bench-*</code>, <code>orrery-plan</code>, <code>orrery-gen</code>, <code>orrery-local</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/train">train/</a></td><td><code>train_torch.py</code> and its requirements (<code>requirements-pascal.txt</code> for GTX 10-series cards)</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/rust">rust/</a></td><td>The labeller in Rust: rules, evaluation, search, sensors, the net; <code>pc-label</code>, <code>pc-parity</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/tools">tools/</a></td><td><code>classics.php</code>, <code>brain_stats.php</code>, <code>fig_training.py</code>, <code>svg2png.mjs</code>, <code>report2docs.py</code>, <code>rust_parity.php</code>, figure scripts</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/film">film/</a></td><td>The Manim films (<code>parliament.py</code>, <code>guide.py</code>, <code>classics.py</code>), the browser recordings (<code>brain_demo.mjs</code>, <code>classics_capture.mjs</code>), the cut</td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/orrery">orrery/</a></td><td>Local queue folders: <code>demos</code> (with results), <code>census</code> (reports), <code>gen</code>, <code>netcheck</code></td></tr>
+<tr><td><a href="https://github.com/vonglurt/parliamentchess/tree/main/docs">docs/</a></td><td>GitHub Pages: the website, the lab reports, media and data</td></tr></table></div>
+<h2 id="commands">Commands</h2>
+<pre><code>make up / make down / make test                 # play, stop, test
+sh bin/php tools/classics.php                   # the classics through the net (3 minutes)
+python3 tools/fig_training.py                   # the training figures from the latest verdicts
+sh film/classics.sh                             # the classics film (Manim, a live recording, the cut)
+php bin/orrery-local.php orrery/demos           # the demo reel on one machine</code></pre>
+<footer><span><a href="./">Parliament Chess</a> &middot; this page is <a href="https://github.com/vonglurt/parliamentchess/blob/main/docs/INDEX.md">docs/INDEX.md</a> on GitHub</span><span>MIT License</span></footer>
+</main>
+</body>
+</html>

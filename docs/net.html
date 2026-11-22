@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Net · Parliament Chess</title>
+<meta name="description" content="Parliament Chess's own neural net: how it sees the board, how a fleet trained it generation by generation, and six famous short games through its eyes.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<style>
+.netkick { color: var(--phos); }
+.legend3 { display: flex; flex-wrap: wrap; gap: 18px; font: 14px var(--mono); margin: 10px 0 4px; }
+.legend3 i { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav" href="guide.html">Play</a>
+  <a class="nav" href="about.html">The project</a>
+  <a class="nav on" href="net.html">The net</a>
+  <a class="nav" href="technical.html">Technical</a>
+  <a class="nav" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
+<main class="wide">
+<p class="kicker netkick" style="margin-top:44px">3 · The trained net</p>
+<h1>Parliament Chess&rsquo;s own net</h1>
+<p class="lede">A small neural net trained only on this game: on positions from its own games, each scored by a search that looks one move deeper than it can. A fleet of machines trained it generation by generation, and a new generation takes the crown only by beating the old one in 200 games. Its maker&rsquo;s verdict: <i>&ldquo;It consistently beats me as a human.&rdquo;</i></p>
+
+<div class="facts" id="facts">
+  <div class="fact"><b data-k="gens">20</b><span>generations trained and judged by the fleet</span></div>
+  <div class="fact"><b data-k="elected">2</b><span>elected: <span data-k="electedNames">g005, g015</span></span></div>
+  <div class="fact"><b data-k="champScore">61.8%</b><span data-k="champLine">g015&rsquo;s score against g005, the champion before it (z +3.78)</span></div>
+  <div class="fact"><b data-k="labels">1.34M</b><span>positions labelled by the teacher</span></div>
+  <div class="fact"><b data-k="wall">42 min</b><span>a generation, first job to verdict (median)</span></div>
+</div>
+
+<nav class="toc"><b>On this page</b><ol>
+  <li><a href="#film">The film: the net reads the classics</a></li>
+  <li><a href="#mind">How it sees: reading MIND</a></li>
+  <li><a href="#classics">Six classics through its eyes</a></li>
+  <li><a href="#queue">How it was trained: the queue</a></li>
+  <li><a href="#timeline">The timeline: twenty generations</a></li>
+  <li><a href="#cost">Where the time goes</a></li>
+  <li><a href="#stop">When to stop training</a></li>
+  <li><a href="#gens">Every generation</a></li>
+  <li><a href="#play">Play it, or watch it think</a></li>
+</ol></nav>
+
+<h2 id="film">The film: the net reads the classics</h2>
+<figure>
+  <video id="film-video" controls preload="metadata" poster="media/still-net-classics.png" src="media/net_classics.mp4"></video>
+  <figcaption>Six famous short games, move by move, through the champion&rsquo;s mind: what it saw, how its 160 and 40 units lit up, where it ranked history&rsquo;s move, and what it would have played. Every number on screen is measured (<code>tools/classics.php</code>); the Opera Game chapter is recorded live from the real client.</figcaption>
+</figure>
+<div class="chapters" id="chapters"></div>
+
+<h2 id="mind">How it sees: reading MIND</h2>
+<div class="pair">
+  <figure><img src="media/net-mind-sidebar.png" alt="MIND in the sidebar: inputs, layer 1 and layer 2 as framed squares, the moves with their probabilities, and the decisions strip"></figure>
+  <div>
+    <p>Every time the net moves (or reads someone else&rsquo;s move), the game draws <b>MIND</b>: the end state of its computation, in the phosphor style of the Orrery console.</p>
+    <ol>
+      <li><b>Inputs, 1,203 switches.</b> Eighteen 8&times;8 boards seen from the side to move (its pieces, the opponent&rsquo;s, former Kings, every square each side attacks, every piece left hanging) and 51 summaries: pressure on each King, mobility, the worst piece hanging, Writs, the election. About 100 are on.</li>
+      <li><b>The transform, 1,203 &gt; 160 &gt; 40.</b> Each lit switch adds its row of learned weights into 160 units; 40 more mix them. Every unit is a square framed in its own colour, filled by its sum.</li>
+      <li><b>Two heads.</b> The value says who is winning (a correction to the hand-written evaluation); the policy gives every legal move a probability.</li>
+      <li><b>A search decides.</b> Two moves deep, plus one for every check. A move&rsquo;s square takes the colour of the <i>search&rsquo;s</i> score, and the white frame marks the move played.</li>
+    </ol>
+    <div class="mind">green <b>+</b> &nbsp;·&nbsp; <span class="amber">amber &minus;</span> &nbsp;·&nbsp; <span class="dim">black 0</span><br>a wire wears its source unit&rsquo;s colour, dotted when it inhibits<br>decisions: one column a move &mdash; value, net rank, its correction, who chose, what happened</div>
+  </div>
+</div>
+<figure><img src="media/net-mind-matrix.png" alt="MIND under the board: the full matrix with the decisions strip"><figcaption>The full panel under the board (Matrix view). Hover any input, unit or move in the game to read its numbers; in a game you are watching, hovering also holds the game.</figcaption></figure>
+
+<h2 id="classics">Six classics through its eyes</h2>
+<p>Every move of six famous short games is legal Parliament Chess (no Writ can be filed before move 10, and none is ever forced), so we replayed them through the champion, generation 15. At each of the 113 positions it read history&rsquo;s move and ranked it, and three players said what they would have played: <b>the net</b> as the lobby plays it (2 plies), <b>the same net one ply deeper</b>, and <b>Medium with no net</b> (the hand-written evaluation alone).</p>
+<h3>Would it play the winner&rsquo;s moves?</h3>
+<div class="table-wrap"><table>
+<tr><th>Game</th><th class="num">Plies</th><th class="num">Winner's moves</th><th class="num">Policy #1</th><th class="num">Net, 2 ply</th><th class="num">Net, 3 ply</th><th class="num">No net</th><th>Final mate</th></tr>
+<tr><td>Fool's Mate</td><td class="num">4</td><td class="num">2</td><td class="num">0</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td>Qh4#: policy #28, found by all three</td></tr>
+<tr><td>Scholar's Mate</td><td class="num">7</td><td class="num">4</td><td class="num">0</td><td class="num">2</td><td class="num">2</td><td class="num">2</td><td>Qxf7#: policy #8, found by all three</td></tr>
+<tr><td>Légal's Mate, 1750</td><td class="num">13</td><td class="num">7</td><td class="num">2</td><td class="num">2</td><td class="num">4</td><td class="num">3</td><td>Nd5#: policy #18, found by all three</td></tr>
+<tr><td>Réti–Tartakower, 1910</td><td class="num">21</td><td class="num">11</td><td class="num">1</td><td class="num">6</td><td class="num">7</td><td class="num">4</td><td>Bd8#: policy #14, found by all three</td></tr>
+<tr><td>The Opera Game, 1858</td><td class="num">33</td><td class="num">17</td><td class="num">2</td><td class="num">11</td><td class="num">11</td><td class="num">7</td><td>Rd8#: policy #24, found by all three</td></tr>
+<tr><td>Lasker–Thomas, 1912</td><td class="num">35</td><td class="num">18</td><td class="num">1</td><td class="num">8</td><td class="num">9</td><td class="num">8</td><td>Kd2#: policy #35, found by all three</td></tr>
+<tr class="elected"><td>All six</td><td class="num">113</td><td class="num">59</td><td class="num">6 (10%)</td><td class="num">31 (53%)</td><td class="num">34 (58%)</td><td class="num">25 (42%)</td><td>6 of 6 found by all three</td></tr>
+</table></div>
+
+<p>The policy&rsquo;s first hunch is history&rsquo;s move only one time in ten: it is a move-ordering prior, nearly flat (its favourite rarely gets more than 3%). With a search behind it, the net plays the winner&rsquo;s move about half the time, ahead of the hand-written player, and one more ply helps a little more.</p>
+<h3>The decisive moments</h3>
+<div class="table-wrap"><table>
+<tr><th>Game</th><th>The moment</th><th>Task</th><th class="num">Policy rank</th><th>Net, 2 ply</th><th>Net, 3 ply</th><th>No net</th></tr>
+<tr><td>Fool's Mate</td><td><b>2…Qh4#</b></td><td>find it</td><td class="num">#28 of 30</td><td><span class="yes">✓</span> Qh4</td><td><span class="yes">✓</span> Qh4</td><td><span class="yes">✓</span> Qh4</td></tr>
+<tr><td>Fool's Mate</td><td><b>2.g4??</b></td><td>avoid it</td><td class="num">#18 of 19</td><td><span class="yes">✓</span> e4</td><td><span class="yes">✓</span> e4</td><td><span class="yes">✓</span> a4</td></tr>
+<tr><td>Scholar's Mate</td><td><b>3…Nf6??</b></td><td>avoid it</td><td class="num">#1 of 28</td><td><span class="yes">✓</span> g6</td><td><span class="yes">✓</span> g6</td><td><span class="yes">✓</span> Qf6</td></tr>
+<tr><td>Légal, 1750</td><td><b>5.Nxe5!?</b></td><td>find it</td><td class="num">#30 of 35</td><td><span class="no">✗</span> d4</td><td><span class="no">✗</span> a4</td><td><span class="no">✗</span> h3</td></tr>
+<tr><td>Légal, 1750</td><td><b>5…Bxd1??</b></td><td>avoid it</td><td class="num">#4 of 38</td><td><span class="no">✗</span> Bxd1</td><td><span class="yes">✓</span> dxe5</td><td><span class="no">✗</span> Bxd1</td></tr>
+<tr><td>Réti–Tartakower, 1910</td><td><b>8…Nxe4??</b></td><td>avoid it</td><td class="num">#45 of 47</td><td><span class="no">✗</span> Nxe4</td><td><span class="no">✗</span> Nxe4</td><td><span class="no">✗</span> Nxe4</td></tr>
+<tr><td>Réti–Tartakower, 1910</td><td><b>9.Qd8+!!</b></td><td>find it</td><td class="num">#29 of 43</td><td><span class="no">✗</span> Nf3</td><td><span class="yes">✓</span> Qd8</td><td><span class="no">✗</span> Nf3</td></tr>
+<tr><td>The Opera Game, 1858</td><td><b>13.Rxd7!</b></td><td>find it</td><td class="num">#44 of 61</td><td><span class="no">✗</span> Qh3</td><td><span class="no">✗</span> Qa4</td><td><span class="no">✗</span> Bxd7</td></tr>
+<tr><td>The Opera Game, 1858</td><td><b>16.Qb8+!!</b></td><td>find it</td><td class="num">#49 of 55</td><td><span class="yes">✓</span> Qb8</td><td><span class="yes">✓</span> Qb8</td><td><span class="yes">✓</span> Qb8</td></tr>
+<tr><td>Lasker–Thomas, 1912</td><td><b>10…Qe7?</b></td><td>avoid it</td><td class="num">#5 of 36</td><td><span class="yes">✓</span> Be7</td><td><span class="yes">✓</span> Bxe5</td><td><span class="yes">✓</span> Bxe5</td></tr>
+<tr><td>Lasker–Thomas, 1912</td><td><b>11.Qxh7+!!</b></td><td>find it</td><td class="num">#8 of 66</td><td><span class="no">✗</span> Nd6</td><td><span class="no">✗</span> Nxf6</td><td><span class="no">✗</span> Nxf6</td></tr>
+</table></div>
+<p>&#10003; means the player found the move (find it) or did not play the blunder (avoid it); beside each mark, the move that player chose. Three things stand out:</p>
+<ul>
+  <li><b>Forcing moves, yes.</b> Every final mate, all six, is found by all three players, though the policy ranks them as low as #35. Morphy&rsquo;s 16.Qb8+!! is found because it is check: the search extends a ply for every check and sees the mate behind it.</li>
+  <li><b>Quiet depth, no.</b> Lasker&rsquo;s 11.Qxh7+!! (mate in eight) and Morphy&rsquo;s 13.Rxd7! are beyond every player here; R&eacute;ti&rsquo;s 9.Qd8+!! needs the third ply.</li>
+  <li><b>The hunch can be wrong; the search saves it.</b> In Scholar&rsquo;s Mate the policy&rsquo;s own favourite is the losing 3&hellip;Nf6??, and the search plays 3&hellip;g6 instead. In L&eacute;gal&rsquo;s trap the 2-ply net takes the Queen (5&hellip;Bxd1??) like Saint Brie did in 1750; one ply deeper, it doesn&rsquo;t.</li>
+</ul>
+<p>See it yourself: the lobby&rsquo;s <b>The classics</b> card replays any of them with the net reading every move. The full measurements, every position&rsquo;s trace included, are in <a href="data/classics.json">docs/data/classics.json</a>.</p>
+
+<h2 id="queue">How it was trained: the queue</h2>
+<figure class="chart"><img src="media/training/fig-gen-queue.png" alt="One generation through the Orrery queue: plan, prep, 30 label jobs, one training job, the gauntlet, the verdict, and the loop to the next generation"></figure>
+<p>Parliament Chess trains on a fleet of machines shared with other projects, through an <b>Orrery queue</b>. Its planner (<code>bin/orrery-gen.php</code>) runs beside the other projects&rsquo; and keeps only a few Parliament jobs waiting at a time. A generation is a chain of jobs:</p>
+<ol>
+  <li><b>pc-prep</b>, once per machine and code version: the committed code unpacked, the tests run, the Rust labeller built, a PyTorch environment on GPU machines. Only committed code reaches a lane (&ldquo;commit to ship&rdquo;).</li>
+  <li><b>pc-label</b>, 30 jobs on CPU lanes: games played with the current champion, every position scored by a teacher search one ply deeper than the player. The labeller is the engine ported to Rust, checked against PHP with zero differences on 1,218 positions.</li>
+  <li><b>pc-train</b>, one job on a GPU lane (a GTX 1080 Ti): the new net, warm-started from the champion, fitted to the last few generations&rsquo; labels, with early stopping on held-out games.</li>
+  <li><b>pc-gauntlet</b>: the challenger plays the champion, 200 games on CPU lanes.</li>
+  <li><b>The verdict</b>: elected only if it beats the champion by more than two standard errors (z &gt; 2) and holds an election in its games. Every verdict commits itself to this repository; an elected net lands in <code>models/</code>, and the next generation labels with it.</li>
+</ol>
+
+<h2 id="timeline">The timeline: twenty generations</h2>
+<figure class="chart"><img src="media/training/fig-gen-timeline.png" alt="Each generation's z against the champion of the day, by the time its verdict came; g005 and g015 cross the bar of z = 2"></figure>
+<p>Each dot is a generation&rsquo;s verdict against the champion of its day. The first three were not elected: two lost to the plain hand-written player and the third edged it, 52.5%, without clearing the bar. <b>Generation 5</b>, the first to label in Rust, beat it 57% and was elected. Nine challengers then played generation 5 to within two standard errors, until <b>generation 15</b>, the first trained with early stopping, beat it 61.8% (z +3.78). Since then the challengers have played generation 15 close to level. The long gap on November 21 follows generation 9&rsquo;s setup failing on every lane; it waited to be re-pinned, and since then only committed code ships (Lab Report XIII).</p>
+
+<h2 id="cost">Where the time goes</h2>
+<figure class="chart"><img src="media/training/fig-gen-cost.png" alt="Lane-minutes per stage for every generation: labelling is the largest stage, training the smallest"></figure>
+<p>Labelling is most of the fleet&rsquo;s work, spread over many lanes; training on one GPU takes a few minutes; the gauntlet comes second. From the first job to the verdict, a generation takes about 40 minutes of wall-clock time. The bars are lane-minutes, the machines&rsquo; time added up; each stage runs on several lanes at once, so the wall clock on the right is far shorter than the bars.</p>
+
+<h2 id="stop">When to stop training</h2>
+<figure class="chart"><img src="media/training/fig-gen-earlystop.png" alt="The champion's held-out loss by epoch: it falls until epoch 7, the exported epoch, then rises; training stopped at epoch 10"></figure>
+<p>The champion&rsquo;s own training run. Its held-out loss (value error plus policy cross-entropy, on games it never trained on) fell for seven epochs and then rose: the net had started to memorise. Training stopped after three epochs without a better one, and the best epoch, 7, was exported. Before early stopping, every generation exported its last epoch.</p>
+
+<h2 id="gens">Every generation</h2>
+<p>Straight from <a href="data/generations.json">docs/data/generations.json</a>, which every verdict commits; this table reads the newest copy.</p>
+<div class="table-wrap"><table id="gen-table">
+  <tr><th>Generation</th><th>Against</th><th class="num">Score</th><th class="num">z</th><th>Verdict</th><th class="num">Labels</th><th class="num">Elections</th><th class="num">Minutes</th><th>Decided (UTC)</th></tr>
+</table></div>
+
+<h2 id="play">Play it, or watch it think</h2>
+<figure>
+  <video controls preload="metadata" poster="media/still-net-mind.png" src="media/net_mind.mp4"></video>
+  <figcaption>192 seconds from the live game: the champion against Medium Populist, with everything it computes drawn beside the board.</figcaption>
+</figure>
+<p>Run the game (<code>make up</code>, then <a href="guide.html#run">the guide</a>) and pick <b>Play the neural net</b>, <b>Watch it think</b>, <b>Net against net</b> or <b>The classics</b>. It sees two moves ahead, plus one for every check: quiet three-move plans and a well-timed Writ are how you beat it. Every technical detail, from the sensors to the trainer&rsquo;s losses, is in <a href="technical.html#4-the-net">the technical write-up</a> and the <a href="parliament-chess-lab-report.html">lab reports</a> (VIII to XIII).</p>
+
+<footer>
+  <span><a href="./">Parliament Chess</a> &middot; <a href="technical.html">how it works</a> &middot; <a href="contents.html">contents</a></span>
+  <span>MIT License</span>
+</footer>
+</main>
+<script>
+// The film's chapters, and the generations, from the data the repository keeps up to date.
+const $ = (s) => document.querySelector(s);
+fetch('data/net-classics-chapters.json').then((r) => r.json()).then((cs) => {
+  const v = $('#film-video'), box = $('#chapters');
+  const t = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  for (const c of cs) {
+    const b = document.createElement('button');
+    b.innerHTML = `<b>${t(c.t)}</b>`;
+    b.append(c.title);
+    b.onclick = () => { v.currentTime = c.t; v.play(); };
+    box.append(b);
+  }
+}).catch(() => {});
+fetch('data/generations.json').then((r) => r.json()).then((gens) => {
+  const tab = $('#gen-table');
+  let champ = 'plain Medium';
+  const elected = [];
+  for (const g of gens) {
+    const tr = document.createElement('tr');
+    if (g.elected) tr.className = 'elected';
+    const cells = [g.name, champ, (100 * g.score).toFixed(1) + '%', (g.z > 0 ? '+' : '') + g.z.toFixed(2), g.elected ? 'elected' : 'not elected',
+      (g.labels || 0).toLocaleString('en-US'), g.politics ? g.politics.elections : '', Math.round(g.wallSeconds / 60), g.decided.slice(0, 16).replace('T', ' ')];
+    cells.forEach((c, i) => { const td = document.createElement('td'); td.textContent = c; if ([2, 3, 5, 6, 7].includes(i)) td.className = 'num'; tr.append(td); });
+    tab.append(tr);
+    if (g.elected) { elected.push(g); champ = g.name; }
+  }
+  const set = (k, v) => { const el = document.querySelector(`[data-k="${k}"]`); if (el) el.textContent = v; };
+  set('gens', gens.length);
+  set('elected', elected.length);
+  set('electedNames', elected.map((g) => g.name).join(', '));
+  const c = elected[elected.length - 1], before = elected.length > 1 ? elected[elected.length - 2].name : 'plain Medium';
+  if (c) { set('champScore', (100 * c.score).toFixed(1) + '%'); set('champLine', `${c.name}’s score against ${before}, the champion before it (z +${c.z.toFixed(2)})`); }
+  const labels = gens.reduce((s, g) => s + (g.labels || 0), 0);
+  set('labels', (labels / 1e6).toFixed(2) + 'M');
+  const walls = gens.slice(1).map((g) => g.wallSeconds / 60).sort((a, b) => a - b);
+  if (walls.length) set('wall', Math.round(walls[Math.floor(walls.length / 2)]) + ' min');
+}).catch(() => {});
+</script>
+</body>
+</html>

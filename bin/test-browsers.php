@@ -182,6 +182,26 @@ if (is_dir(__DIR__ . '/../models') && glob(__DIR__ . '/../models/g[0-9][0-9][0-9
         && $st['evals'][0][1] === 1 && $st['evals'][1][3] === 1, 'a tally per side, and the net\'s evaluation after every move');
     [$s] = req('POST', $api('move'), ['id' => $a['id'], 'token' => $a['token'], 'move' => 'e2e5']);
     check($s === 422, 'an illegal move is still refused');
+
+    echo "\nThe classics\n";
+    [$s, $cl] = req('GET', $api('classics'));
+    check($s === 200 && in_array('opera', array_column($cl['games'] ?? [], 'key'), true), 'the classics are listed: ' . implode(', ', array_column($cl['games'] ?? [], 'key')));
+    [$s, $a] = req('POST', $api('new'), ['mode' => 'classic', 'classic' => 'fool']);
+    [, $st] = req('GET', $api('state') . "?id={$a['id']}");
+    check($s === 200 && $a['you'] === 0 && $st['players']['1'] === 'Fool' && $st['aiToMove'] && ($st['reader'] ?? '') !== '',
+        "a classic is watched, not played: Fool's Mate, with a reader");
+    $v = $st['version'];
+    for ($i = 0; $i < 6 && ($r = req('POST', $api('ai'), ['id' => $a['id'], 'version' => $v])[1]) && empty($r['unchanged']); $i++) {
+        $v = $r['version'];
+    }
+    [, $st] = req('GET', $api('state') . "?id={$a['id']}");
+    $last = $st['brains']['-1'] ?? [];
+    check($st['result'] === '0-1' && implode(' ', array_column($st['log'], 'san')) === 'f3 e5 g4 Qh4#' && !$st['aiToMove'],
+        "the watchers step it to history's end: f3 e5 g4 Qh4#, 0-1");
+    check(($last['source'] ?? '') === 'history' && ($last['chosen'] ?? '') === 'd8h4' && isset($last['would']) && count($st['evals']) === 4,
+        'every move is read by the net, with the move it would have played (' . ($last['would'] ?? '?') . ' for Qh4#)');
+    [$s] = req('POST', $api('new'), ['mode' => 'classic', 'classic' => 'nosuch']);
+    check($s === 400, 'an unknown classic is refused');
 } else {
     echo "  (skipped: no published net in models/)\n";
 }

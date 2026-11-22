@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works · Parliament Chess</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+<style>main h1 { margin-top: 44px; } main h2 { margin-top: 44px; }</style>
+</head>
+<body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav" href="guide.html">Play</a>
+  <a class="nav" href="about.html">The project</a>
+  <a class="nav" href="net.html">The net</a>
+  <a class="nav on" href="technical.html">Technical</a>
+  <a class="nav" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
+<main>
+<!-- Made from docs/TECHNICAL.md by tools/md2page.py: edit the Markdown, then run the script. -->
+<h1 id="how-parliament-chess-works">How Parliament Chess works</h1>
+<p>A technical tour of the project, from the rules engine to the trained net and the fleet that trains it. Every part is plain code in this repository: PHP 8.2+ with no dependencies for the game, one canvas page for the client, PyTorch for training, Rust for the fastest labeller, Manim and headless Chrome for the films. The measurements behind each choice are in the <a href="parliament-chess-lab-report.html">lab reports</a>; a map of every file is in the <a href="contents.html">contents</a>.</p>
+<p><b>On this page:</b> <a href="#1-at-a-glance">1. At a glance</a> · <a href="#2-the-rules-engine">2. The rules engine</a> · <a href="#3-the-bots-book-return-search">3. The bots</a> · <a href="#4-the-net">4. The net</a> · <a href="#5-training">5. Training</a> · <a href="#6-the-orrery-queue">6. The Orrery queue</a> · <a href="#7-the-server-and-the-client">7. Server and client</a> · <a href="#8-measuring-it">8. Measuring it</a> · <a href="#9-the-films">9. The films</a> · <a href="#10-tests">10. Tests</a></p>
+<h2 id="1-at-a-glance">1. At a glance</h2>
+<pre><code> browser   public/play.html + assets/app.js: board canvas, lobby, replays, MIND
+    │  JSON over HTTP
+ server    src/Server: Api, Store, View, Names, Classics
+    │
+ players   src/AI: Players, Search (Book-Return), Evaluator, KnownSpace, Sensors, Net2 ◄── models/gNNN.json
+    │                                                                                    ▲
+ rules     src/Engine: Position (every rule), Game (log, SAN, PCN), Recording, Workers   │
+                                                                                          │
+ fleet     bin/orrery-gen.php: pc-prep → pc-label ×30 → pc-train (GPU) → pc-gauntlet → verdict</code></pre>
+<div class="table-wrap"><table>
+<tr><th>Layer</th><th>Where</th><th>What it does</th></tr>
+<tr><td>Rules</td><td><code>src/Engine</code></td><td>The board, every chess rule, the election layer, the Ledger, notation, recordings</td></tr>
+<tr><td>Players</td><td><code>src/AI</code></td><td>The hand evaluation, Book-Return Search, the opening book, the sensors and the net</td></tr>
+<tr><td>Server</td><td><code>src/Server</code>, <code>public/index.php</code></td><td>A JSON API over the PHP built-in server; one file per game</td></tr>
+<tr><td>Client</td><td><code>public/</code></td><td>One page: the board canvas, the lobby, replays, the record and the net's mind</td></tr>
+<tr><td>Training</td><td><code>bin/label.php</code>, <code>rust/</code>, <code>train/</code>, <code>bin/orrery-gen.php</code></td><td>Teacher labels, the PyTorch trainer, the generation planner</td></tr>
+<tr><td>Evidence</td><td><code>orrery/</code>, <code>tools/</code>, <code>docs/data</code></td><td>Self-play queues, analyses, the data behind every figure</td></tr></table></div>
+<h2 id="2-the-rules-engine">2. The rules engine</h2>
+<p><code>src/Engine/Position.php</code> holds one position and every rule.</p>
+<ul><li><b>Board.</b> Squares run a1 = 0 … h8 = 63. A piece is <code>+type</code> for White, <code>-type</code> for Black, with P=1 N=2 B=3 R=4 Q=5 K=6. Every piece also has a permanent identity (<code>$id[sq]</code>) and a career record in the Ledger (<code>$lf[id]</code>: has reigned, is a Pretender, was a Queen), so a crowned pawn or a demoted King is tracked for the whole game.</li><li><b>Moves</b> are one int: <code>from | to &lt;&lt; 6 | promo &lt;&lt; 12 | flags &lt;&lt; 16</code>, with flags for capture, double push, en passant, castling, promotion and <b>Writ</b>. A Writ is the move <code>from = to = the Candidate&#x27;s square</code> with <code>F_WRIT</code>, so the search, the book and the notation treat it like any other move.</li><li><b>The election constants:</b> no Writ before full move 10 (<code>PEACE_UNTIL</code>), a Term of 5 full moves between your count and your next Writ, 1 Writ to start and at most 3 (<code>WRIT_START</code>, <code>WRIT_CAP</code>), College votes N 2, B 2, R 3 (<code>VOTES</code>).</li><li><b>The count runs inside <code>Position::apply</code>.</b> At the start of the filer's next turn the pending election is resolved before anything else: the Candidate must stand unattacked; each voter backs the nearer of King and Candidate by Chebyshev distance (a tie backs the King); attacked voters abstain; the Queen breaks a College tie. The two chambers give one of four results (Coronation, Contested, Royal Swap, Defeat), or the count fails or is void. Because the count is part of making a move, a search sees a Writ exactly as it plays out: Writ, reply, count, evaluation.</li><li><b>After every count the board is still a chess position:</b> one King a side, ordinary piece types. A dethroned King becomes a Pretender pawn (promotes only to R, B or N); a pawn placed on its last rank by an election is stranded but still votes.</li></ul>
+<p><code>src/Engine/Game.php</code> keeps the log: SAN with check marks, UCI, timestamps, repetition counts, the fifty-move rule, careers, and <b>PCN</b> (PGN plus <code>W@sq</code> Writs and <code>{count}</code> comments). <code>Recording.php</code> saves finished games for replays; <code>Workers.php</code> fans a job out to one worker per core.</p>
+<h2 id="3-the-bots-book-return-search">3. The bots: Book-Return Search</h2>
+<ul><li><b><code>Evaluator.php</code></b> scores a position in centipawns from the side to move's view: material, centralisation, mobility, passed pawns, King safety (attacked squares around each King) and a mop-up term for won endings, plus three election terms (Writs in hand, the projected value of a pending count, the Pretender's lower promotion ceiling).</li><li><b><code>Search.php</code></b>, Book-Return Search: in the book it plays a book move; out of it, an alpha-beta search (depth 2 for Medium) with a captures-only quiescence search and a one-ply extension for every check. At every frontier node it asks the book again and blends known outcomes into the score, which pulls play back toward the known tree. Among moves within a margin of the best it picks at random (12 cp for Medium), but files a Writ only when it is the best move outright, and plays a forced mate exactly.</li><li><b><code>KnownSpace.php</code></b>, the book: every position seen, keyed by Zobrist hash, with the moves played and how those games ended, in a SQLite <code>WITHOUT ROWID</code> table (a clustered B-tree). Opening theory seeds it; finished games grow it (a replayed classic does not).</li><li><b><code>Players.php</code></b> names players: <code>easy</code> (1 ply), <code>medium</code> (2), <code>hard</code> (3), each as a <code>whig</code> (files when the search says it pays), <code>monarchist</code> (never files) or <code>populist</code> (loves a coronation); <code>+net2:g015</code> or <code>+net2:champion</code> adds a published net. The browser may only ask for names like these, never a path (<code>Players::safeSpec</code>).</li></ul>
+<h2 id="4-the-net">4. The net</h2>
+<h3 id="inputs-sensors-v2-1203-switches">Inputs: Sensors v2, 1,203 switches</h3>
+<p><code>src/AI/Sensors.php</code> turns a position into the indices of the inputs that are on (about 100), always from the side to move's point of view (Black's board is mirrored):</p>
+<div class="table-wrap"><table>
+<tr><th>Inputs</th><th>Index</th><th>Count</th></tr>
+<tr><td>Our pieces, theirs: one 8×8 plane per type (P N B R Q K)</td><td>0–767</td><td>768</td></tr>
+<tr><td>Our Pretender pawns (former Kings), theirs</td><td>768–895</td><td>128</td></tr>
+<tr><td>Squares we attack, squares they attack</td><td>896–1023</td><td>128</td></tr>
+<tr><td>Our hanging pieces, theirs</td><td>1024–1151</td><td>128</td></tr>
+<tr><td>Pressure on our King's zone, on theirs (5 buckets each)</td><td>1152–1161</td><td>10</td></tr>
+<tr><td>We are in check</td><td>1162</td><td>1</td></tr>
+<tr><td>Our mobility, theirs (5 buckets each)</td><td>1163–1172</td><td>10</td></tr>
+<tr><td>Our Writs, theirs (0–3)</td><td>1173–1180</td><td>8</td></tr>
+<tr><td>The election: we may file, our count pending, theirs, Peace over, our Term up, theirs</td><td>1181–1186</td><td>6</td></tr>
+<tr><td>The best poll if we filed now: Coronation, Contested, Swap, nothing</td><td>1187–1190</td><td>4</td></tr>
+<tr><td>A pending count would move their crown, ours</td><td>1191–1192</td><td>2</td></tr>
+<tr><td>Our worst hanging piece, theirs (nothing, pawn, minor, rook, queen)</td><td>1193–1202</td><td>10</td></tr></table></div>
+<p>These sensors see a move or two ahead without searching: attacks, hanging pieces, King pressure and whether a Writ would win.</p>
+<h3 id="the-network-1203--160--40--value-and-policy">The network: 1,203 &gt; 160 &gt; 40 &gt; value and policy</h3>
+<p><code>src/AI/Net2.php</code> (inference) and <code>train/train_torch.py</code> (training) share one design:</p>
+<pre><code>h1 = clip(b1 + Σ emb[i] for every active input i, 0, 1)        160 units: a sum of rows, no multiplications
+h2 = clip(b2 + W2 · h1, 0, 1)                                   40 units
+value  = tanh(wv · h2 + bv)                                     the side to move&#x27;s expected result
+policy = softmax over legal moves of  mbias[m] + h2 · (from[f] + to[t])   (a Writ: h2 · writ[sq])</code></pre>
+<p>The champion is a <b>residual</b> net: its raw value, clipped to ±2 and scaled by 400, is a correction in centipawns added to the hand-written evaluation, so a net that knows nothing plays exactly like the hand-written player. A player <code>medium+net2:champion</code> uses the corrected evaluation at every leaf of its 2-ply search and the policy to order moves. The policy proposes; the search disposes. In the champion's games, its played move is the policy's own favourite about one time in five (<code>tools/brain_stats.php</code>, Report XIII).</p>
+<p><code>Net2::trace</code> returns everything one position computes (the active inputs, both layers before and after clipping, the value, every move's logit and probability, and the strongest connections that carried the signal). The server stores it with each move, and the client draws it as <b>MIND</b>.</p>
+<p>The Rust port (<code>rust/src/net2.rs</code>, <code>sensors.rs</code>) computes the same numbers; <code>pc-parity</code> checks it against <code>php tools/rust_parity.php</code> (0 differences on 1,218 positions).</p>
+<h2 id="5-training">5. Training</h2>
+<p>Depth is paid for once, offline: a teacher searches one ply deeper than the player, and the student learns, in one look, what the teacher saw.</p>
+<ol><li><b>Labels</b> (<code>bin/label.php</code>, or <code>rust/</code> <code>pc-label</code> on the fleet): games are played with the current champion; every position is searched by the teacher (depth 3), which scores every legal move.</li><li><b>Targets</b> (<code>train/train_torch.py</code>): the value target is the teacher's score minus the hand evaluation (residual mode), leaning a little (<code>--reinforce 0.1</code>) toward the game's result; the policy target is a softmax of the teacher's move scores at a temperature of 60 cp. Small bonuses ("cookies") mark sound Writs and promotions, which the hand evaluation undervalues.</li><li><b>Fitting:</b> loss = value MSE + β × policy cross-entropy; games are split 90/10 by game id, never by position. A new generation warm-starts from the champion and trains on a replay window of recent generations' labels. <b>Early stopping:</b> after three epochs without a better held-out loss the run stops and the best epoch is exported.</li></ol>
+<p>The champion, generation 15: 211,142 positions (189,857 train, 21,285 held out), 10 epochs on a GTX 1080 Ti in 280 s, best epoch 7 exported (<code>models/g015.json</code>, <code>meta</code>). On the fleet's Pascal cards PyTorch 2.14.1+cu126 runs eagerly (<code>train/requirements-pascal.txt</code>).</p>
+<figure class="chart"><img src="media/training/fig-gen-earlystop.png" alt="How the champion stopped training"></figure>
+<h2 id="6-the-orrery-queue">6. The Orrery queue</h2>
+<p>The fleet is a set of machines ("lanes") shared with other projects through an Orrery queue. Parliament Chess adds jobs through its own planner, <code>bin/orrery-gen.php</code>, which the queue's keeper calls beside the other projects' planners.</p>
+<figure class="chart"><img src="media/training/fig-gen-queue.png" alt="One generation through the Orrery queue"></figure>
+<div class="table-wrap"><table>
+<tr><th>Job</th><th>Where</th><th>What</th></tr>
+<tr><td><code>pc-prep</code></td><td>every lane, once per code version</td><td>The <b>committed</b> code (<code>git archive HEAD</code>) unpacked, the tests run, the Rust labeller built; a PyTorch venv on GPU lanes</td></tr>
+<tr><td><code>pc-label</code> ×30</td><td>CPU lanes</td><td>Self-play with the champion, every position labelled by the teacher; a worker per core</td></tr>
+<tr><td><code>pc-train</code> ×1</td><td>a GPU lane</td><td>The new net, warm-started from the champion</td></tr>
+<tr><td><code>pc-gauntlet</code></td><td>CPU lanes</td><td>200 games, challenger against champion</td></tr>
+<tr><td>verdict</td><td>the planner</td><td>Elected only if the score beats 0.5 by more than 2 standard errors <b>and</b> the challenger held at least one election; the verdict is committed and pushed (<code>docs/data/generations.json</code>, <code>lineage.tsv</code>, and <code>models/gNNN.json</code> when elected)</td></tr></table></div>
+<p>Each generation is pinned to a commit, so a report can name the code it ran and nothing half-written reaches a lane. Failed label or gauntlet jobs are retried with the same seed. The planner keeps only a few Parliament jobs waiting at a time, so the other projects' queues barely move. Local queue folders (<code>orrery/demos</code>, <code>orrery/census</code>, <code>orrery/gen</code>) run without the fleet through <code>bin/orrery-local.php DIR</code>, a one-machine keeper.</p>
+<figure class="chart"><img src="media/training/fig-gen-timeline.png" alt="Each generation's verdict against the champion of the day"></figure>
+<figure class="chart"><img src="media/training/fig-gen-cost.png" alt="Where a generation's time goes"></figure>
+<p><code>python3 tools/fig_training.py</code> redraws these figures from the data after each verdict.</p>
+<h2 id="7-the-server-and-the-client">7. The server and the client</h2>
+<p><code>public/index.php</code> routes requests for PHP's built-in server (<code>bin/serve</code>, with the JIT on). The API (<code>src/Server/Api.php</code>) is JSON:</p>
+<div class="table-wrap"><table>
+<tr><th>Route</th><th>What</th></tr>
+<tr><td><code>POST /api/new</code></td><td>A game: <code>pvp</code> (two browsers, one token each), <code>ai</code>, <code>aivai</code>, or <code>classic</code> (a famous game replayed, the net reading every move)</td></tr>
+<tr><td><code>GET /api/state</code></td><td>The game as the browser draws it, with each side's latest calculation (<code>brains</code>), a tally per side and the net's evaluation after every move (<code>evals</code>)</td></tr>
+<tr><td><code>POST /api/move</code></td><td>A person's move; if the game has a net, the move is <b>read</b>: traced through the net at the position the mover faced</td></tr>
+<tr><td><code>POST /api/ai</code></td><td>Ask the side to move to play (a bot, a net, or a classic's next historic move); any watcher may ask, a version number stops double moves</td></tr>
+<tr><td><code>GET /api/record</code>, <code>/api/pcn</code></td><td>The record with player and ISO 8601 time per move; the game in PCN</td></tr>
+<tr><td><code>GET /api/classics</code>, <code>/api/nets</code></td><td>The famous games; the published nets, the champion last</td></tr>
+<tr><td><code>GET /api/replay</code>, <code>/api/recordings</code>, <code>/api/orrery</code></td><td>Replays, recordings, the queues drawn as orbits</td></tr></table></div>
+<p>Each game is one JSON file under <code>data/games</code>, read under a shared lock and written under an exclusive one (<code>Store.php</code>); every change bumps its version, and watching browsers poll for it.</p>
+<p>The client (<code>public/assets/app.js</code>) is one page with no build step. The board is a canvas (so any game records to WebM). <b>MIND</b> comes in three sizes: <code>MindView</code> (the matrix under the board), <code>MindSide</code> (the sidebar) and <code>BrainView</code> (the network animated with curves): green +, amber −, black 0, every unit framed in its own colour (the golden angle round the colour wheel), and each wire in its source's colour, dotted when it inhibits. In a game between bots, or a classic, the client waits for the panel's animation before asking for the next move, and hovering the panel holds the game.</p>
+<h2 id="8-measuring-it">8. Measuring it</h2>
+<div class="table-wrap"><table>
+<tr><th>Tool</th><th>Measures</th></tr>
+<tr><td><code>bin/selfplay.php</code>, <code>bin/analyze.php</code></td><td>Self-play between any two players; balance statistics with 95% intervals</td></tr>
+<tr><td><code>bin/crown-theory.php</code></td><td>When a Writ moves the crown (1,712 Writs)</td></tr>
+<tr><td><code>bin/bench-depth.php</code>, <code>bin/bench-policy.php</code></td><td>What deeper search costs; what the policy buys</td></tr>
+<tr><td><code>tools/brain_stats.php</code></td><td>What the net's mind shows across real games</td></tr>
+<tr><td><code>tools/classics.php</code></td><td>Six famous short games through the net: its rank of every historic move and what three players would play (<code>docs/data/classics.json</code>)</td></tr>
+<tr><td><code>tools/fig_training.py</code></td><td>The training figures, from <code>docs/data/generations.json</code></td></tr></table></div>
+<h2 id="9-the-films">9. The films</h2>
+<div class="table-wrap"><table>
+<tr><th>Film</th><th>Made with</th><th>Command</th></tr>
+<tr><td><code>parliament_chess.mp4</code></td><td>Manim (<code>film/parliament.py</code>)</td><td><code>sh film/render.sh</code></td></tr>
+<tr><td><code>players_guide.mp4</code></td><td>Screenshots of the real client + Manim (<code>film/guide.py</code>)</td><td><code>node film/guide_shots.mjs &amp;&amp; sh film/render.sh guide</code></td></tr>
+<tr><td><code>net_mind.mp4</code></td><td>Headless Chrome recording the live game (<code>film/brain_demo.mjs</code>)</td><td><code>node film/brain_demo.mjs</code></td></tr>
+<tr><td><code>net_classics.mp4</code></td><td>Manim chapters drawn from the measured traces (<code>film/classics.py</code>), a live recording of the classic mode (<code>film/classics_capture.mjs</code>), cut by <code>film/classics_cut.py</code></td><td><code>sh film/classics.sh</code></td></tr></table></div>
+<h2 id="10-tests">10. Tests</h2>
+<pre><code>make test                         # both suites below
+sh bin/php bin/test.php           # 50 rule tests: every chess rule, the election layer, the Ledger, notation, the net
+php bin/test-browsers.php         # 44 checks through a real server: two browsers, a spectator, bots, nets, the classics
+sh bin/php tools/rust_parity.php  # with rust/ pc-parity: PHP and Rust agree on 1,218 positions</code></pre>
+<hr>
+<p>Further reading: the <a href="parliament-chess-lab-report.html">lab reports</a> (Reports I–XIII), the <a href="https://github.com/vonglurt/parliamentchess/blob/main/RULES.md">rules</a>, and <a href="https://vonglurt.github.io/parliamentchess/net.html">the net's page</a>.</p>
+<footer><span><a href="./">Parliament Chess</a> &middot; this page is <a href="https://github.com/vonglurt/parliamentchess/blob/main/docs/TECHNICAL.md">docs/TECHNICAL.md</a> on GitHub</span><span>MIT License</span></footer>
+</main>
+</body>
+</html>

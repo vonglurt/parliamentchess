@@ -24,13 +24,17 @@ if ($uri === '/play') {
 if (str_starts_with($uri, '/docs/')) {
     $base = realpath(__DIR__ . '/../docs');
     $file = realpath($base . '/' . substr(rawurldecode($uri), 6));
+    if ($file !== false && is_dir($file)) {
+        $file = realpath($file . '/index.html'); // /docs/ is the website's splash page
+    }
     if ($file === false || !str_starts_with($file, $base . '/') || !is_file($file)) {
         http_response_code(404);
         echo 'not found';
         return true;
     }
     $types = ['html' => 'text/html; charset=utf-8', 'md' => 'text/markdown; charset=utf-8', 'png' => 'image/png',
-        'gif' => 'image/gif', 'mp4' => 'video/mp4', 'json' => 'application/json', 'css' => 'text/css', 'svg' => 'image/svg+xml'];
+        'gif' => 'image/gif', 'mp4' => 'video/mp4', 'json' => 'application/json', 'css' => 'text/css', 'svg' => 'image/svg+xml',
+        'jpg' => 'image/jpeg', 'js' => 'text/javascript', 'tsv' => 'text/tab-separated-values; charset=utf-8'];
     header('Content-Type: ' . ($types[strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream'));
     readfile($file);
     return true;

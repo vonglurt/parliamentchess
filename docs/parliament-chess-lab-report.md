@@ -828,6 +828,142 @@ A neural net's move can now be read as it is made: what it saw, which units fire
 | The measurements | `tools/brain_stats.php`, `docs/data/brain-stats.json` |
 | The trace | `Net2::trace`, `/api/ai`, the `brain` field of every game state |
 
+## Lab Report XIII — Early stopping, the first election since generation 5, and each side's calculation as a matrix
+
+Every generation from 5 to 14 trained for 16 epochs and exported the last, although its held-out value error was lowest by epoch 5 and 0.012 to 0.021 higher at the export. The trainer now measures its held-out loss before training and after every epoch, keeps the best weights and stops after three epochs without improvement. Generation 15, the first trained this way, stopped at epoch 10, exported epoch 7, and beat generation 5 by 61.75% to 38.25% over 200 games (z +3.78): the first election in ten generations. Generation 16 found no epoch better than its start, so it exported generation 15's own weights; its gauntlet against generation 15, a self-match, scored 0.525 (z +0.75), a measured null result for the gauntlet. Two stalls in the fleet pipeline, nearly ten hours and 39 minutes, led to three fixes: a generation's code is now the last commit, a failed job is retried, and a net is read only when the file is whole. The game now draws both sides' calculations, the net reading a person's or a bot's moves as well as making its own. It draws them as a matrix in the style of the Orrery console's MIND screen and in a sidebar beside the board. Generation 15 plays its own policy's favourite 19.6% of the time, against generation 5's 14.0%.
+
+The requests, in order: whether the queue was fine after nasser was shut down wrongly; to add early stopping (approved); each side's calculation shown in the game; the end state of the computation drawn like the Orrery montage's MIND screen; the last decision's weights and activations in a sidebar; then this report.
+
+### A. Two stalls, and a pipeline that ships only committed code
+
+Twice the chain of generations stopped with nothing broken in the nets. Both times the fleet itself was healthy (treadcore's work kept every lane busy), and both times one job's failure held a whole generation.
+
+| Incident | Cause | Parliament time lost | Fix |
+| --- | --- | --- | --- |
+| Generation 9's setup failed on all eight lanes (20 Nov, 20:57 to 21:11) | The planner packed a new generation's code from the working tree, and generation 9 was pinned while Report XII's work was half done. A new rule test called `Players::netPath('champion')`, which throws when `models/` is absent, and the fleet's tarball carries no `models/`. PHP's fatal error exits with 255, which the keeper first took for a dropped SSH connection and retried before marking the job failed. | About 9 h 40 min, overnight, until the person asked whether the queue was fine | The test skips when no net is published. Generation 9 was re-pinned by hand to a corrected tarball (`cecf0ccd8f`, differing only in that test), after a hand run on saskatchewan. The planner now packs the last commit (`git archive HEAD`), never the working tree. |
+| Generation 12's verdict waited on one gauntlet job (21 Nov, 10:11 to 10:50) | saskatchewan and saskatchewan-2 are two lanes on one machine and share `~/pc-data`. One job read the champion's net while the other job's send was rewriting it; all eight game workers found half a file ("not a Sensors v2 net") and the job failed in 2.5 s with no games. The planner never plans an id the queue has seen again, so the generation could never be decided. | 39 min | A failed label or gauntlet job is planned again as `ID-r1`, then `ID-r2`, with the same command and seed: `pc-g012-gauntlet-008-r1` played its game on calber in 43 s. `Net2::load` reads a net again, for up to 20 s, while it is not yet whole JSON. |
+
+**Commit to ship.** A generation's code is now a commit, so a report can name it, and nothing half-written can reach a lane. It also has a cost, visible in the pins: generations 13 and 14 were pinned before early stopping was committed and ran the code of generations 5 to 8 (`4cab397771`), so generation 15 (`ee04943370`) is the first trained with it. A committed bug still ships; the setup job's quick rule tests, the 44 that run without `models/`, are the only gate.
+
+A third interruption cost nothing: nasser was powered off mid-setup. The keeper put its job back on the queue, flagged the host, and later moved it to the bench.
+
+### B. Early stopping
+
+**Method.** `train/train_torch.py` keeps its 90/10 split by game. Before training (epoch 0, the champion's weights as the warm start gives them) and after every epoch it measures the held-out loss: value MSE + β × policy cross-entropy, with β = 1, the objective the net trains on, measured against the teacher's own targets (no cookies). The weights of the best reading are kept. After three epochs in a row without a better reading (`--patience 3`) training stops, and the best epoch is exported, epoch 0 included; `--last` restores the old behaviour. The net's metadata records `bestEpoch`, `epochsRun` and `stoppedEarly`, and the verdict now reports the exported epoch's held-out numbers, not the last one's. This is the patience family of stopping rules in Prechelt's study, whose slower criteria bought about 4% better generalisation for about four times the training [18].
+
+**Looking back.** Every generation from 5 to 14 trained all 16 epochs and exported the last. Their histories show what that cost. The old histories carry no policy loss, so this table uses held-out value MSE alone, not the new rule's loss.
+
+| Generation | Best epoch (value MSE) | Held-out value MSE there | At the export (epoch 16) | Paid for the last 11 to 15 epochs |
+| --- | --- | --- | --- | --- |
+| g005 | 10 | 0.1618 | 0.1645 | +0.0027 |
+| g006 | 1 | 0.1422 | 0.1632 | +0.0211 |
+| g007 | 3 | 0.1513 | 0.1633 | +0.0120 |
+| g008 | 3 | 0.1628 | 0.1805 | +0.0177 |
+| g009 | 2 | 0.1623 | 0.1796 | +0.0173 |
+| g010 | 5 | 0.1659 | 0.1817 | +0.0158 |
+| g011 | 4 | 0.1584 | 0.1732 | +0.0148 |
+| g012 | 3 | 0.1621 | 0.1785 | +0.0164 |
+| g013 | 5 | 0.1637 | 0.1785 | +0.0147 |
+| g014 | 3 | 0.1694 | 0.1867 | +0.0173 |
+
+Generation 5, the only one elected in that run, was also the only one whose value error kept improving until epoch 10. Every challenger after it peaked by epoch 5 and then lost 0.012 to 0.021 of held-out value MSE, about a tenth of its error, before it was exported. Report XI's finding that the run overfits early held for every one of them.
+
+**Checks before it shipped.** On generations 11 and 12's labels (140,387 positions from 3,832 games, on an Apple GPU) the new rule read 3.3579 at epoch 0, found its best at epoch 6 (3.3214), and stopped after epoch 9, in 33 s. Its value MSE there was 0.1702, against 0.1684 at epoch 2: the combined loss trades a little value error for a policy that still improves. On calber's GTX 1080 Ti, with the fleet's torch 2.14.1+cu126 and patience 1, a small run exported epoch 0, the path where no epoch beats the start.
+
+### C. Generations 9 to 16: the first election since generation 5
+
+Each challenger plays 200 games against the current champion (generation 5 until generation 15's election), so 0.5 is level. The held-out numbers are the exported epoch's, measured on each generation's own held-out games, so they compare loosely across generations.
+
+| Generation | Code | Labels | Epochs run, exported | Held-out value MSE | Held-out policy top-1 | Score vs the champion | z | Elections | Wall | Verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| g009 | cecf0ccd8f | 68,526 | 16, 16 | 0.180 | 15.4% | 0.520 ± 0.033 | +0.61 | 96 | 66 min | not elected |
+| g010 | cecf0ccd8f | 69,893 | 16, 16 | 0.182 | 15.2% | 0.493 ± 0.033 | −0.23 | 84 | 42 min | not elected |
+| g011 | cecf0ccd8f | 70,601 | 16, 16 | 0.173 | 15.2% | 0.561 ± 0.034 (196 games) | +1.80 | 84 | 47 min | not elected |
+| g012 | cecf0ccd8f | 69,786 | 16, 16 | 0.179 | 14.8% | 0.533 ± 0.034 (196 games) | +0.98 | 97 | 73 min | not elected |
+| g013 | 4cab397771 | 70,700 | 16, 16 | 0.178 | 15.6% | 0.540 ± 0.034 | +1.19 | 96 | 42 min | not elected |
+| g014 | 4cab397771 | 69,718 | 16, 16 | 0.187 | 15.4% | 0.533 ± 0.034 | +0.96 | 109 | 42 min | not elected |
+| **g015** | ee04943370 | 70,724 | **10, 7** | **0.166** | 15.1% | **0.618 ± 0.031** | **+3.78** | 85 | 39 min | **elected** |
+| g016 | ee04943370 | 69,446 | 3, 0 | 0.134 | 15.3% | 0.525 ± 0.033 vs g015 | +0.75 | 107 | 42 min | not elected (a copy of g015) |
+
+**Generation 15**, the first trained with early stopping, stopped after epoch 10 and exported epoch 7. It beat generation 5 by 61.75% to 38.25% over 200 games, 3.8 standard errors, held 85 elections, and was elected: the first election in ten generations. Its training took 287 lane-seconds instead of about 410. Its exported held-out value MSE, 0.166, is the lowest since generation 7, though its value MSE was lower still at epoch 2 (0.161) and the combined loss chose epoch 7 for the policy.
+
+**Generation 16** found no epoch better than its start: the held-out loss rose from the first epoch (value MSE 0.134 at epoch 0, 0.141 at epoch 1) and training stopped after three. So it exported epoch 0, the warm start, which is generation 15's weights unchanged. Its gauntlet was generation 15 playing itself, and it scored 0.525 with z +0.75. That is a measured null result for the gauntlet: 200 games of a player against itself land within one standard error of level, as they should. It also spent 42 minutes of the fleet on a known answer.
+
+**196 games.** Generations 11 and 12 recorded 196 games because one gauntlet job in each kept only four of its eight. The cause was the race of section A: on saskatchewan's two lanes, four of each job's eight game workers read a half-written champion net and stopped, while the other four finished, so the job counted as done. The race hit three jobs; only one failed outright. Since generation 15's code, `Net2::load` waits for a whole file, and generations 15 and 16 recorded all 200 games.
+
+### D. Each side's calculation
+
+**Readings.** Report XII drew only a net player's moves. Now both sides get a calculation. A net player's move is its own, as before. A move by a side without a net, a person or a hand-written bot, is *read*: the server runs the game's net on the position that side faced (`Net2::trace`), marks the move actually played, and keeps the result as that side's latest calculation, labelled a reading. The mover never saw these numbers; they show how the net judged that side's position and how high it ranked the move chosen. A bot's own search scores come along.
+
+**Tallies.** Each game state now carries each side's latest calculation, a running tally per side (moves, how often the move played was the net's favourite or in its top three, average rank and probability, average size of the net's correction), and one row per move: ply, side, the net's value from White's side, own or read, the rank and probability of the move played, the correction from White's side, and who chose (net, person, bot without a net, or book). The page shows two side cards above the panel, a strip of the evaluation over the game, and four views: follow the game, White, Black, or both, one panel per side. The lobby gained **Net against net**, the champion on both sides (Populist against Whig).
+
+**Measured.** `tools/brain_stats.php --both` replayed Report XII's measurement with generation 15: the same eight seeds against Medium Populist, colours alternating, two random plies and no book, reading the bot's moves as the server does (`docs/data/brain-stats-g015.json`).
+
+| Per move | g005, its own (Report XII) | g015, its own | Medium Populist, read by g015 |
+| --- | --- | --- | --- |
+| Moves | 415 | 419 | 419 |
+| The move played was the net's favourite | 14.0% | **19.6%** | 14.6% |
+| ... in its top three | 30.8% | 37.9% | 31.7% |
+| Rank of the move played, mean (median) | 11.0 (6) | 9.4 (6) | 10.6 (6) |
+| Probability the net gave the move played, median | not measured | 5.0% | 4.6% |
+| The policy's favourite was the search's best root move | 15.2% | 20.0% | (no net search) |
+| The policy's top probability, median | 7.0% | 8.9% | 8.9% (the same policy) |
+| The net's correction, absolute, median (90th percentile) | 60 cp (385) | 73 cp (329) | 55 cp (218) |
+| Trace time in PHP, median | 29 ms | 23 ms | 23 ms |
+| The net's results in the eight games | 3 won, 3 lost, 1 drawn, 1 unfinished | 3 won, 3 lost, 1 drawn, 1 unfinished |  |
+
+Generation 15's instinct agrees with its own search more often than generation 5's did: one move in five is the policy's favourite, against one in seven, and the favourite is the search's best root move 20% of the time, against 15%. These are the gold rows Report XII hoped the next generations would show. A search without the net, Medium Populist's, plays generation 15's favourite 14.6% of the time, about as often as generation 5's own search played generation 5's. With 419 moves the rates carry standard errors near 2 percentage points, and moves in one game are not independent, so the gain from 14.0% to 19.6% is suggestive rather than proven. Eight games say nothing about strength; the gauntlet does that.
+
+**Cost.** A reading is one more trace, about 23 ms, plus loading the net, since each request is a fresh PHP process. A game state carrying both sides' calculations measured 79 KB at ply 6: three traces, because the latest is sent twice, once as the latest and once as its side's.
+
+### E. The end state as a matrix: the Matrix view and the MIND sidebar
+
+The request was to show the end state of the computation the way the Orrery console's MIND screen shows a tank's net in a montage, and then to keep the last decision's activations in a sidebar beside the board. Both views draw the same trace as Report XII's panel, with the console's rules taken from its source [19]:
+
+- **Black glass and phosphor.** A dark screen with scanlines, phosphor-green type, a dim green rim.
+- **Green positive, amber negative, black zero.** A square's fill is its signed value, with intensity |v|^0.6, so a layer-1 unit held below zero shows amber rather than vanishing.
+- **Every unit a square, framed in its own colour.** A unit's frame colour steps round the colour wheel by the golden angle, so neighbours never share a hue, and **a wire wears its source unit's colour**, brighter as its current grows and dotted when it inhibits. A wire can be followed back to the unit it left.
+- **Decisions, newest at the right.** One column a move.
+
+**The Matrix view** (the default; **Network** brings back the animated curves) lays out, on one 1240 × 470 screen: the 1,203 inputs as eighteen 8 × 8 boards and the summary rows; layer 1's 160 units as a 20 × 8 grid and layer 2's 40 as an 8 × 5 grid, filled by their sums before the clip; the strongest wires (48 into layer 1, 150 into layer 2, and the value's and each move's own); the value; and the policy's eight favourites. A move's square is coloured by the search's score for it, so amber squares are moves the instinct liked and the search rejected; the move played is framed in white. The generation stands in the corner, as on the console. The decisions strip has five rows: the net's value from White's side, how high the net ranked the move played, the net's correction, who chose the move (net green, person white, a bot without a net blue, the book amber), and what happened (a count, a Writ, a capture, a check). The calculation builds up over 1.1 s, then holds its end state.
+
+**The MIND sidebar** puts the same end state, 360 pixels wide, under the status line beside the board, in every game with a net: the inputs, layer 1 as 16 × 10 and layer 2 as 5 × 8 squares, the wires, the value, the moves' activations as squares with their probabilities, and the decisions strip. It always shows the last decision, whoever made it, so it is visible while the large panel below is scrolled away or hidden.
+
+Two faults were found while building them. The second panel and the evaluation strip stayed on screen when hidden, because the stylesheet's `display: block` overrode the `hidden` attribute; that fault predated this report. And one scripted edit of `app.js` inserted a block of text between every character of the file (64.9 MB); since the insertion was regular, removing every copy restored the file (it parsed, and every edit before that one was intact) before the edit was redone correctly.
+
+![The Matrix view in Both, generation 15 on both sides: side cards on top, then each side's MIND screen with its inputs, layer 1 as a 20 by 8 grid and layer 2 as 8 by 5 squares framed in their own colours, the wires, the value, the policy's eight favourites coloured by the search's score, and the decisions strip. Black's instinct favoured Bf6, Nc6 and a3, which its search scored at -524 to -615; it played Nxd7, the net's twelfth choice, at -53.](media/net-mind-matrix.png)
+
+Fig. 1. The Matrix view in Both, generation 15 against itself (Net against net, Populist against Whig), at move 12. Black's instinct liked Bf6, Nc6 and a3; its search scored them all below −500 (amber) and played Nxd7, the net's twelfth choice, at −53 (white frame).
+
+![The MIND sidebar beside the board in a game of generation 15 against Medium Populist: Black's move 9... Nxc3, read by the net, ranked first of its moves at 6.6%, with the value, the move squares and the decisions strip below.](media/net-mind-sidebar.png)
+
+Fig. 2. The MIND sidebar beside the board: Medium Populist's 9… Nxc3, read by generation 15, which ranked it first at 6.6%. The decisions strip shows the book's moves in amber, then the net's in green and the bot's in blue, with captures in red.
+
+### F. Discussion and limits
+
+- **One election is one data point.** Generation 15's labels, seeds and cookie sizes differ from generation 14's, and generation 11 reached z +1.80 without early stopping. The controlled test is cheap and has not been run: train the same labels both ways, with `--last` and with early stopping, and play both against generation 5. It costs one extra gauntlet, about 20 lane-minutes.
+- **The rule weighs the policy.** The held-out loss is value MSE plus policy cross-entropy, the training objective. Generation 15's value error was lowest at epoch 2 (0.161), but the policy kept improving and the rule exported epoch 7 (0.166). A rule on value alone would have stopped sooner; which plays better is untested.
+- **An epoch-0 export is a copy, and still plays a gauntlet.** Generation 16 spent 42 minutes of the fleet confirming that the champion is level with itself. When the best epoch is 0, the planner should record "no change" and go on to the next generation. Not done yet.
+- **A partial job still counts as done.** A gauntlet job whose workers die can finish with fewer than eight games and succeed, as two did here. The self-play script should fail the job when a worker fails, so the retry plays the full set. Not done yet.
+- **Held-out sets differ.** Each generation is measured on its own held-out games, so its held-out numbers compare loosely across generations; within one run, epoch against epoch, they compare exactly.
+- **A reading is a counterfactual.** The net never chose the moves it reads, and a move it ranks low is not a mistake: its own favourite is played only one time in five.
+- **The views sample the wires.** The Matrix view draws about 250 of some 13,000 live connections, the sidebar fewer. The squares are exact; the wires are the strongest.
+- **Size.** A state with both sides' calculations is about 80 KB, a third of it the latest calculation sent twice.
+- **Commit to ship guards against half-written code, not against bugs.** The setup job's quick tests are the only gate before a generation's code reaches every lane.
+
+### G. Conclusion
+
+Report XI found the training run overfitting after its first epochs; ten generations' histories confirm it, each peaking by epoch 5 and exported 0.012 to 0.021 worse in held-out value error. With early stopping, generation 15 kept its seventh epoch, beat generation 5 by 61.75% to 38.25% over 200 games (z +3.78), and became the first champion in ten generations. Its instinct agrees with its search one move in five rather than one in seven. One election does not prove the cause; the controlled test in section F would. Generation 16, a copy of the champion by the same rule, measured the gauntlet's noise and showed a waste worth removing. The pipeline now ships only committed code, retries a failed job, and reads a net only when it is whole. Both sides' calculations are drawn, as a matrix in the Orrery console's own visual language and beside the board. Fifty rule tests and 39 browser tests pass.
+
+| Deliverable | Where |
+| --- | --- |
+| Early stopping | `train/train_torch.py` (`--patience`, `--last`); `bestEpoch`, `epochsRun`, `stoppedEarly` in each net's metadata |
+| Pipeline fixes | `bin/orrery-gen.php` (the last commit packed, failed jobs retried, the exported epoch reported); `Net2::load` (waits for a whole file); `bin/test.php` (skips without `models/`) |
+| Each side's calculation | the game state's `brains`, `tally` and `evals`; side cards, evaluation strip, Follow / White / Black / Both; lobby **Net against net** |
+| Matrix view and MIND sidebar | `public/assets/app.js` (`MindView`, `MindSide`); `?panel=matrix` or `network`, `?view=both` |
+| Measurements | `tools/brain_stats.php --both`; `docs/data/brain-stats-g015.json` |
+| The new champion | `models/g015.json`, published by the keeper's verdict commit |
+
 ## References
 
 Game and history sources are linked in Report II; every link there was opened on 20 November 2026.
@@ -849,6 +985,8 @@ Game and history sources are linked in Report II; every link there was opened on
 15. G. Hinton, O. Vinyals, and J. Dean, "Distilling the knowledge in a neural network," 2015. [Online](https://arxiv.org/abs/1503.02531)
 16. A. Y. Ng, D. Harada, and S. Russell, "Policy invariance under reward transformations: Theory and application to reward shaping," in *Proc. ICML*, 1999, pp. 278–287.
 17. M. Lai, "Giraffe: Using deep reinforcement learning to play chess," M.Sc. thesis, Imperial College London, 2015. [Online](https://arxiv.org/abs/1509.01549)
+18. L. Prechelt, "Early stopping — but when?," in *Neural Networks: Tricks of the Trade*, G. B. Orr and K.-R. Müller, Eds., LNCS 1524. Berlin, Germany: Springer, 1998, pp. 55–69; 2nd ed. 2012, doi: 10.1007/978-3-642-35289-8_5. [Online](https://link.springer.com/chapter/10.1007/978-3-642-35289-8_5)
+19. Orrery console, Results → Montage, the MIND screen: `src/montage.rs` of the orrery repository (local checkout): its colours, `shade`, `node_hue` and the decisions strip.
 
 ### License
 

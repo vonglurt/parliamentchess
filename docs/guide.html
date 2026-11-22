@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Player's Guide · Parliament Chess</title>
+<meta name="description" content="How to play Parliament Chess: run it, your first game, filing a Writ, the campaign, the count, and when to move the crown.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230f2c24'/%3E%3Ctext x='32' y='47' font-size='42' text-anchor='middle' fill='%23d4a62a'%3E%E2%99%9A%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="top"><nav>
+  <a class="brand" href="./"><span>&#9818;&#xFE0E;</span>Parliament Chess</a>
+  <a class="nav on" href="guide.html">Play</a>
+  <a class="nav" href="about.html">The project</a>
+  <a class="nav" href="net.html">The net</a>
+  <a class="nav" href="technical.html">Technical</a>
+  <a class="nav" href="contents.html">Contents</a>
+  <a class="nav" href="https://github.com/vonglurt/parliamentchess">GitHub</a>
+</nav></header>
+<main>
+<p class="kicker" style="margin-top:44px">1 · Play it</p>
+<h1>The player&rsquo;s guide</h1>
+<p class="lede">Every move is a normal chess move. The one new thing is the crown: from move 10 you may call an election, and your own pieces vote on whether the crown leaves your King for another piece.</p>
+
+<nav class="toc"><b>On this page</b><ol>
+  <li><a href="#run">Play in a minute</a></li>
+  <li><a href="#video">Your first game, on video</a></li>
+  <li><a href="#lobby">The lobby</a></li>
+  <li><a href="#game">How a game goes</a></li>
+  <li><a href="#vote">A king vote, step by step</a></li>
+  <li><a href="#writs">Writs, terms and the Ledger</a></li>
+  <li><a href="#tips">When to move the crown</a></li>
+  <li><a href="#net">Playing the neural net</a></li>
+  <li><a href="#classics">The classics</a></li>
+  <li><a href="#record">Your game, on the record</a></li>
+</ol></nav>
+
+<h2 id="run">Play in a minute</h2>
+<pre><code>git clone https://github.com/vonglurt/parliamentchess.git
+cd parliamentchess
+make up          # then open http://localhost:8080 and press Play now
+make down        # stop it</code></pre>
+<p>You need PHP 8.2 or later and nothing else (no Composer, no database; <code>pdo_sqlite</code> adds the opening book if your PHP has it). The game is a server, so it runs on your machine rather than on these pages. Open it in Chrome.</p>
+
+<h2 id="video">Your first game, on video</h2>
+<figure>
+  <video controls preload="metadata" poster="media/still-guide.png" src="media/players_guide.mp4"></video>
+  <figcaption>106 seconds on the real client: the lobby, inviting a player, filing a Writ, the campaign, the count, when to move the crown, and the game record.</figcaption>
+</figure>
+
+<h2 id="lobby">The lobby</h2>
+<figure><img src="media/guide/lobby.jpg" alt="The lobby: your name, then the ways to play"></figure>
+<p>You arrive as a pumpkin or another giant squash (Atlantic Giant, Big Max, Jarrahdale&hellip;); type a new name if you like. Then pick a way to play:</p>
+<div class="table-wrap"><table>
+  <tr><th>Card</th><th>What it does</th></tr>
+  <tr><td><b>Two browsers</b></td><td>Create a game and send the second link to a friend. Anyone with the watch link can follow live.</td></tr>
+  <tr><td><b>Play the machine</b></td><td>Easy, Medium or Hard, as a Whig, a Populist or a Monarchist, with either colour.</td></tr>
+  <tr><td><b>Play the neural net</b></td><td>The champion of the training runs, with its mind drawn beside the board on every move. Or <b>Watch it think</b>, or <b>Net against net</b>.</td></tr>
+  <tr><td><b>The classics</b></td><td>Famous short games, move for move; the net reads every move and says what it would have played.</td></tr>
+  <tr><td><b>Watch the machines</b></td><td>Two bots argue it out while you watch.</td></tr>
+  <tr><td><b>House rules</b></td><td>Elections off (plain FIDE chess), or Regency (Queens may stand).</td></tr>
+</table></div>
+
+<h2 id="game">How a game goes</h2>
+<h3>1. It&rsquo;s chess</h3>
+<p>Castling, en passant, promotion, all of it. Fool&rsquo;s Mate still mates. For the first nine moves nothing else can happen (the <i>Coronation Peace</i>), so your openings are safe.</p>
+<h3>2. From move 10, you may file a Writ</h3>
+<p>On your turn, instead of moving, press <b>File a Writ</b> and name a <b>Candidate</b>: one of your own pieces that could be King instead. It can&rsquo;t be your King or a Queen, it can&rsquo;t have worn the crown before, and it can&rsquo;t be under attack. The gold squares show who may stand. Pick one, and the board previews the vote as it stands right now. Filing costs your whole turn.</p>
+<div class="pair">
+  <figure><img src="media/guide/candidates.jpg" alt="Gold squares: the pieces that may stand for the crown"><figcaption>The gold squares may stand.</figcaption></figure>
+  <figure><img src="media/guide/forecast.jpg" alt="The forecast: Commons 4 to 1, College 7 to 5"><figcaption>The forecast, if the vote were counted now.</figcaption></figure>
+</div>
+<h3>3. The campaign: your opponent gets one move</h3>
+<p>They can attack the Candidate&rsquo;s square, which makes the election fail. They can capture your voters, or attack them so they&rsquo;re too scared to vote. Or they can ignore you and file a Writ of their own.</p>
+<h3>4. The count</h3>
+<p>At the start of your next turn, your pieces vote. Each one backs whichever is <b>nearer</b>, the Candidate or the King, counting king-steps; a tie backs the King. A piece under attack abstains.</p>
+<ul>
+  <li><b>Commons:</b> every pawn has 1 vote.</li>
+  <li><b>College:</b> a Knight has 2, a Bishop 2, a Rook 3.</li>
+  <li><b>Speaker:</b> the Queen votes only to break a tie in the College.</li>
+</ul>
+<figure><img src="media/fig-election.png" alt="Who votes: every line is a vote the engine counted in a real game"><figcaption>Who votes: every line is a vote the engine counted in a real game.</figcaption></figure>
+<div class="table-wrap"><table>
+  <tr><th></th><th>Commons back the Candidate</th><th>Commons back the King</th></tr>
+  <tr><th>College backs the Candidate</th><td><b>Coronation:</b> the Candidate is King, the old King becomes a pawn</td><td><b>Contested Coronation:</b> the same, and your opponent gets a bonus Writ</td></tr>
+  <tr><th>College backs the King</th><td><b>Royal Swap:</b> King and Candidate swap squares</td><td><b>Defeat:</b> nothing happens</td></tr>
+</table></div>
+<p>A result that would leave your new King in check, or give check, doesn&rsquo;t count. When the crown moves, you lose your castling rights. Then you play your move as usual.</p>
+
+<h2 id="vote">A king vote, step by step</h2>
+<figure><img src="media/guide/king-vote.jpg" alt="White files for the c1 Bishop, Black answers, and the Bishop is crowned"></figure>
+<ol>
+  <li><b>Move 11.</b> White&rsquo;s King sits on g1, so White files a Writ for the Bishop on c1. The preview looks comfortable: Commons 4 to 1, College 7 to 5.</li>
+  <li><b>Black has one move,</b> and finds a clever one: <b>Be6</b>, attacking the Bishop on b3.</li>
+  <li><b>The count.</b> The b3 Bishop is under attack, so it abstains. That leaves the College tied at 5 to 5; the Queen on d1 is nearer c1 than g1, so as Speaker she breaks the tie for the Candidate. With the Commons already 4 to 1, it&rsquo;s a <b>Coronation</b>: the Bishop on c1 is the new King, the old King on g1 a Pretender pawn. Castling queenside, done by election.</li>
+</ol>
+<figure style="max-width:440px"><img src="media/guide/tally.jpg" alt="The tally: Commons 4 to 1, College 5 to 5, Coronation"></figure>
+
+<h2 id="writs">Writs, terms and the Ledger</h2>
+<ul>
+  <li><b>Writs:</b> you start with 1. Each time you lose a Knight, Bishop, Rook or Queen you gain 1 (a <i>grievance</i>), up to 3. A Contested Coronation hands your opponent one too.</li>
+  <li><b>Terms:</b> after a count you wait 5 full moves before your next Writ. No Writ while in check, and one election at a time.</li>
+  <li><b>One term only:</b> a piece that has worn the crown can never be elected again. The starting Kings already have.</li>
+  <li><b>Pretenders:</b> a dethroned King becomes a pawn, and it may only ever promote to a Rook, Bishop or Knight.</li>
+  <li><b>Stranded pawns:</b> a pawn put on its last rank by an election can&rsquo;t move, but it still votes. A pawn on its own first rank steps one square, never two.</li>
+</ul>
+<p><b>Winning</b> is plain chess: checkmate whoever wears the crown. A mate delivered during your opponent&rsquo;s campaign only counts after their count, because the count may carry the crown out of the net. The full text is in <a href="https://github.com/vonglurt/parliamentchess/blob/main/RULES.md">RULES.md</a>.</p>
+
+<h2 id="tips">When to move the crown</h2>
+<p>Like castling, the crown move has a right moment. In 1,712 Writs from 1,100 self-play games:</p>
+<ol>
+  <li><b>Count first.</b> File a Writ only when the preview already wins it: those moved the crown 79% of the time, the rest 5.5%.</li>
+  <li><b>Crown before the storm.</b> With no square around your King attacked, 85% succeeded; with three or more attacked, 51%.</li>
+  <li><b>Crown early.</b> Moves 10 to 29: 76%. Move 45 or later: 60%.</li>
+  <li><b>Guard your voters.</b> Like Be6 above, the reply that wins is usually an attack on a voter, not on the Candidate.</li>
+</ol>
+<figure><img src="media/fig-crown-theory.png" alt="How often the crown moved after a Writ, by the position when it was filed"></figure>
+
+<h2 id="net">Playing the neural net</h2>
+<p>The lobby&rsquo;s <b>Play the neural net</b> card puts you against the champion of the training runs (generation 15 at the time of writing). Every time it moves, its mind is drawn beside the board: what it saw, the two layers that computed, the value, and the moves it liked. <a href="net.html">The net&rsquo;s own page</a> explains how to read it and how it was trained.</p>
+<p><b>To beat it:</b> it sees two moves ahead (plus one more for every check), so quiet three-move plans and a well-timed Writ are your weapons. When <i>their worst hang</i> lights up in its inputs, it has spotted your loose piece.</p>
+
+<h2 id="classics">The classics</h2>
+<p>Pick a famous short game (Fool&rsquo;s Mate, Scholar&rsquo;s Mate, L&eacute;gal 1750, R&eacute;ti&ndash;Tartakower 1910, the Opera Game 1858, Lasker&ndash;Thomas 1912) and press <b>Watch the net read it</b>. Every move is history&rsquo;s; the net reads each one through its own weights, ranks it, and says what it would have played. Hover the panel to hold the game while you read.</p>
+
+<h2 id="record">Your game, on the record</h2>
+<div class="pair">
+  <figure><img src="media/guide/record.jpg" alt="The game record: every move with its player and its time"></figure>
+  <figure><img src="media/guide/bot.jpg" alt="A bot opponent: Ceratonia siliqua, the carob"></figure>
+</div>
+<p>The side panel lists every move with its player and the time it was played, and <b>CSV</b>, <b>JSON</b> and <b>PCN</b> download the whole record. The Ledger keeps each piece&rsquo;s career: born a Bishop, crowned on c1. Bots are named after sixty nuts, legumes and squash: you might lose to <i>Ceratonia siliqua</i> (the carob) or a Black-eyed Pea.</p>
+<p><b>PCN</b> is PGN with two additions: a Writ is a move, <code>W@Nf5</code> (<code>W@e4</code> for a pawn), and each count is a comment: <code>{Black count for d7: Commons 3-0, College 7-0 =&gt; coronation}</code>.</p>
+
+<footer>
+  <span><a href="./">Parliament Chess</a> &middot; next: <a href="about.html">what is this project?</a></span>
+  <span>MIT License</span>
+</footer>
+</main>
+</body>
+</html>
