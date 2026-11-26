@@ -97,11 +97,10 @@ final class Players
             @mkdir(dirname($path), 0775, true);
         }
         $k = new KnownSpace($path);
-        if ($k->size() === 0) {
+        if ($k->isEmpty()) {
             foreach (KnownSpace::theory() as $line) {
                 $k->addTheory(explode(' ', $line));
             }
-            $k->load();
         }
         return $k;
     }

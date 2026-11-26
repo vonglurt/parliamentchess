@@ -14,12 +14,24 @@ use Parliament\Engine\Position;
  *
  * Search::choose plays from it while a position is known, and Search::negamax
  * blends known outcomes into its frontier, which pulls play back toward the tree.
+ *
+ * IT IS READ BY KEY, ONE POSITION AT A TIME. It used to be read whole into a PHP array when
+ * opened. At 541 rows that was nothing; at the 153,774 rows of the fleet's 5,824 gauntlet games
+ * the array took 224 MB and died against PHP's default 128 MB on its first line (the Known Tree
+ * report, 26 November), and the server opens the book on every request that makes a bot. A
+ * position's rows sit together under its key, three page reads deep at that size and four at
+ * three hundred million rows, so a probe costs what it costs at any size. What has been read is
+ * kept for the life of the object (bounded, below), so a search that meets the same position
+ * twice asks once; misses are kept too, since most frontier positions are not in the book.
  */
 final class KnownSpace
 {
     private \PDO $db;
-    /** In-memory mirror: key => ['n' => games, 's' => score for the side to move, 'moves' => [uci => [w, d, l]]] */
-    private array $mem = [];
+    private \PDOStatement $byKey;
+    /** Positions read so far: key => ['n' => games, 's' => score for the side to move, 'moves' => [uci => [w, d, l, theory]]], or false when the book holds none. */
+    private array $seen = [];
+    /** How many positions $seen keeps before it starts again: about 8 MB of PHP arrays at the most. */
+    private const SEEN_MAX = 40000;
     public int $minPlay = 3;   // games needed before a learned (non-theory) move is played from the book
     public int $maxBookPly = 30;
 
@@ -36,39 +48,57 @@ final class KnownSpace
             h INTEGER NOT NULL, mv TEXT NOT NULL, w INTEGER NOT NULL DEFAULT 0, d INTEGER NOT NULL DEFAULT 0,
             l INTEGER NOT NULL DEFAULT 0, theory INTEGER NOT NULL DEFAULT 0, ply INTEGER NOT NULL DEFAULT 0,
             PRIMARY KEY (h, mv)) WITHOUT ROWID');
-        $this->load();
+        // The primary key's own order: SQLite walks the B-tree to h and reads its rows, no table scan.
+        $this->byKey = $this->db->prepare('SELECT mv, w, d, l, theory FROM known WHERE h = ?');
     }
 
+    /** Forget what has been read, so the next probe sees the file as it is now (after another process learned). */
     public function load(): void
     {
-        $this->mem = [];
-        foreach ($this->db->query('SELECT h, mv, w, d, l, theory FROM known') as $r) {
-            $h = (int)$r['h'];
-            $e = &$this->mem[$h];
-            $e['moves'][$r['mv']] = [(int)$r['w'], (int)$r['d'], (int)$r['l'], (int)$r['theory']];
-            unset($e);
-        }
-        foreach ($this->mem as $h => $e) {
-            $n = $w = $d = 0;
-            foreach ($e['moves'] as [$mw, $md, $ml]) {
-                $n += $mw + $md + $ml;
-                $w += $mw;
-                $d += $md;
-            }
-            $this->mem[$h]['n'] = $n;
-            $this->mem[$h]['s'] = $n ? ($w + 0.5 * $d) / $n : 0.5;
-        }
+        $this->seen = [];
     }
 
+    /** One position's entry, read by its key, or null when the book does not hold it. */
+    public function entry(int $h): ?array
+    {
+        if (array_key_exists($h, $this->seen)) {
+            return $this->seen[$h] ?: null;
+        }
+        if (count($this->seen) >= self::SEEN_MAX) {
+            $this->seen = [];
+        }
+        $this->byKey->execute([$h]);
+        $moves = [];
+        $n = $w = $d = 0;
+        foreach ($this->byKey->fetchAll(\PDO::FETCH_NUM) as [$mv, $mw, $md, $ml, $theory]) {
+            $moves[$mv] = [(int)$mw, (int)$md, (int)$ml, (int)$theory];
+            $n += $mw + $md + $ml;
+            $w += $mw;
+            $d += $md;
+        }
+        if (!$moves) {
+            $this->seen[$h] = false;
+            return null;
+        }
+        return $this->seen[$h] = ['n' => $n, 's' => $n ? ($w + 0.5 * $d) / $n : 0.5, 'moves' => $moves];
+    }
+
+    /** How many positions the book holds (a walk of the whole key, so for statistics, not for play). */
     public function size(): int
     {
-        return count($this->mem);
+        return (int)$this->db->query('SELECT COUNT(DISTINCT h) FROM known')->fetchColumn();
+    }
+
+    /** Whether the book holds nothing yet: one page read, whatever its size. */
+    public function isEmpty(): bool
+    {
+        return $this->db->query('SELECT 1 FROM known LIMIT 1')->fetchColumn() === false;
     }
 
     /** A book move for $p, or null. Theory moves are always playable; learned ones need $minPlay games. */
     public function pick(Position $p, \Random\Randomizer $rng): ?array
     {
-        $e = $this->mem[$p->hash()] ?? null;
+        $e = $this->entry($p->hash());
         if ($e === null) {
             return null;
         }
@@ -108,8 +138,11 @@ final class KnownSpace
     /** Blend a searched score with what is known about the position (side-to-move view). */
     public function blend(int $key, int $searched): int
     {
-        $e = $this->mem[$key] ?? null;
-        if ($e === null || $e['n'] < 4 || abs($searched) > 5000) {
+        if (abs($searched) > 5000) {
+            return $searched; // a mate score is not blended, so the book is not asked
+        }
+        $e = $this->entry($key);
+        if ($e === null || $e['n'] < 4) {
             return $searched;
         }
         $known = (int)round(($e['s'] - 0.5) * 600);
@@ -130,6 +163,7 @@ final class KnownSpace
             }
             // Theory is "known good" for both sides: mostly draws, a slight edge to the mover.
             $st->execute([$g->pos->hash(), $uci, $weight, 2 * $weight, $weight - 1, $i]);
+            unset($this->seen[$g->pos->hash()]);
             $g->playInt($m);
         }
         return count($ucis);
@@ -153,6 +187,7 @@ final class KnownSpace
             $by = $e['by'];
             $res = $g->winner === null ? 0 : ($g->winner === $by ? 1 : -1);
             $st->execute([$replay->pos->hash(), $e['uci'], (int)($res === 1), (int)($res === 0), (int)($res === -1), $i]);
+            unset($this->seen[$replay->pos->hash()]);
             $m = $replay->parse($e['uci']);
             if ($m === null) {
                 break;

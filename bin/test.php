@@ -199,5 +199,49 @@ if (is_file($champ)) {
     echo "  (skipped: no published net in models/)\n";
 }
 
+echo "\nThe book is read by key\n";
+if (class_exists(\PDO::class) && in_array('sqlite', \PDO::getAvailableDrivers(), true)) {
+    $bookDir = sys_get_temp_dir() . '/pc-book-test-' . getmypid();
+    @mkdir($bookDir, 0775, true);
+    $bookFile = "$bookDir/known.sqlite";
+    $k = new \Parliament\AI\KnownSpace($bookFile);
+    check($k->isEmpty(), 'a new book is empty');
+    $start = new Game();
+    $k->addTheory(explode(' ', \Parliament\AI\KnownSpace::theory()['Italian']));
+    $e = $k->entry($start->pos->hash());
+    check(!$k->isEmpty() && $e !== null && isset($e['moves']['e2e4']) && $e['moves']['e2e4'][3] === 1, 'a line of theory is found again under the first position\'s key');
+    $pick = $k->pick($start->pos, new \Random\Randomizer(new \Random\Engine\Mt19937(1)));
+    check($pick !== null && Game::uci($pick['move']) === 'e2e4', 'and pick plays it');
+    check($k->entry(123456789) === null && $k->entry(123456789) === null, 'a position the book does not hold is null, asked twice');
+    // A book of 200,000 rows, written straight into its table: the old reader held every row in an
+    // array (224 MB for 153,774) when the book was opened; this one opens it without reading a row.
+    $db = new \PDO('sqlite:' . $bookFile);
+    $db->beginTransaction();
+    $ins = $db->prepare('INSERT INTO known (h, mv, w, d, l) VALUES (?, ?, ?, ?, ?)');
+    for ($i = 1; $i <= 200000; $i++) {
+        $ins->execute([$i * 7919, 'a2a3', 3, 1, 1]);
+    }
+    $db->commit();
+    $before = memory_get_usage();
+    $big = new \Parliament\AI\KnownSpace($bookFile);
+    check(memory_get_usage() - $before < 1_000_000, sprintf('opening a book of 200,000 rows holds %.0f kB, not the rows', (memory_get_usage() - $before) / 1000));
+    $e = $big->entry(4242 * 7919);
+    check($e !== null && $e['n'] === 5 && abs($e['s'] - 0.7) < 1e-9, 'one of them is read by its key: 5 games, 0.7 for the side to move');
+    check($big->blend(4242 * 7919, 0) === (int)round((5 / 29) * 120), 'blend weighs it as before: 5 games against 24 of search');
+    // Learning a game must show in the next probe of a position already read.
+    $n0 = $big->entry($start->pos->hash())['n'];
+    $g = new Game();
+    foreach (['f2f3', 'e7e5', 'g2g4', 'd8h4'] as $u) {
+        $g->playInt($g->parse($u));
+    }
+    $big->learn($g);
+    check($big->entry($start->pos->hash())['n'] === $n0 + 1, 'a game learned is counted at the next probe of a position read before it');
+    $db = $k = $big = null;
+    array_map('unlink', glob("$bookDir/*") ?: []);
+    @rmdir($bookDir);
+} else {
+    echo "  (skipped: no SQLite in this PHP)\n";
+}
+
 echo "\n$passes passed, $fails failed\n";
 exit($fails ? 1 : 0);

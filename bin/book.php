@@ -35,5 +35,4 @@ if ($verb === 'theory') {
     }
     echo "learned $games games, $plies positions\n";
 }
-$book->load();
-echo json_encode($book->stats() + ['inMemory' => $book->size()]) . "\n";
+echo json_encode($book->stats()) . "\n"; // read by key: nothing is held in memory to count
