@@ -107,8 +107,9 @@ function games(string $dir, string $name, string $round, int $jobs, int $per, in
             $result = $i < $wins ? $col : ($i < $wins + $losses ? -$col : null);
             $f = sprintf('%s-g%02d.json', $id, $i + 1);
             put("$dir/results/$id/pc-out/$id/$f", ['white' => $col === 1 ? 'medium+net2' : "medium+net2:\$HOME/pc-data/$name/champion.json",
-                'winner' => $result, 'log' => [['by' => $col, 'san' => 'e4', 'writ' => true, 'count' => null],
-                    ['by' => -$col, 'san' => 'e5', 'count' => ['color' => $col, 'outcome' => 'coronation']]]]);
+                'winner' => $result, 'log' => [['by' => $col, 'uci' => 'e2e4', 'san' => 'e4', 'writ' => true, 'count' => null],
+                    ['by' => -$col, 'uci' => 'e7e5', 'san' => 'e5', 'count' => ['color' => $col, 'outcome' => 'coronation']],
+                    ['by' => $col, 'uci' => 'e1g1', 'san' => 'O-O', 'count' => null]]]);
             $files[] = $f;
         }
         put("$dir/results/$id/pc-out/$id/summary.json", ['job' => $id, 'files' => $files]);
@@ -264,6 +265,8 @@ games($dir, 'g006', 'gauntlet', 4, 10, 5, 5, 'gauntlet');
 $p = run($dir, 'plan 64');
 $r = rows($dir)['g006'] ?? null;
 check($r !== null && $r['games'] === 40 && $r['z'] !== null && (float)$r['z'] === 0.0 && $r['elected'] === false && empty($r['unchanged']), 'and an even gauntlet decides it as before: 40 games, z 0, not elected');
+check($r !== null && isset($r['styles']) && $r['styles']['games'] === 40 && count($r['styles']) === 8, 'its row carries the challenger\'s seven style rates over its 40 games');
+check($r !== null && (float)($r['styles']['castle'] ?? 0) === 1.0 && (float)($r['styles']['trades'] ?? 1) === 0.0, 'a challenger that castled in every game is castled 100%, and traded in none');
 exec('rm -rf ' . escapeshellarg($dir));
 
 echo "\nA crown is confirmed by a second gauntlet\n";

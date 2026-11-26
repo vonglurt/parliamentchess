@@ -5,6 +5,7 @@ declare(strict_types=1);
  * The generation planner: Parliament Chess nets trained as a chain of Orrery jobs.
  *
  *   php bin/orrery-gen.php DIR plan N | collect | sync [HOST] | chores    (the keeper's planner contract)
+ *   php bin/orrery-gen.php DIR styles [--write]                         (the style rates of decided rows)
  *
  * DIR is an Orrery Queue directory. The planner keeps its own state in DIR/parliament/ when that
  * folder exists (so it can share a queue such as grove with another project's planner), else in DIR:
@@ -323,10 +324,52 @@ function championIn(array $rows, int $gi): ?array
  * crowned, promotions. The election gate reads these. Colours alternate game by game in a job, so the
  * challenger is found by its spec on each game.
  */
+/**
+ * The seven opening styles of the Known Tree report (orrery tools/report/known_tree.py, STYLES, one sentence
+ * a rule), applied to one side of one game: its own plies among the first forty. The gauntlet draws each
+ * side's first move at random, so the rules about what the net chose (knights, queen, king walk) begin at
+ * its second move, as there.
+ */
+const STYLES = ['trades', 'centre', 'castle', 'knights', 'queen', 'flank', 'kingwalk'];
+
+function styleOf(array $log, int $col): array
+{
+    $own = [];
+    foreach (array_slice($log, 0, 40) as $e) {
+        if (($e['by'] ?? 0) === $col) {
+            $own[] = [(string)($e['uci'] ?? ''), (string)($e['san'] ?? '')];
+        }
+    }
+    $net = array_slice($own, 1);
+    $n = fn(array $xs, int $first, callable $f) => count(array_filter(array_slice($xs, 0, $first), $f));
+    $piece = fn(array $x) => $x[1] === '' ? '' : $x[1][0];
+    return [
+        'trades' => $n($own, 10, fn($x) => str_contains($x[1], 'x')) >= 3,                         // three captures in the first ten moves
+        'centre' => $n($own, 10, fn($x) => in_array($x[0], ['e2e4', 'd2d4', 'e7e5', 'd7d5'], true)) >= 2, // both centre pawns two squares
+        'castle' => $n($own, 15, fn($x) => str_starts_with($x[1], 'O-O')) > 0,                    // castled by the fifteenth move
+        'knights' => $n($net, 4, fn($x) => $piece($x) === 'N') >= 2,                                // two knight moves in moves 2 to 5
+        'queen' => $n($net, 5, fn($x) => $piece($x) === 'Q') > 0,                                   // the Queen out in moves 2 to 6
+        'flank' => $n($own, 10, fn($x) => in_array($piece($x), ['a', 'b', 'g', 'h'], true) && !str_contains(substr($x[1], 0, 2), 'x')) >= 3,
+        'kingwalk' => $n($net, 11, fn($x) => $piece($x) === 'K') > 0,                              // the King steps, uncastled, in moves 2 to 12
+    ];
+}
+
+/** Style counts over games as the share of them, rounded for the row. */
+function styleRates(array $counts): array
+{
+    $g = max(1, $counts['games'] ?? 0);
+    $out = ['games' => $counts['games'] ?? 0];
+    foreach (STYLES as $k) {
+        $out[$k] = round(($counts[$k] ?? 0) / $g, 3);
+    }
+    return $out;
+}
+
 function tally(string $dir, array $ids, string $challenger): array
 {
     $scores = [];
     $politics = ['writs' => 0, 'elections' => 0, 'crownMoves' => 0, 'coronations' => 0, 'promotions' => 0];
+    $styles = ['games' => 0] + array_fill_keys(STYLES, 0);
     foreach ($ids as $id) {
         $sum = json_decode((string)@file_get_contents(rp($dir, $id, 'summary.json')), true);
         foreach ($sum['files'] ?? [] as $f) {
@@ -336,6 +379,10 @@ function tally(string $dir, array $ids, string $challenger): array
             }
             $col = $r['white'] === $challenger ? 1 : -1;
             $scores[] = $r['winner'] === null ? 0.5 : ($r['winner'] === $col ? 1.0 : 0.0);
+            $styles['games']++;
+            foreach (styleOf($r['log'] ?? [], $col) as $k => $hit) {
+                $styles[$k] += (int)$hit;
+            }
             foreach ($r['log'] ?? [] as $e) {
                 if ($e['by'] === $col && !empty($e['writ'])) {
                     $politics['writs']++;
@@ -353,7 +400,7 @@ function tally(string $dir, array $ids, string $challenger): array
             }
         }
     }
-    return [$scores, $politics];
+    return [$scores, $politics, $styles];
 }
 
 /** Score, standard error and z against an even match. Unrounded: the bar reads these, the rows round. */
@@ -439,6 +486,7 @@ function decide(string $dir, string $state, ?array &$pending = null): array
         $minElections = (int)$g['B']['elections'];
         $politics = ['writs' => 0, 'elections' => 0, 'crownMoves' => 0, 'coronations' => 0, 'promotions' => 0];
         $rounds = [];
+        $styles = null;
         $same = $g['trainDone'] && !$g['gauntStarted'] ? unchanged($dir, $g, $champ) : null;
         if ($g['trainDone'] && !$g['gauntStarted'] && $same === null) {
             $pending['moved'][$g['name']] = true; // looked at: the pass may give it a gauntlet
@@ -450,7 +498,7 @@ function decide(string $dir, string $state, ?array &$pending = null): array
         } elseif (!$g['gauntDone']) {
             continue;
         } else {
-            [$scores, $politics] = tally($dir, $g['gaunts'], $g['G']['challenger']);
+            [$scores, $politics, $styles] = tally($dir, $g['gaunts'], $g['G']['challenger']);
             $v = verdict($scores);
             $strong = $v['z'] > $bar;
             $political = $politics['elections'] >= $minElections;
@@ -466,12 +514,15 @@ function decide(string $dir, string $state, ?array &$pending = null): array
                 // carries an even net through on the strength of the first. With rounds of one size the
                 // floor all but implies the pooled bar ((2 + 1) / sqrt 2 = 2.1), so it is the floor that
                 // decides; the pooled bar binds when bar.confirm.jobs is smaller than the gauntlet.
-                [$scores2, $politics2] = tally($dir, $g['confirms'], $g['G']['challenger']);
+                [$scores2, $politics2, $styles2] = tally($dir, $g['confirms'], $g['G']['challenger']);
                 $v2 = verdict($scores2);
                 $all = verdict(array_merge($scores, $scores2));
                 $rounds = ['first' => rounded($v), 'confirm' => rounded($v2)];
                 foreach ($politics2 as $k => $x) {
                     $politics[$k] += $x;
+                }
+                foreach ($styles2 as $k => $x) {
+                    $styles[$k] += $x;
                 }
                 $floor = (float)$g['C']['z'];
                 $elected = $all['z'] > $bar && $v2['z'] > $floor;
@@ -532,6 +583,9 @@ function decide(string $dir, string $state, ?array &$pending = null): array
         $row = ['name' => $g['name'], 'gi' => $gi] + ($v ? rounded($v) : ['games' => 0, 'score' => null, 'se' => null, 'z' => null])
             + ['bar' => $bar, 'elected' => $elected, 'minElections' => $minElections, 'politics' => $politics, 'why' => $why]
             + ($same !== null ? ['unchanged' => true] : []) + $rounds + $control
+            // The challenger's opening character over all its games, the Known Tree's seven rules: a
+            // verdict says how strong a generation is, these say how it plays.
+            + ($styles ? ['styles' => styleRates($styles)] : [])
             + ['labels' => $labels, 'device' => $train['device'] ?? null,
             'valValueMSE' => $lastEpoch['valValueMSE'] ?? null, 'valPolicyTop1' => $lastEpoch['valPolicyTop1'] ?? null,
             'laneSeconds' => array_map(fn($x) => round($x, 1), $stage), 'wallSeconds' => $last > 0 ? $last - $first : null,
@@ -817,6 +871,41 @@ if ($verb === 'collect') {
     foreach ($pending['confirm'] as $name => $v) {
         printf("%s  over the bar at z %.2f in its first gauntlet: its second is under way\n", $name, $v['z']);
     }
+    exit(0);
+}
+
+/*
+ * styles [--write]: the challenger's style rates for every decided generation, from its gauntlet's own
+ * recordings, as a table. --write adds them to the rows that have none (decided before 26 November); no
+ * other field of a row is touched, and a row whose games no longer add up to its count is left as it is.
+ */
+if ($verb === 'styles') {
+    $write = in_array('--write', $argv, true);
+    $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
+    $have = jobs($dir);
+    $rows = json_decode((string)file_get_contents("$state/generations.json"), true) ?: [];
+    $specs = $plan['generations'] ?? [];
+    $added = 0;
+    printf("%-5s %5s  %s\n", 'gen', 'games', implode(' ', array_map(fn($k) => sprintf('%8s', $k), STYLES)));
+    foreach ($rows as $i => $r) {
+        if (!isset($specs[$r['gi']]) || $specs[$r['gi']]['name'] !== $r['name'] || !$r['games']) {
+            continue;
+        }
+        $g = generation($specs[$r['gi']], $r['gi'], $have);
+        [, , $c] = tally($dir, array_merge($g['gaunts'], isset($r['confirm']) ? $g['confirms'] : []), $g['G']['challenger']);
+        $rates = styleRates($c);
+        printf("%-5s %5d  %s%s\n", $r['name'], $rates['games'], implode(' ', array_map(fn($k) => sprintf('%7.1f%%', 100 * $rates[$k]), STYLES)),
+            $rates['games'] === $r['games'] ? '' : "   (the row says {$r['games']} games: left alone)");
+        if ($write && !isset($r['styles']) && $rates['games'] === $r['games']) {
+            $rows[$i]['styles'] = $rates;
+            $added++;
+        }
+    }
+    if ($write && $added) {
+        file_put_contents("$state/generations.json.tmp", json_encode($rows, JSON_PRETTY_PRINT));
+        rename("$state/generations.json.tmp", "$state/generations.json");
+    }
+    echo $write ? "styles added to $added row(s)\n" : "(read only: --write adds them to the rows that have none)\n";
     exit(0);
 }
 
