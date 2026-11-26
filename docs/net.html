@@ -171,8 +171,11 @@ fetch('data/generations.json').then((r) => r.json()).then((gens) => {
   for (const g of gens) {
     const tr = document.createElement('tr');
     if (g.elected) tr.className = 'elected';
-    const cells = [g.name, champ, (100 * g.score).toFixed(1) + '%', (g.z > 0 ? '+' : '') + g.z.toFixed(2), g.elected ? 'elected' : 'not elected',
-      (g.labels || 0).toLocaleString('en-US'), g.politics ? g.politics.elections : '', Math.round(g.wallSeconds / 60), g.decided.slice(0, 16).replace('T', ' ')];
+    // A net refused unchanged never played: no score, no z (null in the record, not 0.5).
+    const played = g.z !== null && g.z !== undefined;
+    const cells = [g.name, champ, played ? (100 * g.score).toFixed(1) + '%' : '\u2014', played ? (g.z > 0 ? '+' : '') + g.z.toFixed(2) : '\u2014',
+      g.elected ? (g.confirm ? 'elected, confirmed' : 'elected') : (g.unchanged ? 'unchanged, not played' : 'not elected'),
+      (g.labels || 0).toLocaleString('en-US'), g.politics ? g.politics.elections : '', g.wallSeconds ? Math.round(g.wallSeconds / 60) : '', g.decided.slice(0, 16).replace('T', ' ')];
     cells.forEach((c, i) => { const td = document.createElement('td'); td.textContent = c; if ([2, 3, 5, 6, 7].includes(i)) td.className = 'num'; tr.append(td); });
     tab.append(tr);
     if (g.elected) { elected.push(g); champ = g.name; }

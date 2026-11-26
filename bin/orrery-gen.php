@@ -22,6 +22,19 @@ declare(strict_types=1);
  *                   score beats 0.5 by more than bar.z standard errors (crucible's ladder rule); it then
  *                   becomes the champion and later generations label with it (expert iteration).
  *
+ * Three rules keep a verdict honest (2026-11-26, after g016 and the thirty generations before it):
+ *   - AN UNCHANGED NET IS REFUSED BEFORE IT PLAYS. When the trained net's weights are its champion's, or
+ *     the trainer exported epoch 0 (the net it began from), it is decided at once, not elected, with no
+ *     gauntlet: g016 was g015 to the byte and scored 0.525 over 200 games, which was the gauntlet's noise.
+ *   - A CROWN IS CONFIRMED. A challenger over the bar plays a second gauntlet (pc-NAME-confirm-KKK, new
+ *     seeds) and is elected only if the 400 games pooled are over the bar AND the second 200 alone are
+ *     over bar.confirm.z (1 by default). At parity the bar lets a lucky net through 2.3% of tries, one
+ *     in 43; pooling alone makes that 0.8%, pooling with the second's own floor 0.4%, while a gain the
+ *     size of g015's (z 3 in 200 games) still passes 82% of the time, against 84% with no confirmation.
+ *   - EVERY control.every-TH GENERATION CARRIES A CONTROL. The champion plays itself, 200 games
+ *     (pc-NAME-control-KKK), beside the labelling; the row keeps it as control, so the noise of one
+ *     gauntlet is measured on the chart and no longer inferred from an accident like g016.
+ *
  * Jobs are told apart from other projects' by kind (pc-*): give grove's config.json a project
  * "parliament-chess" with these kinds, and the lanes that have PHP the capability "php".
  */
@@ -244,33 +257,59 @@ function prepJob(string $name, array $caps, array $d, array $needs, bool $rust =
         'timeout_s' => 2 * 3600, 'stage' => 'prep']);
 }
 
-/** Planner state per generation: label ids, train id, gauntlet ids, and what is done. */
+/**
+ * Planner state per generation: label ids, train id, gauntlet ids, the confirm round's and the
+ * control's, and what is done.
+ *
+ * bar.confirm is {"jobs": N, "z": Z}: N jobs of the gauntlet's size (its own N by default), and the
+ * floor the second round must clear alone. false turns the round off and the first gauntlet decides
+ * alone, as it did to g031. control.every is how often a generation carries a control (0: never); the
+ * generation's number picks it, g010, g020 ..., so a replanned generation keeps its control or lack of one.
+ */
 function generation(array $gen, int $gi, array $have): array
 {
     $name = $gen['name'];
     $L = ($gen['label'] ?? []) + ['jobs' => 40, 'games' => 3, 'workers' => 0, 'depth' => 3, 'player' => 'medium/populist', 'every' => 3, 'needs' => 'php'];
     $T = ($gen['train'] ?? []) + ['needs' => 'cuda', 'epochs' => 12, 'h1' => 128, 'h2' => 32, 'batch' => 1024, 'warm' => true, 'mode' => 'residual', 'lam' => 0.1];
     $G = ($gen['gauntlet'] ?? []) + ['jobs' => 25, 'games' => 1, 'workers' => 0, 'challenger' => 'medium+net2', 'champion' => 'medium', 'needs' => 'php'];
-    $labels = [];
-    for ($k = 1; $k <= $L['jobs']; $k++) {
-        $labels[] = attempt($have, sprintf('pc-%s-label-%03d', $name, $k));
-    }
-    $gaunts = [];
-    for ($k = 1; $k <= $G['jobs']; $k++) {
-        $gaunts[] = attempt($have, sprintf('pc-%s-gauntlet-%03d', $name, $k));
-    }
+    $B = ($gen['bar'] ?? []) + ['z' => 2.0, 'elections' => 1, 'confirm' => []];
+    $C = $B['confirm'] === false ? ['jobs' => 0, 'z' => 0.0] : (array)$B['confirm'] + ['jobs' => $G['jobs'], 'z' => 1.0];
+    $every = (int)($gen['control']['every'] ?? 10);
+    $ids = function (string $round, int $n) use ($have, $name): array {
+        $out = [];
+        for ($k = 1; $k <= $n; $k++) {
+            $out[] = attempt($have, sprintf('pc-%s-%s-%03d', $name, $round, $k));
+        }
+        return $out;
+    };
+    $labels = $ids('label', (int)$L['jobs']);
+    $gaunts = $ids('gauntlet', (int)$G['jobs']);
+    $confirms = $ids('confirm', (int)$C['jobs']);
+    $controls = $every > 0 && (int)substr($name, 1) % $every === 0 ? $ids('control', (int)$G['jobs']) : [];
     $done = fn(array $ids) => count(array_filter($ids, fn($i) => state($have, $i) === 'done')) === count($ids);
-    return ['name' => $name, 'gi' => $gi, 'L' => $L, 'T' => $T, 'G' => $G, 'labels' => $labels,
+    // A control is a measurement, not a gate: a job that failed its last retry, or that a person
+    // stopped, leaves the control short rather than holding the generation's verdict forever.
+    $settled = fn(array $ids) => count(array_filter($ids, fn($i) => in_array(state($have, $i), ['done', 'failed', 'stopped'], true))) === count($ids);
+    return ['name' => $name, 'gi' => $gi, 'L' => $L, 'T' => $T, 'G' => $G, 'B' => $B, 'C' => $C, 'labels' => $labels,
         'bookless' => ($gen['label']['book'] ?? true) === false, // label.book false: --no-book (code from 2026-11-20 on)
         'train' => "pc-$name-train", 'gaunts' => $gaunts, 'labelsDone' => $done($labels),
-        'trainDone' => state($have, "pc-$name-train") === 'done', 'gauntDone' => $done($gaunts)];
+        'trainDone' => state($have, "pc-$name-train") === 'done', 'gauntDone' => $done($gaunts),
+        // By the first attempt's id: a retry's id is not in the queue until it is planned.
+        'gauntStarted' => count(array_filter(range(1, max(1, (int)$G['jobs'])), fn($k) => isset($have[sprintf('pc-%s-gauntlet-%03d', $name, $k)]))) > 0,
+        'confirms' => $confirms, 'confirmDone' => $done($confirms), 'controls' => $controls, 'controlSettled' => $settled($controls)];
 }
 
 /** The champion before generation $gi (null: the hand-written evaluation). */
 function championBefore(string $state, int $gi): ?array
 {
+    return championIn(json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [], $gi);
+}
+
+/** The same, from rows in hand: decide() reads it before the rows it has just decided are written. */
+function championIn(array $rows, int $gi): ?array
+{
     $champ = null;
-    foreach (json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [] as $row) {
+    foreach ($rows as $row) {
         if ($row['gi'] < $gi && $row['elected']) {
             $champ = $row;
         }
@@ -278,64 +317,185 @@ function championBefore(string $state, int $gi): ?array
     return $champ;
 }
 
-/** Elections: decide every generation whose gauntlet is complete. Runs at the start of each pass. */
-function decide(string $dir, string $state): array
+/**
+ * The games of some gauntlet jobs, each scored from the challenger's side (1, 0.5, 0), and what the
+ * challenger did with the election layer: Writs filed, elections held (counts), crowns moved, Kings
+ * crowned, promotions. The election gate reads these. Colours alternate game by game in a job, so the
+ * challenger is found by its spec on each game.
+ */
+function tally(string $dir, array $ids, string $challenger): array
 {
+    $scores = [];
+    $politics = ['writs' => 0, 'elections' => 0, 'crownMoves' => 0, 'coronations' => 0, 'promotions' => 0];
+    foreach ($ids as $id) {
+        $sum = json_decode((string)@file_get_contents(rp($dir, $id, 'summary.json')), true);
+        foreach ($sum['files'] ?? [] as $f) {
+            $r = json_decode((string)@file_get_contents(rp($dir, $id, $f)), true);
+            if (!$r) {
+                continue;
+            }
+            $col = $r['white'] === $challenger ? 1 : -1;
+            $scores[] = $r['winner'] === null ? 0.5 : ($r['winner'] === $col ? 1.0 : 0.0);
+            foreach ($r['log'] ?? [] as $e) {
+                if ($e['by'] === $col && !empty($e['writ'])) {
+                    $politics['writs']++;
+                }
+                if ($e['by'] === $col && str_contains((string)$e['san'], '=')) {
+                    $politics['promotions']++;
+                }
+                $c = $e['count'] ?? null;
+                if ($c && ($c['color'] ?? 0) === $col) {
+                    $politics['elections']++;
+                    $out = $c['outcome'] ?? '';
+                    $politics['crownMoves'] += in_array($out, ['coronation', 'contested', 'swap'], true) ? 1 : 0;
+                    $politics['coronations'] += in_array($out, ['coronation', 'contested'], true) ? 1 : 0;
+                }
+            }
+        }
+    }
+    return [$scores, $politics];
+}
+
+/** Score, standard error and z against an even match. Unrounded: the bar reads these, the rows round. */
+function verdict(array $scores): array
+{
+    $n = count($scores);
+    $mean = $n ? array_sum($scores) / $n : 0.5;
+    $sd = $n > 1 ? sqrt(array_sum(array_map(fn($x) => ($x - $mean) ** 2, $scores)) / ($n - 1)) : 0.5;
+    $se = $sd / sqrt(max(1, $n));
+    return ['games' => $n, 'score' => $mean, 'se' => $se, 'z' => $se > 0 ? ($mean - 0.5) / $se : 0.0];
+}
+
+function rounded(array $v): array
+{
+    return ['games' => $v['games'], 'score' => round($v['score'], 4), 'se' => round($v['se'], 4), 'z' => round($v['z'], 2)];
+}
+
+/** A net's weights as a digest, its meta left out (when and how it was trained, which always differs). */
+function weights(string $file): ?string
+{
+    $net = json_decode((string)@file_get_contents($file), true);
+    if (!is_array($net)) {
+        return null;
+    }
+    unset($net['meta']);
+    return sha1(serialize($net));
+}
+
+/**
+ * Why a trained net is no new net, or null when it moved. Its weights are compared with its champion's
+ * whole, not taken from the trainer's word, so a net from before the trainer wrote bestEpoch (g014 and
+ * earlier) is judged the same way. A cold start that kept epoch 0 is refused too: it is the untrained net.
+ * A net not yet fetched is not judged here; its gauntlet judges it.
+ */
+function unchanged(string $dir, array $g, ?array $champ): ?string
+{
+    $file = rp($dir, $g['train'], 'net2.json');
+    $mine = weights($file);
+    if ($mine === null) {
+        return null;
+    }
+    if ($champ && $mine === weights(rp($dir, 'pc-' . $champ['name'] . '-train', 'net2.json'))) {
+        return "unchanged: its weights are champion {$champ['name']}'s, so it was not played";
+    }
+    $meta = json_decode((string)file_get_contents($file), true)['meta'] ?? [];
+    if (($meta['bestEpoch'] ?? null) === 0) {
+        return 'unchanged: the trainer exported epoch 0, the net it began from, so it was not played';
+    }
+    return null;
+}
+
+/**
+ * The control a generation carries: none until there is a champion to play itself, and none when the
+ * gauntlet is not against the champion (a net against plain Medium is no control of anything).
+ */
+function controlsOf(array $g, ?array $champ): array
+{
+    return $champ && $g['G']['champion'] === 'champion' ? $g['controls'] : [];
+}
+
+/**
+ * Elections: decide every generation whose gauntlet is complete, or whose net came back unchanged.
+ * Runs at the start of each pass. $pending tells the pass what is undecided and why: confirm, the
+ * generations whose first gauntlet cleared the bar and whose second has not finished (with the first's
+ * verdict); refused, the unchanged nets whose verdict waits only for their control; moved, the nets
+ * just trained and compared with their champion and found changed, which may now have a gauntlet.
+ */
+function decide(string $dir, string $state, ?array &$pending = null): array
+{
+    $pending = ['confirm' => [], 'refused' => [], 'moved' => []];
     $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
     $have = jobs($dir);
     $rows = json_decode((string)@file_get_contents("$state/generations.json"), true) ?: [];
     $decided = array_column($rows, 'name');
     foreach ($plan['generations'] as $gi => $spec) {
         $g = generation($spec, $gi, $have);
-        if (!$g['gauntDone'] || in_array($g['name'], $decided, true)) {
+        if (in_array($g['name'], $decided, true)) {
             continue;
         }
-        $scores = [];
-        // What the challenger did with the election layer across its gauntlet: Writs filed, elections
-        // held (counts), crowns moved, Kings crowned, promotions. The gate reads these.
+        $champ = championIn($rows, $gi);
+        $bar = (float)$g['B']['z'];
+        // The election gate: no generation is elected unless it held at least bar.elections elections.
+        $minElections = (int)$g['B']['elections'];
         $politics = ['writs' => 0, 'elections' => 0, 'crownMoves' => 0, 'coronations' => 0, 'promotions' => 0];
-        foreach ($g['gaunts'] as $id) {
-            $sum = json_decode((string)@file_get_contents(rp($dir, $id, 'summary.json')), true);
-            foreach ($sum['files'] ?? [] as $f) {
-                $r = json_decode((string)@file_get_contents(rp($dir, $id, $f)), true);
-                if (!$r) {
+        $rounds = [];
+        $same = $g['trainDone'] && !$g['gauntStarted'] ? unchanged($dir, $g, $champ) : null;
+        if ($g['trainDone'] && !$g['gauntStarted'] && $same === null) {
+            $pending['moved'][$g['name']] = true; // looked at: the pass may give it a gauntlet
+        }
+        if ($same !== null) {
+            $v = null;
+            $elected = false;
+            $why = $same;
+        } elseif (!$g['gauntDone']) {
+            continue;
+        } else {
+            [$scores, $politics] = tally($dir, $g['gaunts'], $g['G']['challenger']);
+            $v = verdict($scores);
+            $strong = $v['z'] > $bar;
+            $political = $politics['elections'] >= $minElections;
+            $elected = $strong && $political;
+            $why = $elected ? 'stronger, and it holds elections' : (!$strong ? 'not stronger by the bar' : 'stronger, but it held fewer than ' . $minElections . ' election(s)');
+            if ($elected && $g['confirms']) {
+                if (!$g['confirmDone']) {
+                    $pending['confirm'][$g['name']] = rounded($v);
                     continue;
                 }
-                $col = $r['white'] === $g['G']['challenger'] ? 1 : -1;
-                $scores[] = $r['winner'] === null ? 0.5 : ($r['winner'] === $col ? 1.0 : 0.0);
-                foreach ($r['log'] ?? [] as $e) {
-                    if ($e['by'] === $col && !empty($e['writ'])) {
-                        $politics['writs']++;
-                    }
-                    if ($e['by'] === $col && str_contains((string)$e['san'], '=')) {
-                        $politics['promotions']++;
-                    }
-                    $c = $e['count'] ?? null;
-                    if ($c && ($c['color'] ?? 0) === $col) {
-                        $politics['elections']++;
-                        $out = $c['outcome'] ?? '';
-                        $politics['crownMoves'] += in_array($out, ['coronation', 'contested', 'swap'], true) ? 1 : 0;
-                        $politics['coronations'] += in_array($out, ['coronation', 'contested'], true) ? 1 : 0;
-                    }
+                // The second round is new games, so it is evidence of its own: pooled, the 400 games must
+                // clear the bar, and the second 200 alone must clear bar.confirm.z, or one lucky round
+                // carries an even net through on the strength of the first. With rounds of one size the
+                // floor all but implies the pooled bar ((2 + 1) / sqrt 2 = 2.1), so it is the floor that
+                // decides; the pooled bar binds when bar.confirm.jobs is smaller than the gauntlet.
+                [$scores2, $politics2] = tally($dir, $g['confirms'], $g['G']['challenger']);
+                $v2 = verdict($scores2);
+                $all = verdict(array_merge($scores, $scores2));
+                $rounds = ['first' => rounded($v), 'confirm' => rounded($v2)];
+                foreach ($politics2 as $k => $x) {
+                    $politics[$k] += $x;
                 }
+                $floor = (float)$g['C']['z'];
+                $elected = $all['z'] > $bar && $v2['z'] > $floor;
+                $why = $elected ? 'stronger, confirmed by a second gauntlet, and it holds elections'
+                    : sprintf('not confirmed: z %+.2f in its first gauntlet, %+.2f in the second (floor %.1f), %+.2f over the %d games pooled (bar %.1f)',
+                        $v['z'], $v2['z'], $floor, $all['z'], $all['games'], $bar);
+                $v = $all;
             }
         }
-        $n = count($scores);
-        $mean = $n ? array_sum($scores) / $n : 0.5;
-        $sd = $n > 1 ? sqrt(array_sum(array_map(fn($x) => ($x - $mean) ** 2, $scores)) / ($n - 1)) : 0.5;
-        $se = $sd / sqrt(max(1, $n));
-        $z = $se > 0 ? ($mean - 0.5) / $se : 0.0;
-        $bar = (float)($spec['bar']['z'] ?? 2.0);
-        // The election gate: no generation is elected unless it held at least bar.elections elections.
-        $minElections = (int)($spec['bar']['elections'] ?? 1);
-        $strong = $z > $bar;
-        $political = $politics['elections'] >= $minElections;
+        $controls = controlsOf($g, $champ);
+        if ($controls && !$g['controlSettled']) {
+            // The control is part of this generation's record: it is planned beside the labels and is
+            // nearly always done long before. A refused net must not be given a gauntlet meanwhile.
+            if ($same !== null) {
+                $pending['refused'][$g['name']] = $same;
+            }
+            continue;
+        }
         // Generation timing: lane-seconds per stage, wall clock from the first start to the last end.
-        $stage = ['label' => 0.0, 'train' => 0.0, 'gauntlet' => 0.0];
+        $stage = ['label' => 0.0, 'train' => 0.0, 'gauntlet' => 0.0] + ($controls ? ['control' => 0.0] : []);
         $first = PHP_INT_MAX;
         $last = 0;
         $hosts = [];
-        foreach (array_merge($g['labels'], [$g['train']], $g['gaunts']) as $id) {
+        foreach (array_merge($g['labels'], [$g['train']], $g['gaunts'], $g['confirms'], $controls) as $id) {
             $j = $have[$id]['job'] ?? null;
             if (!$j) {
                 continue;
@@ -362,15 +522,22 @@ function decide(string $dir, string $state): array
                 $lastEpoch = $row;
             }
         }
-        $row = ['name' => $g['name'], 'gi' => $gi, 'games' => $n, 'score' => round($mean, 4), 'se' => round($se, 4), 'z' => round($z, 2),
-            'bar' => $bar, 'elected' => $strong && $political, 'minElections' => $minElections, 'politics' => $politics,
-            'why' => $strong && $political ? 'stronger, and it holds elections' : (!$strong ? 'not stronger by the bar' : 'stronger, but it held fewer than ' . $minElections . ' election(s)'),
-            'labels' => $labels, 'device' => $train['device'] ?? null,
+        // An unchanged net has no score: null, not 0.5, since no game was played to give it one.
+        $control = [];
+        if ($controls) {
+            [$cs] = tally($dir, $controls, $g['G']['challenger']);
+            $control = ['control' => rounded(verdict($cs)) + ['of' => $champ['name'], 'jobs' => count($controls),
+                'what' => 'champion ' . $champ['name'] . ' against itself: the noise of one gauntlet']];
+        }
+        $row = ['name' => $g['name'], 'gi' => $gi] + ($v ? rounded($v) : ['games' => 0, 'score' => null, 'se' => null, 'z' => null])
+            + ['bar' => $bar, 'elected' => $elected, 'minElections' => $minElections, 'politics' => $politics, 'why' => $why]
+            + ($same !== null ? ['unchanged' => true] : []) + $rounds + $control
+            + ['labels' => $labels, 'device' => $train['device'] ?? null,
             'valValueMSE' => $lastEpoch['valValueMSE'] ?? null, 'valPolicyTop1' => $lastEpoch['valPolicyTop1'] ?? null,
             'laneSeconds' => array_map(fn($x) => round($x, 1), $stage), 'wallSeconds' => $last > 0 ? $last - $first : null,
             'hosts' => array_keys($hosts), 'decided' => date('c')];
         $rows[] = $row;
-        file_put_contents("$state/lineage.tsv", implode("\t", [$row['name'], $row['games'], $row['score'], $row['se'], $row['z'],
+        file_put_contents("$state/lineage.tsv", implode("\t", [$row['name'], $row['games'], $row['score'] ?? '-', $row['se'] ?? '-', $row['z'] ?? '-',
             $row['elected'] ? 'elected' : 'not elected: ' . $row['why'], $row['politics']['elections'], $row['labels'], $row['laneSeconds']['label'], $row['laneSeconds']['train'],
             $row['laneSeconds']['gauntlet'], $row['wallSeconds'], $row['decided']]) . "\n", FILE_APPEND);
         if ($row['elected']) {
@@ -444,9 +611,12 @@ function publish(string $dir, string $state): void
         return;
     }
     $last = $rows[count($rows) - 1];
-    $msg = sprintf("Orrery: generation %s %s (score %.3f, z %.2f, %d games, %d elections)",
-        $last['name'], $last['elected'] ? 'ELECTED' : 'not elected', $last['score'], $last['z'], $last['games'],
-        $last['politics']['elections'] ?? 0);
+    $msg = $last['z'] === null
+        ? sprintf("Orrery: generation %s not elected (%s)", $last['name'], $last['why'])
+        : sprintf("Orrery: generation %s %s (score %.3f, z %.2f, %d games%s, %d elections)",
+            $last['name'], $last['elected'] ? 'ELECTED' : 'not elected', $last['score'], $last['z'], $last['games'],
+            isset($last['confirm']) ? sprintf(', confirmed z %.2f then %.2f', $last['first']['z'], $last['confirm']['z']) : '',
+            $last['politics']['elections'] ?? 0);
     $paths = implode(' ', array_map('escapeshellarg', array_keys($want)));
     $g = 'git -C ' . escapeshellarg($repo);
     $log = [];
@@ -478,7 +648,7 @@ if ($verb === 'plan') {
         echo "[]\n";
         exit(0);
     }
-    $rowsNow = decide($dir, $state);
+    $rowsNow = decide($dir, $state, $pending);
     extendPlan($state, array_column($rowsNow, 'name'));
     publish($dir, $state);
     $plan = json_decode((string)file_get_contents("$state/plan.json"), true);
@@ -578,23 +748,47 @@ if ($verb === 'plan') {
                     . ' --out ' . $o . '/net2.json > ' . $o . '/train.log 2>&1',
                 'fetch' => "pc-out/{$g['train']}"]);
         }
-        if ($g['trainDone']) {
+        // One round of games against the champion: the gauntlet, its confirmation, or the control.
+        // NET is the net under test as the lane will hold it; each round has its own seeds.
+        $round = function (string $id, int $k, string $stage, string $net, int $seedAt, string $title) use ($g, $gi, $name, $champ, $champSend, $spec2, $common, $lanes, $d, $dir): array {
+            $G = $g['G'];
+            $send = $net === 'net2.json' ? [['src' => rp($dir, $g['train'], 'net2.json'), 'dst' => "pc-data/$name/net2.json"]] : [];
+            return $common(['id' => $id, 'kind' => 'pc-gauntlet', 'title' => "Parliament $name: $title ($id)",
+                'needs' => $G['needs'], 'stage' => $stage,
+                'send' => array_merge($send, $champ && ($G['champion'] === 'champion' || $net === 'champion.json') ? $champSend : []),
+                'cmd' => prelude($lanes ? $d['hash'] : '') . 'PC_NET2="$HOME/pc-data/' . $name . '/' . $net . '" sh bin/php bin/selfplay.php --job ' . $id
+                    . ' --white "' . $G['challenger'] . '" --black "' . $spec2($G['champion']) . '" --games ' . (int)$G['games'] . ' --workers ' . (int)$G['workers']
+                    . ' --seed ' . (($gi + 1) * 1000 + $k + $seedAt) . ' --opening-random 2 --max-plies 300 --quiet --no-book'
+                    . ' --out "$HOME/pc-out/' . $id . '"',
+                'fetch' => "pc-out/$id"]);
+        };
+        // The control rides beside the labels: it needs no new net, only the champion.
+        foreach (controlsOf($g, $champ) as $k => $id) {
+            if (isset($have[$id]) || count($out) >= $n || $room <= 0) {
+                continue;
+            }
+            $room--;
+            $out[] = $round($id, $k, 'control', 'champion.json', 701, "control, champion {$champ['name']} against itself");
+        }
+        // A gauntlet only for a net decide() has looked at and found moved; a refused net waits for its
+        // control and is decided without one.
+        if ($g['trainDone'] && ($g['gauntStarted'] || isset($pending['moved'][$name]))) {
             foreach ($g['gaunts'] as $k => $id) {
                 if (isset($have[$id]) || count($out) >= $n || $room <= 0) {
                     continue;
                 }
                 $room--;
-                $G = $g['G'];
-                $black = $spec2($G['champion']);
-                $out[] = $common(['id' => $id, 'kind' => 'pc-gauntlet', 'title' => "Parliament $name: challenger vs champion ($id)",
-                    'needs' => $G['needs'], 'stage' => 'gauntlet',
-                    'send' => array_merge([['src' => rp($dir, $g['train'], 'net2.json'), 'dst' => "pc-data/$name/net2.json"]],
-                        $G['champion'] === 'champion' && $champ ? $champSend : []),
-                    'cmd' => prelude($lanes ? $d['hash'] : '') . 'PC_NET2="$HOME/pc-data/' . $name . '/net2.json" sh bin/php bin/selfplay.php --job ' . $id
-                        . ' --white "' . $G['challenger'] . '" --black "' . $black . '" --games ' . (int)$G['games'] . ' --workers ' . (int)$G['workers']
-                        . ' --seed ' . (($gi + 1) * 1000 + $k + 501) . ' --opening-random 2 --max-plies 300 --quiet --no-book'
-                        . ' --out "$HOME/pc-out/' . $id . '"',
-                    'fetch' => "pc-out/$id"]);
+                $out[] = $round($id, $k, 'gauntlet', 'net2.json', 501, 'challenger vs champion');
+            }
+        }
+        if (isset($pending['confirm'][$name])) {
+            $first = $pending['confirm'][$name];
+            foreach ($g['confirms'] as $k => $id) {
+                if (isset($have[$id]) || count($out) >= $n || $room <= 0) {
+                    continue;
+                }
+                $room--;
+                $out[] = $round($id, $k, 'gauntlet', 'net2.json', 601, sprintf('second gauntlet, to confirm z %+.2f', $first['z']));
             }
         }
         break; // one generation at a time
@@ -607,11 +801,21 @@ if ($verb === 'collect') {
     if (!is_file("$state/plan.json")) {
         exit(0);
     }
-    foreach (decide($dir, $state) as $r) {
-        printf("%s  score %.3f +- %.3f over %d games, z %.2f (bar %.1f), %d election(s): %s | labels %d | lane-s label %.0f, train %.0f, gauntlet %.0f | wall %ss\n",
-            $r['name'], $r['score'], $r['se'], $r['games'], $r['z'], $r['bar'], $r['politics']['elections'] ?? 0,
+    foreach (decide($dir, $state, $pending) as $r) {
+        $played = $r['z'] === null ? 'not played' : sprintf('score %.3f +- %.3f over %d games, z %.2f', $r['score'], $r['se'], $r['games'], $r['z']);
+        if (isset($r['confirm'])) {
+            $played .= sprintf(' (first %+.2f, second %+.2f)', $r['first']['z'], $r['confirm']['z']);
+        }
+        if (isset($r['control'])) {
+            $played .= sprintf(' | control %.3f, z %+.2f', $r['control']['score'], $r['control']['z']);
+        }
+        printf("%s  %s (bar %.1f), %d election(s): %s | labels %d | lane-s label %.0f, train %.0f, gauntlet %.0f | wall %ss\n",
+            $r['name'], $played, $r['bar'], $r['politics']['elections'] ?? 0,
             $r['elected'] ? 'ELECTED' : 'not elected (' . ($r['why'] ?? '') . ')', $r['labels'],
             $r['laneSeconds']['label'], $r['laneSeconds']['train'], $r['laneSeconds']['gauntlet'], $r['wallSeconds'] ?? '-');
+    }
+    foreach ($pending['confirm'] as $name => $v) {
+        printf("%s  over the bar at z %.2f in its first gauntlet: its second is under way\n", $name, $v['z']);
     }
     exit(0);
 }

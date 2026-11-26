@@ -94,9 +94,20 @@ def timeline():
         tick += dt.timedelta(hours=6)
     body += text((L + R) / 2, B + 52, "when the verdict came, UTC (each generation takes about 40 minutes on the fleet)", 13, MUTED, "middle")
     for g in GENS:
-        x, y = X(when(g)), Y(max(zmin, min(zmax, g["z"])))
+        x = X(when(g))
+        if g.get("control"):  # the champion against itself: the noise of one gauntlet, as an open ring
+            c = g["control"]
+            cy = Y(max(zmin, min(zmax, c["z"])))
+            ctip = f'{g["name"]}\u2019s control: {c["of"]} against itself, {100 * c["score"]:.1f}% over {c["games"]} games, z {c["z"]:+.2f}'
+            body += f'<g><title>{escape(ctip)}</title><circle cx="{x:.1f}" cy="{cy:.1f}" r="6" fill="none" stroke="{MUTED}" stroke-width="1.5"/></g>'
+        if g["z"] is None:  # refused unchanged: it never played, so there is no z; a tick on the floor says it was there
+            body += f'<g><title>{escape(g["name"] + ": " + g["why"])}</title><line x1="{x:.1f}" x2="{x:.1f}" y1="{B - 12}" y2="{B}" stroke="{MUTED}" stroke-width="2"/></g>'
+            continue
+        y = Y(max(zmin, min(zmax, g["z"])))
         tip = (f'{g["name"]}: {100 * g["score"]:.1f}% over {g["games"]} games, z {g["z"]:+.2f}, '
                f'{"elected" if g["elected"] else "not elected"} · {when(g).strftime("%b %-d %H:%M")} UTC')
+        if g.get("confirm"):
+            tip += f' (first gauntlet z {g["first"]["z"]:+.2f}, second {g["confirm"]["z"]:+.2f})'
         if g["elected"]:
             body += f'<g><title>{escape(tip)}</title><circle cx="{x:.1f}" cy="{y:.1f}" r="8" fill="{BLUE}" stroke="{SURF}" stroke-width="2"/></g>'
             if g["z"] > 3:  # near the top: the label goes to the left of the dot
@@ -107,9 +118,14 @@ def timeline():
                 body += text(x, y - 36, f'{100 * g["score"]:.1f}%, z {g["z"]:+.2f}', 13, INK2, "middle")
         else:
             body += f'<g><title>{escape(tip)}</title><circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="#a9a8a2" stroke="{SURF}" stroke-width="2"/></g>'
+    # The two marks that are not verdicts say what they are, and only when there is one to see.
+    keys = (["\u25cb a control: the champion against itself"] if any(g.get("control") for g in GENS) else []) + \
+        (["| a net unchanged from its champion, not played"] if any(g["z"] is None for g in GENS) else [])
+    for k, line in enumerate(keys):
+        body += text(R - 10, Y(-3.0) + 17 * k, line, 12, MUTED, "end")
     # Name the first and the latest, and the lowest, so the reader can find their way.
     for g in (GENS[0], GENS[-1]):
-        if not g["elected"]:
+        if not g["elected"] and g["z"] is not None:
             x, y = X(when(g)), Y(max(zmin, min(zmax, g["z"])))
             body += text(x, y + 22, g["name"], 12, INK2, "middle")
     return svg(W, H + 10, body, "The generations' verdicts")
