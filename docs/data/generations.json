@@ -1489,5 +1489,50 @@
             "flank": 0.15,
             "kingwalk": 0.115
         }
+    },
+    {
+        "name": "g032",
+        "gi": 30,
+        "games": 200,
+        "score": 0.4975,
+        "se": 0.033,
+        "z": -0.08,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 85,
+            "elections": 85,
+            "crownMoves": 35,
+            "coronations": 21,
+            "promotions": 79
+        },
+        "why": "not stronger by the bar",
+        "styles": {
+            "games": 200,
+            "trades": 0.175,
+            "centre": 0.26,
+            "castle": 0.145,
+            "knights": 0.31,
+            "queen": 0.31,
+            "flank": 0.22,
+            "kingwalk": 0.14
+        },
+        "labels": 69595,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.17445,
+        "valPolicyTop1": 0.1583,
+        "laneSeconds": {
+            "label": 7261.1,
+            "train": 131.7,
+            "gauntlet": 682.8
+        },
+        "wallSeconds": 6853,
+        "hosts": [
+            "saskatchewan",
+            "calber",
+            "saskatchewan-2"
+        ],
+        "decided": "2026-11-27T02:41:25+00:00"
     }
 ]
