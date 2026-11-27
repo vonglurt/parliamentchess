@@ -1769,5 +1769,67 @@
             "columbia"
         ],
         "decided": "2026-11-27T08:06:43+00:00"
+    },
+    {
+        "name": "g038",
+        "gi": 36,
+        "games": 400,
+        "score": 0.54,
+        "se": 0.0234,
+        "z": 1.71,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 181,
+            "elections": 181,
+            "crownMoves": 98,
+            "coronations": 59,
+            "promotions": 160
+        },
+        "why": "not confirmed: z +2.12 in its first gauntlet, +0.30 in the second (floor 1.0), +1.71 over the 400 games pooled (bar 2.0)",
+        "first": {
+            "games": 200,
+            "score": 0.57,
+            "se": 0.0331,
+            "z": 2.12
+        },
+        "confirm": {
+            "games": 200,
+            "score": 0.51,
+            "se": 0.0331,
+            "z": 0.3
+        },
+        "styles": {
+            "games": 400,
+            "trades": 0.155,
+            "centre": 0.22,
+            "castle": 0.268,
+            "knights": 0.365,
+            "queen": 0.29,
+            "flank": 0.225,
+            "kingwalk": 0.115
+        },
+        "labels": 70840,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.18713,
+        "valPolicyTop1": 0.1534,
+        "laneSeconds": {
+            "label": 8058.6,
+            "train": 217.2,
+            "gauntlet": 2076.8
+        },
+        "wallSeconds": 3947,
+        "hosts": [
+            "saskatchewan",
+            "saskatchewan-2",
+            "columbia",
+            "boburner",
+            "calber",
+            "jaguaribe",
+            "bosporus",
+            "whitewolf"
+        ],
+        "decided": "2026-11-27T09:14:17+00:00"
     }
 ]
