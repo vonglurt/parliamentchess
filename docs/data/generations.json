@@ -1671,5 +1671,53 @@
             "whitewolf"
         ],
         "decided": "2026-11-27T06:15:55+00:00"
+    },
+    {
+        "name": "g036",
+        "gi": 34,
+        "games": 200,
+        "score": 0.4325,
+        "se": 0.0334,
+        "z": -2.02,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 85,
+            "elections": 85,
+            "crownMoves": 36,
+            "coronations": 23,
+            "promotions": 62
+        },
+        "why": "not stronger by the bar",
+        "styles": {
+            "games": 200,
+            "trades": 0.105,
+            "centre": 0.18,
+            "castle": 0.155,
+            "knights": 0.27,
+            "queen": 0.26,
+            "flank": 0.34,
+            "kingwalk": 0.13
+        },
+        "labels": 70687,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.18834,
+        "valPolicyTop1": 0.1653,
+        "laneSeconds": {
+            "label": 5876,
+            "train": 343.6,
+            "gauntlet": 883.6
+        },
+        "wallSeconds": 3294,
+        "hosts": [
+            "calber",
+            "saskatchewan-2",
+            "saskatchewan",
+            "boburner",
+            "whitewolf",
+            "jaguaribe"
+        ],
+        "decided": "2026-11-27T07:12:48+00:00"
     }
 ]
