@@ -1941,5 +1941,55 @@
             "columbia"
         ],
         "decided": "2026-11-27T11:11:06+00:00"
+    },
+    {
+        "name": "g041",
+        "gi": 39,
+        "games": 200,
+        "score": 0.5275,
+        "se": 0.0338,
+        "z": 0.81,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 94,
+            "elections": 94,
+            "crownMoves": 53,
+            "coronations": 35,
+            "promotions": 84
+        },
+        "why": "not stronger by the bar",
+        "styles": {
+            "games": 200,
+            "trades": 0.215,
+            "centre": 0.315,
+            "castle": 0.215,
+            "knights": 0.37,
+            "queen": 0.285,
+            "flank": 0.25,
+            "kingwalk": 0.14
+        },
+        "labels": 70361,
+        "device": "NVIDIA GeForce GTX 1080",
+        "valValueMSE": 0.19236,
+        "valPolicyTop1": 0.1517,
+        "laneSeconds": {
+            "label": 7145.1,
+            "train": 147.5,
+            "gauntlet": 1169.9
+        },
+        "wallSeconds": 2880,
+        "hosts": [
+            "saskatchewan",
+            "bosporus",
+            "whitewolf",
+            "boburner",
+            "saskatchewan-2",
+            "calber",
+            "jaguaribe",
+            "columbia"
+        ],
+        "decided": "2026-11-27T12:02:19+00:00"
     }
 ]
