@@ -1881,5 +1881,65 @@
             "saskatchewan"
         ],
         "decided": "2026-11-27T10:06:38+00:00"
+    },
+    {
+        "name": "g040",
+        "gi": 38,
+        "games": 200,
+        "score": 0.47,
+        "se": 0.0334,
+        "z": -0.9,
+        "bar": 2,
+        "elected": false,
+        "minElections": 1,
+        "politics": {
+            "writs": 82,
+            "elections": 82,
+            "crownMoves": 39,
+            "coronations": 24,
+            "promotions": 83
+        },
+        "why": "not stronger by the bar",
+        "control": {
+            "games": 200,
+            "score": 0.4625,
+            "se": 0.0344,
+            "z": -1.09,
+            "of": "g015",
+            "jobs": 25,
+            "what": "champion g015 against itself: the noise of one gauntlet"
+        },
+        "styles": {
+            "games": 200,
+            "trades": 0.22,
+            "centre": 0.225,
+            "castle": 0.205,
+            "knights": 0.3,
+            "queen": 0.3,
+            "flank": 0.215,
+            "kingwalk": 0.145
+        },
+        "labels": 69387,
+        "device": "NVIDIA GeForce GTX 1080 Ti",
+        "valValueMSE": 0.18427,
+        "valPolicyTop1": 0.158,
+        "laneSeconds": {
+            "label": 7489.2,
+            "train": 280.7,
+            "gauntlet": 1011.9,
+            "control": 1202.1
+        },
+        "wallSeconds": 3686,
+        "hosts": [
+            "bosporus",
+            "saskatchewan",
+            "whitewolf",
+            "boburner",
+            "saskatchewan-2",
+            "calber",
+            "jaguaribe",
+            "columbia"
+        ],
+        "decided": "2026-11-27T11:11:06+00:00"
     }
 ]
